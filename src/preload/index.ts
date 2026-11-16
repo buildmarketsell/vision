@@ -34,12 +34,21 @@ const api: VisionApi = {
     onChange: (callback) => subscribe(IPC.fsChange, callback),
   },
   pty: {
-    start: (cols, rows) => ipcRenderer.invoke(IPC.ptyStart, cols, rows),
+    start: (cols, rows, resumeSessionId) => ipcRenderer.invoke(IPC.ptyStart, cols, rows, resumeSessionId),
     write: (id, data) => ipcRenderer.send(IPC.ptyWrite, id, data),
     resize: (id, cols, rows) => ipcRenderer.send(IPC.ptyResize, id, cols, rows),
     kill: (id) => ipcRenderer.send(IPC.ptyKill, id),
     onData: (callback) => subscribe(IPC.ptyData, callback),
     onExit: (callback) => subscribe(IPC.ptyExit, callback),
+  },
+  chat: {
+    start: (options) => ipcRenderer.invoke(IPC.chatStart, options),
+    send: (id, message) => ipcRenderer.send(IPC.chatSend, id, message),
+    stop: (id) => ipcRenderer.send(IPC.chatStop, id),
+    onEvent: (callback) => subscribe(IPC.chatEvent, callback),
+    onExit: (callback) => subscribe(IPC.chatExit, callback),
+    list: () => ipcRenderer.invoke(IPC.chatList),
+    history: (sessionId) => ipcRenderer.invoke(IPC.chatHistory, sessionId),
   },
 };
 

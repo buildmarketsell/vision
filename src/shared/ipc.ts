@@ -1,4 +1,5 @@
 /** Types shared by the main process, the preload bridge and the renderer. */
+import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions, ChatStartResult, PastConversation } from './claudeChat';
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -80,12 +81,24 @@ export interface VisionApi {
     onChange(callback: (event: FsChangeEvent) => void): Unsubscribe;
   };
   pty: {
-    start(cols: number, rows: number): Promise<PtyStartResult>;
+    /** With a session id, the terminal continues that conversation (`claude --resume`). */
+    start(cols: number, rows: number, resumeSessionId?: string): Promise<PtyStartResult>;
     write(id: number, data: string): void;
     resize(id: number, cols: number, rows: number): void;
     kill(id: number): void;
     onData(callback: (event: PtyDataEvent) => void): Unsubscribe;
     onExit(callback: (event: PtyExitEvent) => void): Unsubscribe;
+  };
+  chat: {
+    start(options: ChatStartOptions): Promise<ChatStartResult>;
+    send(id: number, message: ChatOutgoing): void;
+    stop(id: number): void;
+    onEvent(callback: (message: ChatEventMessage) => void): Unsubscribe;
+    onExit(callback: (message: ChatExitMessage) => void): Unsubscribe;
+    /** Saved conversations for the open folder, newest first. */
+    list(): Promise<PastConversation[]>;
+    /** A saved conversation's messages, as stream events. */
+    history(sessionId: string): Promise<unknown[]>;
   };
 }
 
@@ -117,4 +130,11 @@ export const IPC = {
   ptyKill: 'claude-terminal:kill',
   ptyData: 'claude-terminal:data',
   ptyExit: 'claude-terminal:exit',
+  chatStart: 'claude-chat:start',
+  chatSend: 'claude-chat:send',
+  chatStop: 'claude-chat:stop',
+  chatEvent: 'claude-chat:event',
+  chatExit: 'claude-chat:exit',
+  chatList: 'claude-chat:list',
+  chatHistory: 'claude-chat:history',
 } as const;

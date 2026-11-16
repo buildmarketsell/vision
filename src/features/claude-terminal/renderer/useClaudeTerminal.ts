@@ -64,7 +64,7 @@ function busyTracker(panelId: string) {
 }
 
 /** Runs `claude` in the open folder inside an xterm.js terminal mounted on `hostRef`. */
-export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>, panelId: string) {
+export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>, panelId: string, resumeSessionId: string | null) {
   const [status, setStatusState] = useState<ClaudeStatus>({ kind: 'starting' });
   const terminalRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
@@ -86,7 +86,7 @@ export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>, pan
     terminal.reset();
     setStatus({ kind: 'starting' });
     fitRef.current?.fit();
-    const result = await window.vision.pty.start(terminal.cols, terminal.rows);
+    const result = await window.vision.pty.start(terminal.cols, terminal.rows, resumeSessionId ?? undefined);
     if (!result.ok) {
       setStatus({ kind: 'failed', message: result.message, notInstalled: result.reason === 'not-found' });
       return;
@@ -94,7 +94,7 @@ export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>, pan
     ptyIdRef.current = result.id;
     setStatus({ kind: 'running' });
     terminal.focus();
-  }, [setStatus]);
+  }, [setStatus, resumeSessionId]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -148,8 +148,6 @@ export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>, pan
       ptyIdRef.current = null;
       terminals.delete(panelId);
       terminal.dispose();
-      // The tab closed: drop the session from the sidebar list.
-      useClaudeSessions.getState().remove(panelId);
     };
   }, [hostRef, panelId, start, setStatus]);
 

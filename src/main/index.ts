@@ -8,6 +8,7 @@ import { flushAppState, loadAppState } from './stateStore';
 import { createWindow, restoreSession, setQuitting } from './windows';
 import { registerFsHandlers } from './workspace/fsHandlers';
 import { killAllClaudeSessions } from '../features/claude-terminal/main/ptyHandlers';
+import { stopAllChats } from '../features/claude-terminal/main/chatProcess';
 
 app.setName(APP_NAME);
 
@@ -44,7 +45,10 @@ app.on('before-quit', (event) => {
   });
 });
 
-app.on('will-quit', () => killAllClaudeSessions());
+app.on('will-quit', () => {
+  killAllClaudeSessions();
+  stopAllChats();
+});
 
 // On macOS the app stays open with no windows, like other Mac apps.
 app.on('window-all-closed', () => {

@@ -20,7 +20,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - `src/shared/`: types, IPC channel names (`IPC`), constants (`app.ts`).
 - `src/renderer/`: `App.tsx`, `theme.ts` (all design tokens), `styles.css`, `core/` (feature types and index, commands and shortcuts, dock and its actions, workspace store, tab status), `components/` (Sidebar, Welcome, Workspace, ErrorBoundary, ContextMenu, fileIcons).
 - `src/features/<name>/`: `index.ts` (manifest), `renderer/`, optional `main/`.
-- `tests/unit/` (vitest), `tests/e2e/` (Playwright driving Electron, with `fixtures/fake-claude.sh`).
+- `tests/unit/` (vitest), `tests/e2e/` (Playwright driving Electron, with `fixtures/fake-claude.mjs`, which fakes both the terminal and the stream-json chat).
 
 ## Adding a feature
 1. Create `src/features/<name>/index.ts` exporting a `Feature` (see `src/renderer/core/feature.ts`).
@@ -34,6 +34,12 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Solid surfaces only: no blur or glass (coding rules ban glassmorphism). Depth comes from `--shadow-card`, `--shadow-control`, `--shadow-popover`.
 - Nested corners are concentric: inner radius = outer radius minus the inset.
 - Menus and popovers grow from where they were opened (`transform-origin`).
+
+## Claude chat (stream-json)
+- VISION runs `claude -p --input-format stream-json --output-format stream-json --verbose --include-partial-messages --permission-prompt-tool stdio` and sends `{"type":"control_request","request":{"subtype":"initialize"}}` first. Without `--permission-prompt-tool stdio`, permission requests are denied on the spot (`--permission-prompts host` alone is not enough).
+- Permission requests and AskUserQuestion arrive as `control_request` / `can_use_tool`; answer with `control_response` (`behavior: allow` + `updatedInput`, answers in `updatedInput.answers`). Stop = `control_request` subtype `interrupt`.
+- Real recorded sessions live in `tests/fixtures/claude/` and drive the reducer tests. When the CLI changes, record again and update those files.
+- Saved conversations: `~/.claude/projects/<folder path with non-alphanumerics as ->/<session-id>.jsonl`; titles from `ai-title` lines. Read-only; never touch credentials.
 
 ## Gotchas
 - Automated runs (tests, screenshots) must set `VISION_HEADLESS=1`: windows render but never show and there is no Dock icon, so nothing pops up on Dan's screen. The e2e tests already do.

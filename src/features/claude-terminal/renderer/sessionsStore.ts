@@ -12,6 +12,8 @@ export interface ClaudeSession {
   status: SessionStatus;
   /** True while Claude is printing output (thinking, running tools). */
   busy: boolean;
+  /** True while a permission request or question waits for you. */
+  waiting: boolean;
 }
 
 interface SessionsState {
@@ -30,7 +32,7 @@ export const useClaudeSessions = create<SessionsState>((set) => ({
   lastActiveId: null,
   update: (id, change) =>
     set((state) => {
-      const current = state.sessions[id] ?? { id, title: DEFAULT_TITLE, status: 'starting', busy: false };
+      const current = state.sessions[id] ?? { id, title: DEFAULT_TITLE, status: 'starting', busy: false, waiting: false };
       const next = { ...current, ...change };
       const unchanged = state.sessions[id] && (Object.keys(change) as Array<keyof typeof change>).every((key) => current[key] === next[key]);
       if (unchanged) return state;

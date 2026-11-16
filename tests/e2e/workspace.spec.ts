@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const projectRoot = resolve(import.meta.dirname, '../..');
-const fakeClaude = join(projectRoot, 'tests/e2e/fixtures/fake-claude.sh');
+const fakeClaude = join(projectRoot, 'tests/e2e/fixtures/fake-claude.mjs');
 
 /** A throwaway folder with a few files, and settings that open it on launch. */
 function makeFixture(): { folder: string; userData: string } {
@@ -31,26 +31,39 @@ async function launch(userData: string): Promise<{ app: ElectronApplication; pag
   const packaged = process.env['VISION_E2E_APP'];
   const app = await electron.launch({
     ...(packaged ? { executablePath: packaged, args: [] } : { args: [projectRoot] }),
-    env: { ...cleanEnv(), VISION_USER_DATA: userData, VISION_CLAUDE_COMMAND: fakeClaude, VISION_HEADLESS: '1' },
+    env: {
+      ...cleanEnv(),
+      VISION_USER_DATA: userData,
+      VISION_CLAUDE_COMMAND: fakeClaude,
+      VISION_CLAUDE_PROJECTS_DIR: mkdtempSync(join(tmpdir(), 'vision-transcripts-')),
+      // Background mode: nothing shows on screen.
+      VISION_HEADLESS: '1',
+    },
   });
   const page = await app.firstWindow();
   return { app, page };
 }
 
-test('opens a folder, edits and saves a file, and starts Claude', async () => {
+const messageBox = (page: Page) => page.getByRole('textbox', { name: 'Message Claude' });
+
+async function sendMessage(page: Page, text: string): Promise<void> {
+  await expect(messageBox(page).first()).toBeEnabled({ timeout: 15_000 });
+  await messageBox(page).first().fill(text);
+  await messageBox(page).first().press('Enter');
+}
+
+test('opens a folder, edits and saves a file, and chats with Claude', async () => {
   const { folder, userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
-    // Claude pane runs the CLI in the open folder.
-    await expect(page.locator('.xterm-rows').first()).toContainText('Fake Claude ready', { timeout: 15_000 });
+    await sendMessage(page, 'hi there');
+    await expect(page.locator('.user-bubble')).toHaveText('hi there');
+    await expect(page.locator('.assistant-text').last()).toContainText('Hello from fake Claude. You said: hi there');
 
-    // File tree shows the folder's files; clicking one opens it in the editor.
     await page.getByRole('treeitem', { name: /hello\.md/ }).click();
     const editor = page.locator('.monaco-editor').first();
     await expect(editor).toBeVisible({ timeout: 15_000 });
     await expect(editor).toContainText('# Hello');
-
-    // Type, see the unsaved dot, save with Cmd+S, the file on disk changes.
     await editor.click();
     await page.keyboard.press('Meta+End');
     await page.keyboard.type('Saved from VISION');
@@ -59,11 +72,47 @@ test('opens a folder, edits and saves a file, and starts Claude', async () => {
     await expect.poll(() => readFileSync(join(folder, 'hello.md'), 'utf8')).toContain('Saved from VISION');
     await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
 
-    // A file created outside the app shows up in the tree.
     writeFileSync(join(folder, 'from-outside.md'), 'x');
     await expect(page.getByRole('treeitem', { name: /from-outside\.md/ })).toBeVisible({ timeout: 10_000 });
-
     await page.screenshot({ animations: 'disabled', path: 'test-results/workspace.png' });
+  } finally {
+    await app.close();
+  }
+});
+
+test('asks before a file change and answers questions', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    await sendMessage(page, 'please edit notes');
+    const card = page.getByRole('alertdialog', { name: 'Claude wants to change a file' });
+    await expect(card).toBeVisible();
+    await expect(card.locator('.diff-added')).toContainText('hello');
+    await page.screenshot({ animations: 'disabled', path: 'test-results/permission.png' });
+    await card.getByRole('button', { name: 'Allow' }).click();
+    await expect(page.locator('.assistant-text').last()).toContainText('I wrote notes.txt.');
+    await expect(page.getByRole('button', { name: /Wrote notes\.txt/ })).toBeVisible();
+
+    await sendMessage(page, 'ask me');
+    const question = page.getByRole('dialog', { name: 'Claude has a question' });
+    await question.getByRole('button', { name: /Blue/ }).click();
+    await question.getByRole('button', { name: 'Send Answer' }).click();
+    await expect(page.locator('.assistant-text').last()).toContainText('You picked Blue.');
+    await page.screenshot({ animations: 'disabled', path: 'test-results/chat.png' });
+  } finally {
+    await app.close();
+  }
+});
+
+test('switches a conversation between chat and terminal', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    await expect(messageBox(page)).toBeEnabled({ timeout: 15_000 });
+    await page.getByRole('tab', { name: 'Terminal' }).click();
+    await expect(page.locator('.xterm-rows')).toContainText('Fake Claude ready', { timeout: 15_000 });
+    await page.getByRole('tab', { name: 'Chat' }).click();
+    await expect(messageBox(page)).toBeEnabled({ timeout: 15_000 });
   } finally {
     await app.close();
   }
@@ -84,7 +133,7 @@ test('closing a window with Claude running raises no errors in the main process'
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
-    await expect(page.locator('.xterm-rows').first()).toContainText('Fake Claude ready', { timeout: 15_000 });
+    await expect(messageBox(page)).toBeEnabled({ timeout: 15_000 });
     await app.evaluate(({ BrowserWindow }) => {
       const store = globalThis as unknown as { visionErrors: string[] };
       store.visionErrors = [];
@@ -103,24 +152,22 @@ test('opens, names, lists and closes several Claude sessions', async () => {
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
-    const sessions = page.getByRole('region', { name: 'Claude' }).getByRole('button', { name: /^Claude session/ });
-    // The first session is named after its conversation, in the sidebar and the tab.
+    const sessions = page.getByRole('region', { name: 'Claude', exact: true }).getByRole('button', { name: /^Claude session/ });
     await expect(sessions).toHaveCount(1, { timeout: 15_000 });
-    await expect(sessions.first()).toHaveAccessibleName('Claude session Test conversation');
-    await expect(page.locator('.dv-tab', { hasText: 'Test conversation' })).toHaveCount(1);
+    // A conversation is named after its first message, in the sidebar and the tab.
+    await sendMessage(page, 'Plan the launch');
+    await expect(sessions.first()).toHaveAccessibleName('Claude session Plan the launch');
+    await expect(page.locator('.dv-tab', { hasText: 'Plan the launch' })).toHaveCount(1);
 
-    // A second session opens as another tab next to the first, from the list or the Claude button.
     await page.getByRole('button', { name: 'New session' }).click();
     await expect(sessions).toHaveCount(2);
     await page.getByRole('button', { name: 'Open a new Claude terminal' }).click();
     await expect(sessions).toHaveCount(3);
-    await expect(page.locator('.xterm-rows')).toHaveCount(3);
 
-    // Closing one from the sidebar stops it and removes it from the list.
     await sessions.first().hover();
-    await page.getByRole('button', { name: 'Close Test conversation' }).first().click();
+    // The sidebar row's close button (the tab has one with the same name too).
+    await page.getByRole('button', { name: 'Close Plan the launch', description: 'Close session' }).click();
     await expect(sessions).toHaveCount(2);
-    await expect(page.locator('.xterm-rows')).toHaveCount(2);
     await page.screenshot({ animations: 'disabled', path: 'test-results/sessions.png' });
   } finally {
     await app.close();

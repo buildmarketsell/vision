@@ -8,9 +8,10 @@
 - Claude sessions (branch `feature/claude-sessions`): open and close as many Claude sessions as wanted (sidebar "+ New session", ⌘T), each a tab named after its conversation, a "Claude" sidebar section with live dots, ⌘L jumps to the last session. Sidebar sections now stack (Claude above Files).
 - Design polish (branch `feature/design-polish`): San Francisco type with size-specific tracking, press feedback, menus that grow from the click, Welcome card entrance, sidebar rubber-band resize, one Claude header with a Working/Ready pill, warm editor colors, card shadows and rounded pane corners fixed, Reduce Motion and Increase Contrast support, headless test mode.
 - Claude button (branch `feature/claude-button`): the sidebar's bottom button is now "Claude" and opens a new Claude terminal (⌘T); every Claude tab, header and session row uses the Claude starburst logo, pulsing while working and dimmed when stopped.
+- v0.2 Claude chat (branch `feature/v0-2-claude-chat`): each Claude tab is a chat by default (streamed formatted replies, tool rows with diffs, Allow/Deny cards, question cards, live Working card, Tasks card when Claude keeps a to-do list, Stop, permission mode picker, drop a file to @mention it, recent conversations to reopen), with a Terminal switch that resumes the same conversation. Tabs remember their conversation across restarts.
 
 ## Next
-- v0.2: custom Claude interface (stream-json). Step 1 is logging real events.
+- Notion-style redesign: flat full-window layout, tabs on top with breadcrumbs, sidebar view icons (Files with New File / New Folder / Collapse All, Claude with conversations and Account & Usage).
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).

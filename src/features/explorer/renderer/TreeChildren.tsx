@@ -2,7 +2,7 @@ import type { MouseEvent } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { DirEntry } from '../../../shared/ipc';
 import { openFile } from '../../../renderer/core/dockActions';
-import { useWorkspace } from '../../../renderer/core/workspaceStore';
+import { PATH_DRAG_TYPE, useWorkspace } from '../../../renderer/core/workspaceStore';
 import { EntryIcon } from '../../../renderer/components/fileIcons';
 import { NameInput } from './NameInput';
 import { createEntry, renameEntry, trashEntry } from './treeActions';
@@ -45,6 +45,11 @@ function TreeRow({ entry, depth, onContextMenu }: RowProps) {
       className="row"
       data-selected={isSelected}
       data-path={entry.path}
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.setData(PATH_DRAG_TYPE, entry.path);
+        event.dataTransfer.effectAllowed = 'copy';
+      }}
       style={{ paddingLeft: indent(depth), opacity: entry.isHidden ? 0.55 : 1 }}
       onClick={activate}
       onContextMenu={(event) => {
