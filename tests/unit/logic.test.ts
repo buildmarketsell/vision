@@ -4,6 +4,7 @@ import { normalizeAppState, pruneLayouts, withRecentFolder } from '../../src/mai
 import { shortcutFromEvent } from '../../src/renderer/core/commands';
 import { relativeParts } from '../../src/renderer/core/workspaceStore';
 import { cleanTitle } from '../../src/features/claude-terminal/renderer/sessionsStore';
+import { rubberBand } from '../../src/renderer/components/Sidebar';
 
 describe('isInsideFolder', () => {
   it('accepts the folder and paths inside it', () => {
@@ -89,5 +90,16 @@ describe('cleanTitle', () => {
   it('keeps "Claude" until the conversation has a real name', () => {
     expect(cleanTitle('✳ Claude Code')).toBe('Claude');
     expect(cleanTitle('')).toBe('Claude');
+  });
+});
+
+describe('rubberBand', () => {
+  it('follows at first, then resists more the further it is pulled', () => {
+    const small = rubberBand(10, 480);
+    const large = rubberBand(400, 480);
+    expect(small).toBeGreaterThan(5);
+    expect(small).toBeLessThan(10);
+    expect(large / 400).toBeLessThan(small / 10);
+    expect(rubberBand(-10, 480)).toBeCloseTo(-small);
   });
 });

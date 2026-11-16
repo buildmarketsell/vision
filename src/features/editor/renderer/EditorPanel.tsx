@@ -14,7 +14,7 @@ function Breadcrumbs({ path }: { path: string }) {
   const folder = useWorkspace((state) => state.folder);
   const parts = [baseName(folder), ...relativeParts(folder, path)];
   return (
-    <div className="flex h-10 shrink-0 items-center gap-1 overflow-hidden px-4 text-(--color-text-muted)" style={{ fontSize: 'var(--size-small)' }}>
+    <div className="caption flex h-9 shrink-0 items-center gap-1 overflow-hidden px-4">
       {parts.map((part, index) => (
         <span key={`${index}-${part}`} className="flex min-w-0 items-center gap-1">
           {index > 0 && <ChevronRight size={12} strokeWidth={1.5} color="var(--color-text-faint)" />}
@@ -28,7 +28,7 @@ function Breadcrumbs({ path }: { path: string }) {
 function Message({ title, detail, action }: { title: string; detail?: string; action?: ReactNode }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
-      <div className="font-medium">{title}</div>
+      <div className="title">{title}</div>
       {detail && <div className="max-w-sm text-(--color-text-muted)">{detail}</div>}
       {action}
     </div>

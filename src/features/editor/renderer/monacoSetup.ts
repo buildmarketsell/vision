@@ -22,7 +22,23 @@ self.MonacoEnvironment = {
 monaco.editor.defineTheme(MONACO_THEME, {
   base: 'vs',
   inherit: true,
-  rules: [],
+  // A calm, warm palette next to the orange accent (Monaco's default blue clashes with it).
+  rules: [
+    { token: '', foreground: '37352F' },
+    { token: 'comment', foreground: '9A9893', fontStyle: 'italic' },
+    { token: 'keyword', foreground: 'B4532A' },
+    { token: 'keyword.md', foreground: '37352F', fontStyle: 'bold' },
+    { token: 'string', foreground: '2F7D5B' },
+    { token: 'string.link.md', foreground: 'B4532A' },
+    { token: 'number', foreground: '3B6EA8' },
+    { token: 'type', foreground: '1F7A8C' },
+    { token: 'tag', foreground: 'B4532A' },
+    { token: 'attribute.name', foreground: '8A6D1F' },
+    { token: 'attribute.value', foreground: '2F7D5B' },
+    { token: 'delimiter', foreground: '6E6D69' },
+    { token: 'strong', fontStyle: 'bold' },
+    { token: 'emphasis', fontStyle: 'italic' },
+  ],
   colors: {
     'editor.background': theme.colors.card,
     'editor.lineHighlightBackground': theme.colors.sidebar,

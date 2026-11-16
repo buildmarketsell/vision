@@ -31,7 +31,7 @@ async function launch(userData: string): Promise<{ app: ElectronApplication; pag
   const packaged = process.env['VISION_E2E_APP'];
   const app = await electron.launch({
     ...(packaged ? { executablePath: packaged, args: [] } : { args: [projectRoot] }),
-    env: { ...cleanEnv(), VISION_USER_DATA: userData, VISION_CLAUDE_COMMAND: fakeClaude },
+    env: { ...cleanEnv(), VISION_USER_DATA: userData, VISION_CLAUDE_COMMAND: fakeClaude, VISION_HEADLESS: '1' },
   });
   const page = await app.firstWindow();
   return { app, page };
@@ -63,7 +63,7 @@ test('opens a folder, edits and saves a file, and starts Claude', async () => {
     writeFileSync(join(folder, 'from-outside.md'), 'x');
     await expect(page.getByRole('treeitem', { name: /from-outside\.md/ })).toBeVisible({ timeout: 10_000 });
 
-    await page.screenshot({ path: 'test-results/workspace.png' });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/workspace.png' });
   } finally {
     await app.close();
   }
@@ -74,7 +74,7 @@ test('shows the Welcome screen when no folder is open', async () => {
   const { app, page } = await launch(userData);
   try {
     await expect(page.getByRole('button', { name: 'Open Folder' })).toBeVisible({ timeout: 15_000 });
-    await page.screenshot({ path: 'test-results/welcome.png' });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/welcome.png' });
   } finally {
     await app.close();
   }
@@ -119,7 +119,7 @@ test('opens, names, lists and closes several Claude sessions', async () => {
     await page.getByRole('button', { name: 'Close Test conversation' }).first().click();
     await expect(sessions).toHaveCount(1);
     await expect(page.locator('.xterm-rows')).toHaveCount(1);
-    await page.screenshot({ path: 'test-results/sessions.png' });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/sessions.png' });
   } finally {
     await app.close();
   }

@@ -14,6 +14,8 @@ app.setName(APP_NAME);
 // Tests run with their own, throwaway settings folder.
 const testUserData = process.env['VISION_USER_DATA'];
 if (testUserData) app.setPath('userData', testUserData);
+// Background mode for tests: no Dock icon and no visible windows.
+if (process.env['VISION_HEADLESS'] === '1') app.dock?.hide();
 
 let stateFlushed = false;
 

@@ -40,12 +40,12 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
     <div
       ref={ref}
       role="menu"
-      className="fixed z-50 min-w-44 p-1"
+      className="menu fixed z-50 min-w-44 p-1"
       style={{
         left,
         top,
+        transformOrigin: `${x - left}px ${y - top}px`,
         background: 'var(--color-card)',
-        border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-control)',
         boxShadow: 'var(--shadow-popover)',
       }}

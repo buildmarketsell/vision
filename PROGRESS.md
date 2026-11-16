@@ -6,6 +6,7 @@
 - v0.1 (branch `feature/v0-1-skeleton`): window with wallpaper and floating cards (Notion-style sidebar, clonk-style Claude pane), Welcome screen with recent folders, open any folder (Cmd+O, drag a folder onto the window, one folder per window, Cmd+Shift+N), file tree (create, rename, Move to Trash, live updates, hidden files toggle), Monaco editor (Cmd+S, unsaved dot, reload or keep edits when the file changes on disk, binary and >5 MB files refused), split panes with tabs (dockview), Claude terminal (runs `claude` in the folder, restart, resize), layout and windows restored on relaunch, `.app` build. Unit tests (12) and end-to-end tests (3) pass on the dev build and the packaged app.
 
 - Claude sessions (branch `feature/claude-sessions`): open and close as many Claude sessions as wanted (sidebar "+ New session", ⌘T), each a tab named after its conversation, a "Claude" sidebar section with live dots, ⌘L jumps to the last session. Sidebar sections now stack (Claude above Files).
+- Design polish (branch `feature/design-polish`): San Francisco type with size-specific tracking, press feedback, menus that grow from the click, Welcome card entrance, sidebar rubber-band resize, one Claude header with a Working/Ready pill, warm editor colors, card shadows and rounded pane corners fixed, Reduce Motion and Increase Contrast support, headless test mode.
 
 ## Next
 - v0.2: custom Claude interface (stream-json). Step 1 is logging real events.

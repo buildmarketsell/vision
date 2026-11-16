@@ -28,9 +28,7 @@ function useActiveClaudeTab(): string | null {
 }
 
 function StatusDot({ session }: { session: ClaudeSession }) {
-  if (session.status === 'running') {
-    return <span className="live-dot shrink-0" style={session.busy ? undefined : { animation: 'none', opacity: 0.45 }} />;
-  }
+  if (session.status === 'running') return <span className="live-dot shrink-0" data-busy={session.busy} />;
   const color = session.status === 'starting' ? 'var(--color-text-faint)' : 'var(--color-danger)';
   return <span className="shrink-0 rounded-full" style={{ width: 6, height: 6, background: color, opacity: 0.6 }} />;
 }
@@ -77,9 +75,15 @@ export function SessionsView() {
 
   return (
     <div className="flex max-h-[40%] shrink-0 flex-col">
-      <div className="flex items-center justify-between pr-2">
+      <div className="group flex items-center justify-between pr-2">
         <div className="section-label">Claude</div>
-        <button className="icon-button" title="New Claude session (⌘T)" aria-label="New Claude session" onClick={newClaudeSession}>
+        <button
+          className="icon-button opacity-0 group-hover:opacity-100 focus:opacity-100"
+          style={{ width: 22, height: 22 }}
+          title="New Claude session (⌘T)"
+          aria-label="New Claude session"
+          onClick={newClaudeSession}
+        >
           <Plus {...ICON} />
         </button>
       </div>
@@ -93,6 +97,7 @@ export function SessionsView() {
             <Plus {...ICON} />
           </span>
           New session
+          <span className="keycap ml-auto">⌘T</span>
         </button>
       </div>
     </div>

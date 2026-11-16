@@ -20,6 +20,8 @@ const closedListeners: WindowClosedListener[] = [];
 let isQuitting = false;
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
+/** Background mode for tests: windows render but are never shown. */
+const HEADLESS = process.env['VISION_HEADLESS'] === '1';
 const BACKGROUND_COLOR = '#E8EEF0';
 
 export function setQuitting(value: boolean): void {
@@ -118,7 +120,7 @@ export function createWindow(folder: string | null, bounds: WindowBounds | null 
   contexts.set(webContentsId, context);
   lockDownNavigation(window);
   watchWindowEvents(context, webContentsId);
-  window.once('ready-to-show', () => window.show());
+  if (!HEADLESS) window.once('ready-to-show', () => window.show());
   loadRenderer(window);
   saveSession();
   return window;

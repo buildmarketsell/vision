@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 /* Features live outside src/renderer, so Tailwind must scan them too. */
 @source '../features';
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/600.css';
-@import '@fontsource/jetbrains-mono/400.css';
 @import 'dockview-react/dist/styles/dockview.css';
 @import '@xterm/xterm/css/xterm.css';
 
-/* Colors and sizes come from theme.ts as CSS variables (applyThemeVariables). */
+/*
+ * Colors, sizes and motion come from theme.ts as CSS variables (applyThemeVariables).
+ * Principles: respond on press (not release), animate only transform and opacity,
+ * critically damped easing (no overshoot), calmer everything under Reduce Motion.
+ */
 
 html,
 body,
@@ -21,9 +21,12 @@ body,
 body {
   font-family: var(--font-ui);
   font-size: var(--size-base);
+  line-height: 1.4;
+  letter-spacing: -0.003em;
   color: var(--color-text);
   background: var(--color-window-background);
   -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
   user-select: none;
 }
 
@@ -47,12 +50,74 @@ body {
   background-position: center;
 }
 
+/* ---- Type scale: tracking is size-specific (tighter as text grows). ---- */
+
+.title {
+  font-size: var(--size-title);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.display {
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.022em;
+}
+
+.caption {
+  font-size: var(--size-small);
+  letter-spacing: 0.006em;
+  color: var(--color-text-muted);
+}
+
+.section-label {
+  font-size: var(--size-small);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--color-text-faint);
+  padding: var(--space-4) var(--space-3) var(--space-1);
+}
+
+/* ---- Surfaces ---- */
+
 .card {
   background: var(--color-card);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+}
+
+@keyframes materialize {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.enter {
+  animation: materialize var(--duration-base) var(--ease) both;
+}
+
+/* ---- Controls: feedback on press, instantly. ---- */
+
+.row,
+.icon-button,
+.button-primary,
+.button-secondary,
+.pill-button {
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.row:active,
+.icon-button:active,
+.button-primary:active,
+.button-secondary:active,
+.pill-button:active {
+  transform: scale(0.97);
+  transition-duration: 0ms;
 }
 
 .row {
@@ -66,19 +131,18 @@ body {
   cursor: default;
 }
 
+.row:active {
+  transform: none;
+  background: var(--color-row-pressed);
+}
+
 .row:hover {
   background: var(--color-row-hover);
 }
 
 .row[data-selected='true'] {
   background: var(--color-row-selected);
-}
-
-.section-label {
-  font-size: var(--size-small);
   font-weight: 500;
-  color: var(--color-text-faint);
-  padding: var(--space-4) var(--space-3) var(--space-1);
 }
 
 .icon-button {
@@ -96,16 +160,21 @@ body {
   color: var(--color-text);
 }
 
+.icon-button:active {
+  background: var(--color-row-pressed);
+}
+
 .button-primary {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  height: 36px;
+  height: 32px;
   padding: 0 var(--space-4);
   border-radius: var(--radius-control);
   background: var(--color-accent);
   color: white;
   font-weight: 500;
+  box-shadow: var(--shadow-control);
 }
 
 .button-primary:hover {
@@ -116,29 +185,58 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  height: 32px;
+  height: 28px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-control);
-  border: 1px solid var(--color-border);
   background: var(--color-card);
   color: var(--color-text);
+  box-shadow: var(--shadow-control);
 }
 
 .button-secondary:hover {
+  background: var(--color-sidebar);
+}
+
+.pill-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+  font-weight: 500;
+}
+
+.pill-button:hover {
+  background: #fdfdfc;
+}
+
+.keycap {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: var(--color-text-faint);
   background: var(--color-row-hover);
 }
 
 .text-input {
   width: 100%;
-  height: 24px;
+  height: 22px;
   padding: 0 var(--space-1);
   border: 1px solid var(--color-accent);
   border-radius: 4px;
-  outline: none;
+  outline: 3px solid var(--color-accent-soft);
   font: inherit;
   color: var(--color-text);
   background: var(--color-card);
   user-select: text;
+}
+
+.chevron {
+  transition: transform var(--duration-base) var(--ease);
 }
 
 .spinner {
@@ -154,6 +252,11 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Menus grow out of the point that was clicked (transform-origin set inline). */
+.menu {
+  animation: materialize var(--duration-fast) var(--ease) both;
 }
 
 /* ---- Dock (panes and tabs): each group is a floating card, tabs look like Notion's. ---- */
@@ -180,17 +283,28 @@ body {
   --dv-icon-hover-background-color: var(--color-row-hover);
   --dv-scrollbar-background-color: var(--color-row-selected);
   --dv-paneview-active-outline-color: transparent;
-  --dv-tab-font-size: 13px;
+  --dv-tab-font-size: var(--size-base);
   --dv-border-radius: var(--radius-card);
   height: 100%;
 }
 
+/* Dockview clips its split containers, which cut off the cards' shadows. */
+.vision-dock .dv-split-view-container,
+.vision-dock .dv-view {
+  overflow: visible;
+}
+
 .vision-dock .dv-groupview {
   border-radius: var(--radius-card);
-  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
   overflow: hidden;
   background: var(--color-card);
+}
+
+/* Tabs that stay alive (Claude, editors) render on an overlay above the pane: round it too. */
+.vision-dock .dv-render-overlay {
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+  overflow: hidden;
 }
 
 .vision-dock .dv-tabs-and-actions-container {
@@ -203,18 +317,18 @@ body {
   margin: 6px 2px;
   padding: 0;
   min-width: 0;
+  transition: background-color var(--duration-fast) var(--ease);
 }
 
-.vision-dock .dv-groupview:focus-within .dv-tabs-and-actions-container,
-.vision-dock .dv-groupview.dv-active-group .dv-tabs-and-actions-container {
-  border-bottom-color: var(--color-border);
+.vision-dock .dv-tab:not(.dv-active-tab):hover {
+  background: var(--color-row-hover);
 }
 
 /* ---- Terminal ---- */
 
 .terminal-host .xterm {
   height: 100%;
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3) var(--space-3);
 }
 
 .terminal-host .xterm-viewport {
@@ -226,11 +340,66 @@ body {
   height: 6px;
   border-radius: 50%;
   background: var(--color-accent);
-  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.live-dot[data-busy='true'] {
+  animation: pulse 1.4s var(--ease) infinite;
+}
+
+.live-dot[data-busy='false'] {
+  opacity: 0.45;
 }
 
 @keyframes pulse {
   50% {
-    opacity: 0.35;
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+}
+
+/* ---- Accessibility ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+  }
+
+  .enter,
+  .menu {
+    animation-name: fade;
+  }
+
+  .live-dot[data-busy='true'] {
+    animation: none;
+  }
+
+  .row:active,
+  .icon-button:active,
+  .button-primary:active,
+  .button-secondary:active,
+  .pill-button:active {
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    /* !important: the theme sets these inline, which would otherwise win. */
+    --color-border: rgba(0, 0, 0, 0.3) !important;
+    --color-text-faint: #5f5e5a !important;
+    --color-text-muted: #4a4945 !important;
+  }
+
+  .card,
+  .vision-dock .dv-groupview {
+    outline: 1px solid rgba(0, 0, 0, 0.35);
   }
 }

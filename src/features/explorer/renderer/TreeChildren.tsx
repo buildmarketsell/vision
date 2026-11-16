@@ -60,10 +60,11 @@ function TreeRow({ entry, depth, onContextMenu }: RowProps) {
       <span className="flex w-3 shrink-0 justify-center">
         {entry.isDirectory && (
           <ChevronRight
+            className="chevron"
             size={12}
             strokeWidth={2}
             color="var(--color-text-faint)"
-            style={{ transform: isOpen ? 'rotate(90deg)' : undefined, transition: 'transform 120ms' }}
+            style={{ transform: isOpen ? 'rotate(90deg)' : undefined }}
           />
         )}
       </span>

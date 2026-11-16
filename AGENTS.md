@@ -28,7 +28,16 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 3. New IPC: add the channel to `IPC` and the method to `VisionApi` in `src/shared/ipc.ts`, then to `src/preload/index.ts`. Validate every argument in main; paths must pass `isInsideFolder`.
 4. Features never import each other's files. Shared things go in `src/renderer/core` or `src/renderer/components`.
 
+## Design rules (Apple principles + Dan's coding rules)
+- System font (San Francisco) and SF Mono; type classes `.title`, `.display`, `.caption`, `.section-label` carry size-specific tracking. Don't add fonts.
+- Feedback on press (`:active`), animate only transform and opacity, easing `var(--ease)` (critically damped, no overshoot). Every animation has a calmer version under `prefers-reduced-motion`.
+- Solid surfaces only: no blur or glass (coding rules ban glassmorphism). Depth comes from `--shadow-card`, `--shadow-control`, `--shadow-popover`.
+- Nested corners are concentric: inner radius = outer radius minus the inset.
+- Menus and popovers grow from where they were opened (`transform-origin`).
+
 ## Gotchas
+- Automated runs (tests, screenshots) must set `VISION_HEADLESS=1`: windows render but never show and there is no Dock icon, so nothing pops up on Dan's screen. The e2e tests already do.
+- Tabs with `renderer: 'always'` (Claude, editors) draw on dockview's overlay layer, not inside the pane; style `.dv-render-overlay` too (its corners are rounded in styles.css).
 - Tailwind scans `src/features` through `@source` in `styles.css`; keep that line or feature styles vanish.
 - When run from inside VS Code, `ELECTRON_RUN_AS_NODE=1` is set and Electron starts as plain Node. The tests and `npm run dev` remove it; for any other Electron command, run `unset ELECTRON_RUN_AS_NODE` first.
 - Never touch `window.webContents` after a window closes (it throws); use `WindowContext.webContents`.
