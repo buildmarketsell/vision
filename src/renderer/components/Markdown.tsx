@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { marked } from 'marked';
+import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { convertEmbeds, imageUrl, resolveImagePath } from '../../shared/markdownImages';
 
 // Links open in the browser (the main process routes new windows there).
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
@@ -10,8 +11,28 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   }
 });
 
-/** Markdown as formatted text: Claude's replies and the .md preview. HTML in the source is sanitized. */
-export function Markdown({ text, className = '' }: { text: string; className?: string }) {
-  const html = useMemo(() => DOMPurify.sanitize(marked.parse(text, { async: false, gfm: true, breaks: false })), [text]);
+// DOMPurify's default list plus vision-file:, the scheme local images are served on.
+const ALLOWED_URI = /^(?:(?:(?:f|ht)tps?|mailto|tel|vision-file):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i;
+
+function toHtml(text: string, baseDir: string | undefined): string {
+  const marked = new Marked({
+    gfm: true,
+    breaks: false,
+    walkTokens: (token) => {
+      if (token.type !== 'image' || !baseDir) return;
+      const path = resolveImagePath(baseDir, token.href);
+      if (path) token.href = imageUrl(path);
+    },
+  });
+  const source = baseDir ? convertEmbeds(text) : text;
+  return DOMPurify.sanitize(marked.parse(source, { async: false }), { ALLOWED_URI_REGEXP: ALLOWED_URI });
+}
+
+/**
+ * Markdown as formatted text: Claude's replies and the .md preview. HTML in the source is sanitized.
+ * With `baseDir` (the note's folder), relative images and Obsidian `![[embeds]]` show the local file.
+ */
+export function Markdown({ text, className = '', baseDir }: { text: string; className?: string; baseDir?: string }) {
+  const html = useMemo(() => toHtml(text, baseDir), [text, baseDir]);
   return <div className={`markdown ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;
 }

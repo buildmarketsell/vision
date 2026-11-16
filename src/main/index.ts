@@ -7,6 +7,7 @@ import { resolveShellPath } from './shellEnv';
 import { flushAppState, loadAppState } from './stateStore';
 import { createWindow, restoreSession, setQuitting } from './windows';
 import { registerFsHandlers } from './workspace/fsHandlers';
+import { registerImageProtocol, registerImageScheme } from './workspace/imageProtocol';
 import { killAllClaudeSessions } from '../features/claude-terminal/main/ptyHandlers';
 import { stopAllChats } from '../features/claude-terminal/main/chatProcess';
 
@@ -18,6 +19,8 @@ if (testUserData) app.setPath('userData', testUserData);
 // Background mode for tests: no Dock icon and no visible windows.
 if (process.env['VISION_HEADLESS'] === '1') app.dock?.hide();
 
+registerImageScheme();
+
 let stateFlushed = false;
 
 app.whenReady().then(() => {
@@ -25,6 +28,7 @@ app.whenReady().then(() => {
   void resolveShellPath();
   registerAppHandlers();
   registerFsHandlers();
+  registerImageProtocol();
   for (const registerFeature of mainFeatures) registerFeature();
   buildAppMenu();
   restoreSession();

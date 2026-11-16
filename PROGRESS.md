@@ -10,6 +10,8 @@
 - Claude button (branch `feature/claude-button`): the sidebar's bottom button is now "Claude" and opens a new Claude terminal (⌘T); every Claude tab, header and session row uses the Claude starburst logo, pulsing while working and dimmed when stopped.
 - v0.2 Claude chat (branch `feature/v0-2-claude-chat`): each Claude tab is a chat by default (streamed formatted replies, tool rows with diffs, Allow/Deny cards, question cards, live Working card, Tasks card when Claude keeps a to-do list, Stop, permission mode picker, drop a file to @mention it, recent conversations to reopen), with a Terminal switch that resumes the same conversation. Tabs remember their conversation across restarts.
 - Markdown preview (on `feature/notion-layout`, 2026-11-16): `.md` files open as a formatted page (Preview) with a Preview / Edit switch in the breadcrumb row; Edit is the Monaco editor. Shared renderer in `src/renderer/components/Markdown.tsx`, page styles in `styles/markdown-document.css`.
+- Images in Markdown (2026-11-17): Preview shows relative images, Obsidian `![[embeds]]` and web images. In Edit, paste a screenshot or drop image files (Finder or the sidebar) and the link is inserted at the cursor; images from outside the folder are saved to `images/` next to the note as `<note>-<date-time>.png`. Local images load through the `vision-file://` scheme, which serves only image files inside an open folder.
+- Zoom (2026-11-17): ⌘= / ⌘+ zoom in, ⌘− out, ⌘0 reset, in the View menu; all windows, remembered in `state.json` (`zoomLevel`).
 
 ## Next
 - Notion-style redesign (branch `feature/notion-layout`, Dan chose "Like Notion" on 2026-11-16; reference: his Notion app screenshot):

@@ -1,5 +1,5 @@
 import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test';
-import { mkdtempSync, readFileSync, realpathSync, writeFileSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -78,6 +78,41 @@ test('opens a folder, edits and saves a file, and chats with Claude', async () =
     writeFileSync(join(folder, 'from-outside.md'), 'x');
     await expect(page.getByRole('treeitem', { name: /from-outside\.md/ })).toBeVisible({ timeout: 10_000 });
     await page.screenshot({ animations: 'disabled', path: 'test-results/workspace.png' });
+  } finally {
+    await app.close();
+  }
+});
+
+const DOT_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+test('shows images in a Markdown preview and saves pasted images next to the note', async () => {
+  const { folder, userData } = makeFixture();
+  mkdirSync(join(folder, 'images'));
+  writeFileSync(join(folder, 'images', 'dot.png'), Buffer.from(DOT_PNG, 'base64'));
+  writeFileSync(join(folder, 'dot two.png'), Buffer.from(DOT_PNG, 'base64'));
+  writeFileSync(join(folder, 'pics.md'), '# Pics\n\n![](images/dot.png)\n\n![[dot two.png]]\n');
+  const { app, page } = await launch(userData);
+  try {
+    await page.getByRole('treeitem', { name: /pics\.md/ }).click();
+    const images = page.locator('.markdown-document img');
+    await expect(images).toHaveCount(2, { timeout: 15_000 });
+    await expect.poll(() => images.evaluateAll((list) => list.map((img) => (img as HTMLImageElement).naturalWidth))).toEqual([1, 1]);
+
+    await page.getByRole('button', { name: 'Edit' }).click();
+    const editor = page.locator('.monaco-editor').first();
+    await expect(editor).toBeVisible({ timeout: 15_000 });
+    await editor.click();
+    await page.keyboard.press('Meta+End');
+    await page.locator('.monaco-editor textarea').first().evaluate(async (target, base64) => {
+      const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+      const data = new DataTransfer();
+      data.items.add(new File([bytes], 'image.png', { type: 'image/png' }));
+      target.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+    }, DOT_PNG);
+    await expect.poll(() => readdirSync(join(folder, 'images')).filter((name) => name.startsWith('pics-')).length).toBe(1);
+    await expect(page.getByLabel('Unsaved changes')).toBeVisible();
+    await page.keyboard.press('Meta+s');
+    await expect.poll(() => readFileSync(join(folder, 'pics.md'), 'utf8')).toMatch(/!\[\]\(images\/pics-\d{8}-\d{6}\.png\)/);
   } finally {
     await app.close();
   }

@@ -2,6 +2,7 @@ import { shell } from 'electron';
 import { open, readdir, readFile, mkdir, rename, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { BINARY_SNIFF_BYTES, MAX_EDITABLE_FILE_BYTES } from '../../shared/app';
+import { IMAGES_FOLDER, pastedImageName } from '../../shared/markdownImages';
 import type { DirEntry, ReadFileResult, Result } from '../../shared/ipc';
 import { looksBinary, validateEntryName } from '../paths';
 
@@ -87,6 +88,27 @@ export async function writeTextFile(path: string, content: string): Promise<Resu
   try {
     await writeFile(path, content, 'utf8');
     return { ok: true, value: undefined };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/** Saves a pasted image in the `images/` folder next to the note and returns its path. Never overwrites. */
+export async function saveImageNextTo(notePath: string, bytes: Uint8Array, ext: string): Promise<Result<string>> {
+  try {
+    const dir = join(dirname(notePath), IMAGES_FOLDER);
+    await mkdir(dir, { recursive: true });
+    const name = pastedImageName(basename(notePath), new Date(), ext);
+    for (let attempt = 1; attempt < 100; attempt += 1) {
+      const target = join(dir, attempt === 1 ? name : name.replace(`.${ext}`, `-${attempt}.${ext}`));
+      try {
+        await writeFile(target, bytes, { flag: 'wx' });
+        return { ok: true, value: target };
+      } catch (error) {
+        if (!(error && typeof error === 'object' && 'code' in error && error.code === 'EEXIST')) throw error;
+      }
+    }
+    return { ok: false, error: 'Could not find a free file name.' };
   } catch (error) {
     return fail(error);
   }

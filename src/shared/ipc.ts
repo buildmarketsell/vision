@@ -69,6 +69,8 @@ export interface VisionApi {
     listDir(path: string): Promise<Result<DirEntry[]>>;
     readFile(path: string): Promise<ReadFileResult>;
     writeFile(path: string, content: string): Promise<Result<void>>;
+    /** Saves image bytes in the `images/` folder next to a note; returns the new file's path. */
+    saveImage(notePath: string, bytes: Uint8Array, ext: string): Promise<Result<string>>;
     createFile(parentDir: string, name: string): Promise<Result<string>>;
     createDir(parentDir: string, name: string): Promise<Result<string>>;
     rename(path: string, newName: string): Promise<Result<string>>;
@@ -112,6 +114,7 @@ export const IPC = {
   listDir: 'fs:listDir',
   readFile: 'fs:readFile',
   writeFile: 'fs:writeFile',
+  saveImage: 'fs:saveImage',
   createFile: 'fs:createFile',
   createDir: 'fs:createDir',
   rename: 'fs:rename',

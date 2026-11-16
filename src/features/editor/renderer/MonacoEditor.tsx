@@ -1,4 +1,7 @@
+import { useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
+import type { editor as MonacoNs } from 'monaco-editor';
+import { enableImagePaste } from './imagePaste';
 import { MONACO_THEME } from './monacoSetup';
 import { theme } from '../../../renderer/theme';
 import { useEditor } from './editorStore';
@@ -10,8 +13,17 @@ interface MonacoEditorProps {
 
 /** Loaded lazily: Monaco is the heaviest part of the app. */
 export default function MonacoEditor({ path, value }: MonacoEditorProps) {
+  const cleanupRef = useRef<() => void>(() => {});
+  const markdown = /\.(md|markdown)$/i.test(path);
+
+  const onMount = (editor: MonacoNs.IStandaloneCodeEditor) => {
+    if (markdown) cleanupRef.current = enableImagePaste(editor, path);
+  };
+  useEffect(() => () => cleanupRef.current(), []);
+
   return (
     <Editor
+      onMount={onMount}
       path={path}
       value={value}
       theme={MONACO_THEME}

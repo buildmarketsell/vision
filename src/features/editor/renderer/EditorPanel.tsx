@@ -3,7 +3,7 @@ import type { IDockviewPanelProps } from 'dockview-react';
 import { ChevronRight, Code, Eye } from 'lucide-react';
 import { Markdown } from '../../../renderer/components/Markdown';
 import type { TabParams } from '../../../renderer/core/feature';
-import { relativeParts, useWorkspace, baseName } from '../../../renderer/core/workspaceStore';
+import { relativeParts, useWorkspace, baseName, parentPath } from '../../../renderer/core/workspaceStore';
 import { reloadFromDisk, useEditor, type Buffer } from './editorStore';
 
 const MonacoEditor = lazy(async () => {
@@ -114,7 +114,7 @@ function EditorBody({ path, buffer, view }: { path: string; buffer: Buffer | und
       <DiskBanners path={path} buffer={buffer} />
       {view === 'preview' && (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <Markdown text={buffer.current} className="markdown-document" />
+          <Markdown text={buffer.current} className="markdown-document" baseDir={parentPath(path)} />
         </div>
       )}
       <div className="min-h-0 flex-1" hidden={view === 'preview'}>

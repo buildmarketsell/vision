@@ -2,7 +2,8 @@ import { dialog, ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { IPC, type Result } from '../../shared/ipc';
 import { isInsideFolder } from '../paths';
 import { onWindowClosed, windowContextFor, type WindowContext } from '../windows';
-import { createEntry, listDirectory, moveToTrash, readTextFile, renameEntry, writeTextFile } from './fileSystem';
+import { IMAGE_EXTENSIONS, MAX_IMAGE_BYTES } from '../../shared/markdownImages';
+import { createEntry, listDirectory, moveToTrash, readTextFile, renameEntry, saveImageNextTo, writeTextFile } from './fileSystem';
 import { FolderWatcher } from './watcher';
 
 const watchers = new Map<WindowContext, FolderWatcher>();
@@ -53,6 +54,14 @@ function registerWriteHandlers(): void {
   ipcMain.handle(IPC.writeFile, (event, path: unknown, content: unknown) =>
     guardPaths(event, [path]) && isText(content) ? writeTextFile(path as string, content) : OUTSIDE,
   );
+  ipcMain.handle(IPC.saveImage, (event, notePath: unknown, bytes: unknown, ext: unknown) => {
+    if (!guardPaths(event, [notePath])) return OUTSIDE;
+    if (!(bytes instanceof Uint8Array) || bytes.byteLength === 0 || bytes.byteLength > MAX_IMAGE_BYTES) {
+      return { ok: false, error: 'The image is empty or larger than 25 MB.' };
+    }
+    if (!isText(ext) || !(IMAGE_EXTENSIONS as readonly string[]).includes(ext)) return { ok: false, error: 'That is not an image type VISION knows.' };
+    return saveImageNextTo(notePath as string, bytes, ext);
+  });
   ipcMain.handle(IPC.createFile, (event, parent: unknown, name: unknown) =>
     guardPaths(event, [parent]) && isText(name) ? createEntry(parent as string, name, 'file') : OUTSIDE,
   );
