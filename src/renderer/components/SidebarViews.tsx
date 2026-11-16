@@ -28,27 +28,37 @@ export function useActiveView(views: SidebarView[]): [string, (id: string) => vo
 }
 
 export function ViewSwitcher({ views, active, onSelect }: { views: SidebarView[]; active: string; onSelect: (id: string) => void }) {
+  const activeIndex = Math.max(0, views.findIndex((view) => view.id === active));
   return (
-    <div role="tablist" aria-label="Sidebar views" className="flex shrink-0 items-center gap-1 px-2 pb-1">
-      {views.map((view) => {
-        const selected = view.id === active;
-        return (
-          <button
-            key={view.id}
-            role="tab"
-            id={`view-tab-${view.id}`}
-            aria-controls={`view-${view.id}`}
-            aria-selected={selected}
-            aria-label={view.title}
-            title={view.title}
-            className="view-tab"
-            onClick={() => onSelect(view.id)}
+    <div className="shrink-0 px-3 pb-2">
+      <div className="view-tray">
+        <div role="tablist" aria-label="Sidebar views" className="view-bar">
+          <span
+            className="view-indicator"
+            aria-hidden
+            style={{ transform: `translateX(calc(${activeIndex} * (var(--view-button) + var(--view-gap))))` }}
           >
-            {view.icon}
-            {selected && <span aria-hidden>{view.title}</span>}
-          </button>
-        );
-      })}
+            <span className="view-ring" />
+            <span className="view-gap" />
+            <span className="view-face" />
+          </span>
+          {views.map((view) => (
+            <button
+              key={view.id}
+              role="tab"
+              id={`view-tab-${view.id}`}
+              aria-controls={`view-${view.id}`}
+              aria-selected={view.id === active}
+              aria-label={view.title}
+              title={view.title}
+              className="view-tab"
+              onClick={() => onSelect(view.id)}
+            >
+              {view.icon}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

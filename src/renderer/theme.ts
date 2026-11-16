@@ -30,6 +30,9 @@ export const theme = {
     terminalText: '#ECE9E4',
     terminalMuted: '#8F8A84',
     focusRing: 'rgba(242, 107, 58, 0.45)',
+    /** Sidebar view switcher: recessed tray and the spinning ring around the active view. */
+    trayGradient: 'linear-gradient(180deg, #DCDCDF 0%, #D3D3D7 50%, #CCCCD1 100%)',
+    ringGradient: 'conic-gradient(from 220deg, #F26B3A 0%, #F7A072 18%, #FFD8B8 36%, #F7A072 54%, #D97757 72%, #E35A28 86%, #F26B3A 100%)',
   },
   radius: {
     card: '16px',

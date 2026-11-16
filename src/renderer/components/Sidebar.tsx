@@ -6,10 +6,9 @@ import { allSidebarViews } from '../core/featureIndex';
 import { baseName, useWorkspace } from '../core/workspaceStore';
 import { theme } from '../theme';
 import { useActiveView, ViewPanels, ViewSwitcher } from './SidebarViews';
-import { AppMark } from './Welcome';
 
 /** Room for the macOS traffic lights at the start of the top row. */
-const TRAFFIC_LIGHTS_WIDTH = 76;
+const TRAFFIC_LIGHTS_WIDTH = 84;
 const RUBBER_BAND = 0.55;
 
 /** Past a limit the sidebar keeps following the pointer, but with growing resistance. */
@@ -98,7 +97,6 @@ export function Sidebar() {
       }}
     >
       <div className="drag-region flex h-(--title-bar-height) shrink-0 items-center gap-2 pr-3" style={{ paddingLeft: TRAFFIC_LIGHTS_WIDTH }}>
-        <AppMark size={20} />
         <span className="title truncate" title={folder}>{baseName(folder)}</span>
       </div>
       <ViewSwitcher views={views} active={activeView} onSelect={selectView} />
