@@ -1,5 +1,6 @@
 import { useState, type PointerEvent } from 'react';
-import { FolderOpen, Sparkles } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
+import { ClaudeLogo } from './ClaudeLogo';
 import { runCommand } from '../core/commands';
 import { allSidebarViews } from '../core/featureIndex';
 import { baseName, useWorkspace } from '../core/workspaceStore';
@@ -62,10 +63,10 @@ function ResizeHandle({ onPreview }: { onPreview: (width: number | null) => void
 function BottomBar() {
   return (
     <div className="flex shrink-0 items-center gap-2 p-3">
-      <button className="pill-button flex-1" onClick={() => runCommand('claude.focus')}>
-        <Sparkles size={15} strokeWidth={1.75} color="var(--color-accent)" />
-        Ask Claude
-        <span className="keycap">⌘L</span>
+      <button className="pill-button flex-1" aria-label="Open a new Claude terminal" title="Open a new Claude terminal (⌘T)" onClick={() => runCommand('claude.new')}>
+        <ClaudeLogo size={16} />
+        Claude
+        <span className="keycap">⌘T</span>
       </button>
       <button
         className="pill-button w-9"
@@ -79,7 +80,7 @@ function BottomBar() {
   );
 }
 
-/** Notion-style sidebar: folder name on top, feature sections stacked (Claude, Files), "Ask Claude" at the bottom. */
+/** Notion-style sidebar: folder name on top, feature sections stacked (Claude, Files), a Claude button at the bottom. */
 export function Sidebar() {
   const folder = useWorkspace((state) => state.folder);
   const storedWidth = useWorkspace((state) => state.sidebarWidth);

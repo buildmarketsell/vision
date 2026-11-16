@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import type { IDockviewPanelProps } from 'dockview-react';
-import { RotateCw, Sparkles } from 'lucide-react';
+import { RotateCw } from 'lucide-react';
+import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
 import type { TabParams } from '../../../renderer/core/feature';
 import { useClaudeSessions } from './sessionsStore';
 import { useClaudeTerminal, type ClaudeStatus } from './useClaudeTerminal';
@@ -10,17 +11,6 @@ function statusLabel(status: ClaudeStatus, busy: boolean): string {
   if (status.kind === 'running') return busy ? 'Working' : 'Ready';
   if (status.kind === 'exited') return 'Stopped';
   return status.notInstalled ? 'Not installed' : 'Did not start';
-}
-
-export function ClaudeIcon({ size = 28 }: { size?: number }) {
-  return (
-    <span
-      className="flex shrink-0 items-center justify-center"
-      style={{ width: size, height: size, borderRadius: size * 0.3, background: 'var(--color-accent)' }}
-    >
-      <Sparkles size={size * 0.55} strokeWidth={2} color="white" />
-    </span>
-  );
 }
 
 /** Status pill: pulsing orange "Working" while Claude prints, calm gray otherwise. */
@@ -39,7 +29,7 @@ function StatusPill({ label, busy, live }: { label: string; busy: boolean; live:
 function Header({ title, label, busy, live, onRestart }: { title: string; label: string; busy: boolean; live: boolean; onRestart: () => void }) {
   return (
     <div className="flex h-12 shrink-0 items-center gap-3 pr-2 pl-4">
-      <ClaudeIcon size={24} />
+      <ClaudeLogo size={22} busy={busy} dim={!live} />
       <span className="title min-w-0 truncate">{title}</span>
       <StatusPill label={label} busy={busy} live={live} />
       <span className="flex-1" />

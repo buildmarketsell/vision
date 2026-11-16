@@ -7,6 +7,7 @@
 
 - Claude sessions (branch `feature/claude-sessions`): open and close as many Claude sessions as wanted (sidebar "+ New session", ⌘T), each a tab named after its conversation, a "Claude" sidebar section with live dots, ⌘L jumps to the last session. Sidebar sections now stack (Claude above Files).
 - Design polish (branch `feature/design-polish`): San Francisco type with size-specific tracking, press feedback, menus that grow from the click, Welcome card entrance, sidebar rubber-band resize, one Claude header with a Working/Ready pill, warm editor colors, card shadows and rounded pane corners fixed, Reduce Motion and Increase Contrast support, headless test mode.
+- Claude button (branch `feature/claude-button`): the sidebar's bottom button is now "Claude" and opens a new Claude terminal (⌘T); every Claude tab, header and session row uses the Claude starburst logo, pulsing while working and dimmed when stopped.
 
 ## Next
 - v0.2: custom Claude interface (stream-json). Step 1 is logging real events.

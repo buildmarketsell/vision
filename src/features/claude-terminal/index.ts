@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import type { Feature } from '../../renderer/core/feature';
-import { ClaudeIcon, ClaudePanel } from './renderer/ClaudePanel';
+import { ClaudeLogo } from '../../renderer/components/ClaudeLogo';
+import { ClaudePanel } from './renderer/ClaudePanel';
 import { SessionsView } from './renderer/SessionsView';
 import { CLAUDE_TAB, DEFAULT_TITLE, focusOrStartClaude, newClaudeSession } from './renderer/sessionsStore';
 import { focusClaudeTerminal } from './renderer/useClaudeTerminal';
@@ -15,7 +16,7 @@ export const claudeTerminalFeature: Feature = {
       component: ClaudePanel,
       closable: true,
       ownGroup: true,
-      icon: () => createElement(ClaudeIcon, { size: 16 }),
+      icon: () => createElement(ClaudeLogo, { size: 15 }),
     },
   ],
   defaultPanels: [{ id: 'claude:first', tabType: CLAUDE_TAB, title: DEFAULT_TITLE }],

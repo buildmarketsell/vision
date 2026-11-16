@@ -109,16 +109,18 @@ test('opens, names, lists and closes several Claude sessions', async () => {
     await expect(sessions.first()).toHaveAccessibleName('Claude session Test conversation');
     await expect(page.locator('.dv-tab', { hasText: 'Test conversation' })).toHaveCount(1);
 
-    // A second session opens as another tab next to the first.
+    // A second session opens as another tab next to the first, from the list or the Claude button.
     await page.getByRole('button', { name: 'New session' }).click();
     await expect(sessions).toHaveCount(2);
-    await expect(page.locator('.xterm-rows')).toHaveCount(2);
+    await page.getByRole('button', { name: 'Open a new Claude terminal' }).click();
+    await expect(sessions).toHaveCount(3);
+    await expect(page.locator('.xterm-rows')).toHaveCount(3);
 
     // Closing one from the sidebar stops it and removes it from the list.
     await sessions.first().hover();
     await page.getByRole('button', { name: 'Close Test conversation' }).first().click();
-    await expect(sessions).toHaveCount(1);
-    await expect(page.locator('.xterm-rows')).toHaveCount(1);
+    await expect(sessions).toHaveCount(2);
+    await expect(page.locator('.xterm-rows')).toHaveCount(2);
     await page.screenshot({ animations: 'disabled', path: 'test-results/sessions.png' });
   } finally {
     await app.close();

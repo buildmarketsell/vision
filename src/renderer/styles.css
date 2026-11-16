@@ -350,6 +350,10 @@ body {
   opacity: 0.45;
 }
 
+.claude-logo[data-busy='true'] {
+  animation: pulse 1.4s var(--ease) infinite;
+}
+
 @keyframes pulse {
   50% {
     opacity: 0.3;
@@ -371,7 +375,8 @@ body {
     animation-name: fade;
   }
 
-  .live-dot[data-busy='true'] {
+  .live-dot[data-busy='true'],
+  .claude-logo[data-busy='true'] {
     animation: none;
   }
 

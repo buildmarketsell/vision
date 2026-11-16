@@ -5,6 +5,8 @@
 export const theme = {
   colors: {
     accent: '#F26B3A',
+    /** Claude's own orange, for the Claude logo. */
+    claude: '#D97757',
     accentHover: '#E35A28',
     accentSoft: 'rgba(242, 107, 58, 0.12)',
     windowBackground: '#E8EEF0',

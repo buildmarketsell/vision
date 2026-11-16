@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
+import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
 import { closePanelById, focusPanel, onDockReady } from '../../../renderer/core/dockActions';
 import { CLAUDE_TAB, newClaudeSession, useClaudeSessions, type ClaudeSession } from './sessionsStore';
 import { focusClaudeTerminal } from './useClaudeTerminal';
@@ -27,12 +28,6 @@ function useActiveClaudeTab(): string | null {
   return activeId;
 }
 
-function StatusDot({ session }: { session: ClaudeSession }) {
-  if (session.status === 'running') return <span className="live-dot shrink-0" data-busy={session.busy} />;
-  const color = session.status === 'starting' ? 'var(--color-text-faint)' : 'var(--color-danger)';
-  return <span className="shrink-0 rounded-full" style={{ width: 6, height: 6, background: color, opacity: 0.6 }} />;
-}
-
 function SessionRow({ session, active }: { session: ClaudeSession; active: boolean }) {
   return (
     <div
@@ -48,7 +43,7 @@ function SessionRow({ session, active }: { session: ClaudeSession; active: boole
       onKeyDown={(event) => event.key === 'Enter' && focusPanel(session.id)}
     >
       <span className="flex w-4 justify-center">
-        <StatusDot session={session} />
+        <ClaudeLogo size={15} busy={session.busy} dim={session.status !== 'running'} />
       </span>
       <span className="flex-1 truncate">{session.title}</span>
       <button
