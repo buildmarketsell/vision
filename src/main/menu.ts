@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu, type MenuItemConstructorOptions } from 'electron';
 import { IPC, type MenuCommandId } from '../shared/ipc';
 import { getAppState } from './stateStore';
-import { createWindow, openFolderInWindow } from './windows';
+import { changeZoom, createWindow, openFolderInWindow } from './windows';
 import { showOpenFolderDialog } from './appHandlers';
 
 function sendToFocusedWindow(id: MenuCommandId): void {
@@ -50,6 +50,12 @@ function viewMenu(): MenuItemConstructorOptions {
       { type: 'separator' },
       ...devItems,
       { role: 'toggleDevTools' },
+      { type: 'separator' },
+      { label: 'Zoom In', accelerator: 'CmdOrCtrl+=', click: () => changeZoom(0.5) },
+      // ⌘+ (with Shift on US keyboards, its own key on Spanish ones) does the same.
+      { label: 'Zoom In', accelerator: 'CmdOrCtrl+Plus', click: () => changeZoom(0.5), visible: false },
+      { label: 'Zoom Out', accelerator: 'CmdOrCtrl+-', click: () => changeZoom(-0.5) },
+      { label: 'Reset Zoom', accelerator: 'CmdOrCtrl+0', click: () => changeZoom(0) },
       { type: 'separator' },
       { role: 'togglefullscreen' },
     ],

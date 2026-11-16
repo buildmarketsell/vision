@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, shell, type WebContents } from 'electron';
 import { join } from 'node:path';
 import type { WindowBounds } from './appState';
 import { getAppState, updateAppState } from './stateStore';
-import { withRecentFolder } from './appState';
+import { clampZoom, withRecentFolder } from './appState';
 
 export interface WindowContext {
   window: BrowserWindow;
@@ -98,6 +98,15 @@ function watchWindowEvents(context: WindowContext, webContentsId: number): void 
   window.on('resized', saveSession);
 }
 
+/** Zooms every window (⌘+ / ⌘− / ⌘0) and remembers the level. `step` 0 resets to 100%. */
+export function changeZoom(step: number): void {
+  const zoomLevel = step === 0 ? 0 : clampZoom(getAppState().zoomLevel + step);
+  updateAppState((state) => ({ ...state, zoomLevel }));
+  for (const { webContents } of allWindowContexts()) {
+    if (!webContents.isDestroyed()) webContents.setZoomLevel(zoomLevel);
+  }
+}
+
 export function createWindow(folder: string | null, bounds: WindowBounds | null = null): BrowserWindow {
   const window = new BrowserWindow({
     ...(bounds ?? DEFAULT_SIZE),
@@ -121,6 +130,7 @@ export function createWindow(folder: string | null, bounds: WindowBounds | null 
   contexts.set(webContentsId, context);
   lockDownNavigation(window);
   watchWindowEvents(context, webContentsId);
+  window.webContents.on('did-finish-load', () => window.webContents.setZoomLevel(getAppState().zoomLevel));
   if (!HEADLESS) window.once('ready-to-show', () => window.show());
   loadRenderer(window);
   saveSession();

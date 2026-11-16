@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isInsideFolder, looksBinary, parseShellPath, SHELL_PATH_MARKER, validateEntryName } from '../../src/main/paths';
-import { normalizeAppState, pruneLayouts, withRecentFolder } from '../../src/main/appState';
+import { clampZoom, normalizeAppState, pruneLayouts, withRecentFolder } from '../../src/main/appState';
 import { shortcutFromEvent } from '../../src/renderer/core/commands';
 import { relativeParts } from '../../src/renderer/core/workspaceStore';
 import { cleanTitle } from '../../src/features/claude-terminal/renderer/sessionsStore';
@@ -101,5 +101,15 @@ describe('rubberBand', () => {
     expect(small).toBeLessThan(10);
     expect(large / 400).toBeLessThan(small / 10);
     expect(rubberBand(-10, 480)).toBeCloseTo(-small);
+  });
+});
+
+describe('zoom level', () => {
+  it('keeps the saved zoom within limits and falls back to 100%', () => {
+    expect(clampZoom(2)).toBe(2);
+    expect(clampZoom(99)).toBe(6);
+    expect(clampZoom(-99)).toBe(-4);
+    expect(clampZoom('big')).toBe(0);
+    expect(normalizeAppState({}).zoomLevel).toBe(0);
   });
 });

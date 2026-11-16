@@ -18,10 +18,12 @@ export interface AppState {
   recentFolders: string[];
   windows: SessionWindow[];
   layouts: Record<string, FolderLayout>;
+  /** Interface zoom (⌘+ / ⌘−), shared by all windows like VS Code. 0 is 100%. */
+  zoomLevel: number;
 }
 
 export function emptyAppState(): AppState {
-  return { recentFolders: [], windows: [], layouts: {} };
+  return { recentFolders: [], windows: [], layouts: {}, zoomLevel: 0 };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -59,6 +61,15 @@ function toLayout(value: unknown): FolderLayout | null {
   };
 }
 
+export const MIN_ZOOM = -4;
+export const MAX_ZOOM = 6;
+
+/** A valid zoom level; anything else becomes 0 (100%). */
+export function clampZoom(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(value * 2) / 2));
+}
+
 /** Turns whatever was on disk into a valid AppState; anything broken falls back to defaults. */
 export function normalizeAppState(raw: unknown): AppState {
   if (!isRecord(raw)) return emptyAppState();
@@ -73,6 +84,7 @@ export function normalizeAppState(raw: unknown): AppState {
     recentFolders: toStringList(raw['recentFolders']).slice(0, MAX_RECENT_FOLDERS),
     windows: toWindows(raw['windows']),
     layouts,
+    zoomLevel: clampZoom(raw['zoomLevel']),
   };
 }
 
