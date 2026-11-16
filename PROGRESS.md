@@ -11,7 +11,15 @@
 - v0.2 Claude chat (branch `feature/v0-2-claude-chat`): each Claude tab is a chat by default (streamed formatted replies, tool rows with diffs, Allow/Deny cards, question cards, live Working card, Tasks card when Claude keeps a to-do list, Stop, permission mode picker, drop a file to @mention it, recent conversations to reopen), with a Terminal switch that resumes the same conversation. Tabs remember their conversation across restarts.
 
 ## Next
-- Notion-style redesign: flat full-window layout, tabs on top with breadcrumbs, sidebar view icons (Files with New File / New Folder / Collapse All, Claude with conversations and Account & Usage).
+- Notion-style redesign (branch `feature/notion-layout`, Dan chose "Like Notion" on 2026-11-16; reference: his Notion app screenshot):
+  - Flat, full window: no wallpaper (remove wallpaper.svg, useWallpaper, get/chooseWallpaper IPC, menu item, `wallpaperPath`), no floating cards. Sidebar flush left (`#F7F7F5`, 1px right border), one white page area, panes split by 1px lines (dockview theme gap 0, no radius/shadow, overlay radius 0).
+  - Traffic lights in the sidebar's top row next to the folder name (row ~44px, `trafficLightPosition` to match).
+  - Tab strip like Notion: gray strip, tabs ~240px with vertical dividers, active tab white and joined to the page, close on hover; empty strip area is a window drag region. Breadcrumbs under the tabs (editor already has them).
+  - Sidebar view icons at the top (like Notion's Home/inbox row and VS Code's activity bar): active view shows icon + label in a gray pill. Views show one at a time (not stacked):
+    - Files: header buttons New File, New Folder, Refresh, Collapse All, hidden-files toggle.
+    - Claude: conversations list + New session, plus Account & Usage like the VS Code Claude panel: Session (5hr) % and Weekly (7 day) % bars with reset times. Data comes from `rate_limit_event` lines in the chat stream (`rate_limit_info.unifiedWindows.five_hour|seven_day.{utilization,resetsAt}`); keep the last values in localStorage so they show on startup.
+  - Later (Dan): notifications view and more.
+  - Update e2e tests (sessions now live in the Claude view) and check screenshots in headless mode.
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).
