@@ -293,6 +293,11 @@ test('opens, names, lists and closes several Claude sessions', async () => {
     // The sidebar row's close button (the tab has one with the same name too).
     await page.getByRole('button', { name: 'Close Plan the launch', description: 'Close session' }).click();
     await expect(sessions).toHaveCount(2);
+    // Usage from the rate_limit_event lines, with the plan from initialize.
+    const usage = sidebar.getByRole('region', { name: 'Usage' });
+    await expect(usage.getByRole('meter', { name: 'Session (5 hr)' })).toHaveAttribute('aria-valuenow', '29');
+    await expect(usage.getByRole('meter', { name: 'Weekly (7 day)' })).toHaveAttribute('aria-valuenow', '40');
+    await expect(usage.getByText('Claude Pro')).toBeVisible();
     await page.screenshot({ animations: 'disabled', path: 'test-results/sessions.png' });
   } finally {
     await app.close();

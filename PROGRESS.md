@@ -13,16 +13,12 @@
 - Images in Markdown (2026-11-17): Preview shows relative images, Obsidian `![[embeds]]` and web images. In Edit, paste a screenshot or drop image files (Finder or the sidebar) and the link is inserted at the cursor; images from outside the folder are saved to `images/` next to the note as `<note>-<date-time>.png`. Local images load through the `vision-file://` scheme, which serves only image files inside an open folder.
 - Zoom (2026-11-17): ⌘= / ⌘+ zoom in, ⌘− out, ⌘0 reset, in the View menu; all windows, remembered in `state.json` (`zoomLevel`).
 
+- Notion-style redesign and chat extras (branch `feature/notion-layout`, 2026-11-16/17): flat full-window layout, gray tab strip with white active tab, traffic lights in the sidebar's top row, no wallpaper. Sidebar views picked from a gradient switcher (after cult-ui's gradient button group): Files (New File, New Folder, Refresh, Collapse All, hidden files), Claude (sessions plus a Usage card from `rate_limit_event`, plan from `initialize`), Inbox (WhatsApp-style chat with yourself, saved in userData/inbox.json). Chat: paste or drop images and files (no Shift), model picker, context meter, slash command menu, message queue, wave loading text (after Kokonut UI). New chats default to Edit automatically.
+
 ## Next
-- Notion-style redesign (branch `feature/notion-layout`, Dan chose "Like Notion" on 2026-11-16; reference: his Notion app screenshot):
-  - Flat, full window: no wallpaper (remove wallpaper.svg, useWallpaper, get/chooseWallpaper IPC, menu item, `wallpaperPath`), no floating cards. Sidebar flush left (`#F7F7F5`, 1px right border), one white page area, panes split by 1px lines (dockview theme gap 0, no radius/shadow, overlay radius 0).
-  - Traffic lights in the sidebar's top row next to the folder name (row ~44px, `trafficLightPosition` to match).
-  - Tab strip like Notion: gray strip, tabs ~240px with vertical dividers, active tab white and joined to the page, close on hover; empty strip area is a window drag region. Breadcrumbs under the tabs (editor already has them).
-  - Sidebar view icons at the top (like Notion's Home/inbox row and VS Code's activity bar): active view shows icon + label in a gray pill. Views show one at a time (not stacked):
-    - Files: header buttons New File, New Folder, Refresh, Collapse All, hidden-files toggle.
-    - Claude: conversations list + New session, plus Account & Usage like the VS Code Claude panel: Session (5hr) % and Weekly (7 day) % bars with reset times. Data comes from `rate_limit_event` lines in the chat stream (`rate_limit_info.unifiedWindows.five_hour|seven_day.{utilization,resetsAt}`); keep the last values in localStorage so they show on startup.
-  - Later (Dan): notifications view and more.
-  - Update e2e tests (sessions now live in the Claude view) and check screenshots in headless mode.
+- Merge `feature/notion-layout` into `main` once Dan has used it for a bit.
+- Later (Dan): notifications view and more sidebar views.
+- Ideas not started: images in the Inbox, Kokonut-style tool rows and Allow/Deny cards, showing images when reopening old conversations.
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).

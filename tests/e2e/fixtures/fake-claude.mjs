@@ -37,6 +37,7 @@ if (!process.argv.includes('-p')) {
           { value: 'default', displayName: 'Default (recommended)', description: 'Opus' },
           { value: 'haiku', displayName: 'Haiku', description: 'Fastest' },
         ],
+        account: { subscriptionType: 'Claude Pro' },
         commands: [
           { name: 'review', description: 'Review the current changes', argumentHint: '' },
           { name: 'compact', description: 'Clear history but keep a summary', argumentHint: '' },

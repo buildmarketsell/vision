@@ -4,6 +4,7 @@ import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
 import { closePanelById, focusPanel, onDockReady } from '../../../renderer/core/dockActions';
 import { CLAUDE_TAB, newClaudeSession, useClaudeSessions, type ClaudeSession } from './sessionsStore';
 import { focusClaudeTerminal } from './useClaudeTerminal';
+import { UsagePanel } from './usage/UsagePanel';
 
 const ICON = { size: 14, strokeWidth: 1.75 };
 
@@ -69,7 +70,7 @@ export function SessionsView() {
   const activeId = useActiveClaudeTab();
 
   return (
-    <div className="flex max-h-[40%] shrink-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="group flex items-center justify-between pr-2">
         <div className="section-label">Claude</div>
         <button
@@ -82,7 +83,7 @@ export function SessionsView() {
           <Plus {...ICON} />
         </button>
       </div>
-      <div className="min-h-0 overflow-y-auto px-1">
+      <div className="min-h-0 flex-1 overflow-y-auto px-1">
         {order.map((id) => {
           const session = sessions[id];
           return session ? <SessionRow key={id} session={session} active={id === activeId} /> : null;
@@ -95,6 +96,7 @@ export function SessionsView() {
           <span className="keycap ml-auto">⌘T</span>
         </button>
       </div>
+      <UsagePanel />
     </div>
   );
 }
