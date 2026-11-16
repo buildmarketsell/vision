@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
-import { ArrowUp, Square } from 'lucide-react';
-import { PERMISSION_MODES, type PermissionMode } from '../../../../shared/claudeChat';
-import { PATH_DRAG_TYPE, relativeParts, useWorkspace } from '../../../../renderer/core/workspaceStore';
+import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { ArrowUp, Square, X } from 'lucide-react';
+import { PERMISSION_MODES, type ChatImage, type PermissionMode } from '../../../../shared/claudeChat';
+import type { Draft } from './useDraft';
+
 const MAX_HEIGHT_PX = 200;
 
 const MODE_LABELS: Record<PermissionMode, string> = {
@@ -10,31 +11,51 @@ const MODE_LABELS: Record<PermissionMode, string> = {
   plan: 'Plan first',
 };
 
+export function imageUrl(image: ChatImage): string {
+  return `data:${image.mediaType};base64,${image.data}`;
+}
+
+function Thumbnails({ images, onRemove }: { images: ChatImage[]; onRemove: (index: number) => void }) {
+  if (images.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {images.map((image, index) => (
+        <div key={`${index}-${image.data.slice(-16)}`} className="composer-thumb">
+          <img src={imageUrl(image)} alt={`Attached image ${index + 1}`} />
+          <button aria-label={`Remove image ${index + 1}`} title="Remove" onClick={() => onRemove(index)}>
+            <X size={10} strokeWidth={2.5} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface ComposerProps {
+  draft: Draft;
   working: boolean;
   disabled: boolean;
   mode: PermissionMode;
-  onSend: (text: string) => void;
+  onSend: (text: string, images: ChatImage[]) => void;
   onStop: () => void;
   onModeChange: (mode: PermissionMode) => void;
 }
 
-export function Composer({ working, disabled, mode, onSend, onStop, onModeChange }: ComposerProps) {
-  const [text, setText] = useState('');
+export function Composer({ draft, working, disabled, mode, onSend, onStop, onModeChange }: ComposerProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  const folder = useWorkspace((state) => state.folder);
+  const canSend = !disabled && (draft.text.trim() !== '' || draft.images.length > 0);
 
   useEffect(() => {
     const area = ref.current;
     if (!area) return;
     area.style.height = 'auto';
     area.style.height = `${Math.min(area.scrollHeight, MAX_HEIGHT_PX)}px`;
-  }, [text]);
+  }, [draft.text]);
 
   const send = () => {
-    if (!text.trim() || disabled) return;
-    onSend(text);
-    setText('');
+    if (!canSend) return;
+    onSend(draft.text, draft.images);
+    draft.clear();
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -44,32 +65,21 @@ export function Composer({ working, disabled, mode, onSend, onStop, onModeChange
     }
   };
 
-  const onDrop = (event: DragEvent) => {
-    const path = event.dataTransfer.getData(PATH_DRAG_TYPE);
-    if (!path) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const mention = `@${relativeParts(folder, path).join('/')} `;
-    setText((current) => (current && !current.endsWith(' ') ? `${current} ${mention}` : current + mention));
-    ref.current?.focus();
-  };
-
   return (
-    <div
-      className="composer"
-      onDragOver={(event) => event.dataTransfer.types.includes(PATH_DRAG_TYPE) && event.preventDefault()}
-      onDrop={onDrop}
-    >
+    <div className="composer">
+      <Thumbnails images={draft.images} onRemove={draft.removeImage} />
       <textarea
         ref={ref}
         rows={1}
-        value={text}
-        placeholder={disabled ? 'Claude is not running' : 'Message Claude… (drop a file to mention it)'}
+        value={draft.text}
+        placeholder={disabled ? 'Claude is not running' : 'Message Claude… (drop files or paste a screenshot)'}
         aria-label="Message Claude"
         disabled={disabled}
-        onChange={(event) => setText(event.target.value)}
+        onChange={(event) => draft.setText(event.target.value)}
         onKeyDown={onKeyDown}
+        onPaste={draft.onPaste}
       />
+      {draft.error && <div className="caption" role="alert" style={{ color: 'var(--color-danger)' }}>{draft.error}</div>}
       <div className="flex items-center gap-2">
         <select className="mode-select" aria-label="Permission mode" value={mode} onChange={(event) => onModeChange(event.target.value as PermissionMode)}>
           {PERMISSION_MODES.map((item) => (
@@ -82,7 +92,7 @@ export function Composer({ working, disabled, mode, onSend, onStop, onModeChange
             <Square size={12} strokeWidth={2.5} fill="currentColor" />
           </button>
         ) : (
-          <button className="send-button" aria-label="Send message" title="Send (Enter)" disabled={!text.trim() || disabled} onClick={send}>
+          <button className="send-button" aria-label="Send message" title="Send (Enter)" disabled={!canSend} onClick={send}>
             <ArrowUp size={16} strokeWidth={2.25} />
           </button>
         )}

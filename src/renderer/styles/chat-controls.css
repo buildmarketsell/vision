@@ -59,35 +59,79 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: var(--radius-control);
+  padding: var(--space-3) var(--space-2) var(--space-2) var(--space-3);
+  border-radius: 14px;
   background: var(--color-card);
+  border: 1px solid var(--color-composer-border);
   box-shadow: var(--shadow-control);
-  border: 1px solid var(--color-border);
+  transition: border-color var(--duration-fast) var(--ease);
 }
 
 .composer:focus-within {
-  border-color: var(--color-accent);
+  border-color: var(--color-composer-border-focus);
 }
 
 .composer textarea {
   resize: none;
   outline: none;
   border: none;
+  padding: 0 var(--space-1) 0 0;
   font: inherit;
   line-height: 1.5;
   background: transparent;
   user-select: text;
 }
 
+.composer-thumb {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.composer-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.composer-thumb button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+}
+
+.bubble-image {
+  display: block;
+  max-width: 240px;
+  max-height: 180px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-row);
+}
+
 .mode-select {
-  height: 24px;
+  height: 28px;
   padding: 0 var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-row-hover);
+  border-radius: var(--radius-control);
+  background: transparent;
   font-size: var(--size-small);
   color: var(--color-text-muted);
   outline: none;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.mode-select:hover {
+  background: var(--color-row-hover);
 }
 
 .send-button {
@@ -103,7 +147,8 @@
 }
 
 .send-button:disabled {
-  opacity: 0.35;
+  background: var(--color-row-selected);
+  color: var(--color-text-faint);
 }
 
 .send-button:active:not(:disabled) {

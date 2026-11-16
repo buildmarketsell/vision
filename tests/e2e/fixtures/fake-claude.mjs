@@ -43,7 +43,11 @@ if (!process.argv.includes('-p')) {
       out({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: toolId, content: answer.behavior === 'allow' ? 'ok' : 'denied', is_error: answer.behavior !== 'allow' } ] } });
       then(answer);
     } else if (message.type === 'user') {
-      const text = String(message.message.content);
+      const content = message.message.content;
+      const blocks = Array.isArray(content) ? content : [];
+      const images = blocks.filter((block) => block.type === 'image').length;
+      const words = Array.isArray(content) ? blocks.filter((block) => block.type === 'text').map((block) => block.text).join(' ') : String(content);
+      const text = images > 0 ? `${words} (${images} image)` : words;
       out({ type: 'system', subtype: 'init', session_id: SESSION, model: 'claude-test' });
       out({ type: 'system', subtype: 'status', status: 'requesting' });
       if (text.includes('edit')) askTool('Write', { file_path: `${process.cwd()}/notes.txt`, content: 'hello\n' }, (answer) => reply(answer.behavior === 'allow' ? 'I wrote **notes.txt**.' : 'Okay, I left it.'));

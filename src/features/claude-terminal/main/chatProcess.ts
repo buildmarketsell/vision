@@ -2,7 +2,10 @@ import { ipcMain, type WebContents } from 'electron';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { IPC } from '../../../shared/ipc';
 import {
+  isImageMediaType,
   isSessionId,
+  MAX_IMAGE_BYTES,
+  MAX_IMAGES_PER_MESSAGE,
   PERMISSION_MODES,
   type ChatOutgoing,
   type ChatStartResult,
@@ -111,14 +114,37 @@ function isShortText(value: unknown, max: number): value is string {
   return typeof value === 'string' && value.length <= max;
 }
 
+const BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
+
+/** Image content blocks for Claude, or null if any image is invalid or too big. */
+export function toImageBlocks(images: unknown): object[] | null {
+  if (images === undefined) return [];
+  if (!Array.isArray(images) || images.length > MAX_IMAGES_PER_MESSAGE) return null;
+  const blocks: object[] = [];
+  for (const image of images) {
+    if (!isPlainObject(image) || !isImageMediaType(image['mediaType'])) return null;
+    const data = image['data'];
+    if (typeof data !== 'string' || (data.length * 3) / 4 > MAX_IMAGE_BYTES || !BASE64_PATTERN.test(data)) return null;
+    blocks.push({ type: 'image', source: { type: 'base64', media_type: image['mediaType'], data } });
+  }
+  return blocks;
+}
+
+function userMessage(text: unknown, images: unknown): object | null {
+  if (!isShortText(text, MAX_MESSAGE_CHARS)) return null;
+  const imageBlocks = toImageBlocks(images);
+  if (!imageBlocks || (text.trim() === '' && imageBlocks.length === 0)) return null;
+  const content = imageBlocks.length === 0 ? text : [...imageBlocks, ...(text.trim() ? [{ type: 'text', text }] : [])];
+  return { type: 'user', message: { role: 'user', content } };
+}
+
 /** Turns a validated window message into the stream-json line Claude expects; null if invalid. */
 export function toClaudeMessage(outgoing: unknown): object | null {
   if (!isPlainObject(outgoing)) return null;
   const message = outgoing as Partial<ChatOutgoing> & Record<string, unknown>;
   switch (message.kind) {
     case 'message':
-      if (!isShortText(message['text'], MAX_MESSAGE_CHARS) || message['text'].trim() === '') return null;
-      return { type: 'user', message: { role: 'user', content: message['text'] } };
+      return userMessage(message['text'], message['images']);
     case 'allow':
       if (!isShortText(message['requestId'], 200) || !isPlainObject(message['updatedInput'])) return null;
       return controlResponse(message['requestId'], { behavior: 'allow', updatedInput: message['updatedInput'] });

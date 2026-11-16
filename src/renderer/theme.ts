@@ -19,6 +19,8 @@ export const theme = {
     rowPressed: 'rgba(55, 53, 47, 0.11)',
     rowSelected: 'rgba(55, 53, 47, 0.09)',
     border: 'rgba(0, 0, 0, 0.06)',
+    composerBorder: 'rgba(55, 53, 47, 0.16)',
+    composerBorderFocus: 'rgba(55, 53, 47, 0.32)',
     danger: '#D44C47',
     success: '#2F7D5B',
     diffAddedBackground: 'rgba(47, 125, 91, 0.10)',

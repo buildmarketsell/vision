@@ -184,7 +184,7 @@ export function reduceClaudeEvent(state: ChatState, raw: unknown): ChatState {
 export function reduceLocal(state: ChatState, action: LocalAction): ChatState {
   switch (action.type) {
     case 'local/sent':
-      return { ...withItem(state, { kind: 'user', text: action.text }), phase: 'working', activity: 'Thinking…' };
+      return { ...withItem(state, { kind: 'user', text: action.text, ...(action.images?.length ? { images: action.images } : {}) }), phase: 'working', activity: 'Thinking…' };
     case 'local/resolved': {
       const permission = state.permissions.find((item) => item.requestId === action.requestId);
       let next: ChatState = {

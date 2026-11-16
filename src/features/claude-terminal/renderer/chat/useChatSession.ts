@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import type { PermissionMode } from '../../../../shared/claudeChat';
+import type { ChatImage, PermissionMode } from '../../../../shared/claudeChat';
 import { reduceClaudeEvent, reduceLocal } from './chatReducer';
 import { emptyChatState, type ChatState, type LocalAction } from './chatTypes';
 
@@ -22,7 +22,7 @@ async function loadHistory(sessionId: string): Promise<ChatState> {
 export interface ChatSession {
   state: ChatState;
   mode: PermissionMode;
-  send: (text: string) => void;
+  send: (text: string, images?: ChatImage[]) => void;
   allow: (requestId: string, updatedInput: Record<string, unknown>) => void;
   deny: (requestId: string) => void;
   interrupt: () => void;
@@ -83,11 +83,12 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
   return {
     state,
     mode,
-    send: (text) => {
+    send: (text, images = []) => {
       const trimmed = text.trim();
-      if (!trimmed || processId.current === null) return;
-      dispatch({ type: 'local/sent', text: trimmed });
-      sendRaw({ kind: 'message', text: trimmed });
+      if ((!trimmed && images.length === 0) || processId.current === null) return;
+      const previews = images.map((image) => `data:${image.mediaType};base64,${image.data}`);
+      dispatch({ type: 'local/sent', text: trimmed, images: previews });
+      sendRaw({ kind: 'message', text: trimmed, ...(images.length > 0 ? { images } : {}) });
     },
     allow: (requestId, updatedInput) => {
       sendRaw({ kind: 'allow', requestId, updatedInput });

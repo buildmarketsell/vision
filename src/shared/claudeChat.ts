@@ -14,9 +14,25 @@ export type ChatStartResult =
   | { ok: true; id: number }
   | { ok: false; reason: 'not-found' | 'no-folder' | 'spawn-failed'; message: string };
 
+/** Image types Claude accepts, and its per-image size limit. */
+export const IMAGE_MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'] as const;
+export type ImageMediaType = (typeof IMAGE_MEDIA_TYPES)[number];
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+export const MAX_IMAGES_PER_MESSAGE = 10;
+
+export function isImageMediaType(value: unknown): value is ImageMediaType {
+  return (IMAGE_MEDIA_TYPES as readonly unknown[]).includes(value);
+}
+
+/** A pasted or dropped image, base64 without the data: prefix. */
+export interface ChatImage {
+  mediaType: ImageMediaType;
+  data: string;
+}
+
 /** What the window may send to Claude (validated in main). */
 export type ChatOutgoing =
-  | { kind: 'message'; text: string }
+  | { kind: 'message'; text: string; images?: ChatImage[] }
   | { kind: 'allow'; requestId: string; updatedInput: Record<string, unknown> }
   | { kind: 'deny'; requestId: string; message: string }
   | { kind: 'interrupt' }

@@ -148,6 +148,27 @@ test('closing a window with Claude running raises no errors in the main process'
   }
 });
 
+test('pastes a screenshot into the chat and sends it', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    await expect(messageBox(page).first()).toBeEnabled({ timeout: 15_000 });
+    await messageBox(page).first().evaluate((area) => {
+      const bytes = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg=='), (char) => char.charCodeAt(0));
+      const data = new DataTransfer();
+      data.items.add(new File([bytes], 'shot.png', { type: 'image/png' }));
+      area.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+    });
+    await expect(page.getByAltText('Attached image 1')).toBeVisible();
+    await sendMessage(page, 'what is this');
+    await expect(page.getByAltText('Sent image 1')).toBeVisible();
+    await expect(page.locator('.assistant-text').last()).toContainText('You said: what is this (1 image)');
+    await expect(page.getByAltText('Attached image 1')).toHaveCount(0);
+  } finally {
+    await app.close();
+  }
+});
+
 test('opens, names, lists and closes several Claude sessions', async () => {
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);

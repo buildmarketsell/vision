@@ -11,7 +11,7 @@ export interface ToolCall {
 }
 
 export type ChatItem =
-  | { kind: 'user'; key: string; text: string }
+  | { kind: 'user'; key: string; text: string; images?: string[] }
   | { kind: 'text'; key: string; text: string; streaming: boolean }
   | { kind: 'tool'; key: string; toolId: string }
   | { kind: 'notice'; key: string; text: string; tone: 'info' | 'warning' | 'error' };
@@ -89,7 +89,7 @@ export function emptyChatState(): ChatState {
 
 /** Things the window itself does, mixed into the same state. */
 export type LocalAction =
-  | { type: 'local/sent'; text: string }
+  | { type: 'local/sent'; text: string; images?: string[] }
   | { type: 'local/resolved'; requestId: string; denied: boolean }
   | { type: 'local/started' }
   | { type: 'local/exited'; exitCode: number | null; errorTail: string }

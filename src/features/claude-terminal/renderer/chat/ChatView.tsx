@@ -4,6 +4,7 @@ import { ClaudeLogo } from '../../../../renderer/components/ClaudeLogo';
 import { baseName, useWorkspace } from '../../../../renderer/core/workspaceStore';
 import type { ChatItem, ChatState } from './chatTypes';
 import { Composer } from './Composer';
+import { useDraft } from './useDraft';
 import { LiveCard, TasksCard } from './LiveCards';
 import { Markdown } from './Markdown';
 import { PermissionCard, QuestionCard } from './RequestCards';
@@ -52,7 +53,14 @@ function EmptyState({ onOpen }: { onOpen: (sessionId: string) => void }) {
 }
 
 function Item({ item, state }: { item: ChatItem; state: ChatState }) {
-  if (item.kind === 'user') return <div className="user-bubble enter">{item.text}</div>;
+  if (item.kind === 'user') {
+    return (
+      <div className="user-bubble enter">
+        {item.images?.map((src, index) => <img key={index} className="bubble-image" src={src} alt={`Sent image ${index + 1}`} />)}
+        {item.text}
+      </div>
+    );
+  }
   if (item.kind === 'text') return <div className={item.streaming ? 'assistant-text streaming' : 'assistant-text'}><Markdown text={item.text} /></div>;
   if (item.kind === 'notice') return <div className="notice" data-tone={item.tone}>{item.text}</div>;
   const tool = state.tools[item.toolId];
@@ -80,9 +88,10 @@ export function ChatView({ chat }: { chat: ChatSession }) {
   const scroll = useStickToBottom(state);
   const waiting = state.permissions.length > 0 || state.questions.length > 0;
   const working = state.phase === 'working';
+  const draft = useDraft();
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col" onDragOver={draft.onDragOver} onDrop={draft.onDrop}>
       <div ref={scroll.ref} onScroll={scroll.onScroll} className="min-h-0 flex-1 overflow-y-auto">
         {state.items.length === 0 && state.phase !== 'starting' ? (
           <EmptyState onOpen={(sessionId) => chat.open(sessionId)} />
@@ -111,6 +120,7 @@ export function ChatView({ chat }: { chat: ChatSession }) {
         {working && !waiting && <LiveCard activity={state.activity} />}
         {state.todos.length > 0 && <TasksCard todos={state.todos} />}
         <Composer
+          draft={draft}
           working={working}
           disabled={state.phase === 'stopped' || state.phase === 'starting'}
           mode={chat.mode}

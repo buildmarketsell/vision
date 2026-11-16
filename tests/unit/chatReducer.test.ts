@@ -6,6 +6,7 @@ import { emptyChatState, type ChatState } from '../../src/features/claude-termin
 import { describeTool } from '../../src/features/claude-terminal/renderer/chat/eventParsing';
 import { messagesFromTranscript, titleFromTail } from '../../src/features/claude-terminal/main/transcripts';
 import { toClaudeMessage } from '../../src/features/claude-terminal/main/chatProcess';
+import { mentionFor } from '../../src/features/claude-terminal/renderer/chat/useDraft';
 
 /** Replays a recorded real session: lines Claude printed, and what the host sent (`__sent__`). */
 function replay(name: string, stopAtFirst?: (state: ChatState) => boolean): ChatState {
@@ -108,5 +109,32 @@ describe('toClaudeMessage (validation in main)', () => {
     expect(toClaudeMessage({ kind: 'allow', requestId: 'r1', updatedInput: 'nope' })).toBeNull();
     expect(toClaudeMessage({ kind: 'setPermissionMode', mode: 'bypassPermissions' })).toBeNull();
     expect(toClaudeMessage('drop table')).toBeNull();
+  });
+});
+
+describe('images and dropped paths', () => {
+  const png = { mediaType: 'image/png', data: 'iVBORw0KGgo=' };
+  it('sends images before the text, and allows an image with no text', () => {
+    expect(toClaudeMessage({ kind: 'message', text: 'what is this', images: [png] })).toEqual({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/png', data: png.data } },
+          { type: 'text', text: 'what is this' },
+        ],
+      },
+    });
+    expect(toClaudeMessage({ kind: 'message', text: '', images: [png] })).toMatchObject({ message: { content: [{ type: 'image' }] } });
+  });
+  it('rejects bad images', () => {
+    expect(toClaudeMessage({ kind: 'message', text: 'x', images: [{ mediaType: 'image/svg+xml', data: png.data }] })).toBeNull();
+    expect(toClaudeMessage({ kind: 'message', text: 'x', images: [{ mediaType: 'image/png', data: 'not base64!' }] })).toBeNull();
+    expect(toClaudeMessage({ kind: 'message', text: 'x', images: Array.from({ length: 11 }, () => png) })).toBeNull();
+  });
+  it('mentions paths relative inside the folder, full outside it', () => {
+    expect(mentionFor('/work/site', '/work/site/src/a.ts')).toBe('@src/a.ts ');
+    expect(mentionFor('/work/site', '/Users/dan/Desktop/shot.pdf')).toBe('@/Users/dan/Desktop/shot.pdf ');
+    expect(mentionFor('/work/site', '/work/site-old/a.ts')).toBe('@/work/site-old/a.ts ');
   });
 });
