@@ -4,6 +4,9 @@ export type PermissionMode = 'default' | 'acceptEdits' | 'plan';
 
 export const PERMISSION_MODES: PermissionMode[] = ['default', 'acceptEdits', 'plan'];
 
+/** New chats edit files without asking (Dan's choice); the picker still offers the others. */
+export const DEFAULT_PERMISSION_MODE: PermissionMode = 'acceptEdits';
+
 export interface ChatStartOptions {
   /** Continue an earlier conversation. */
   resumeSessionId?: string;

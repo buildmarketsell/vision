@@ -2,6 +2,7 @@ import { ipcMain, type WebContents } from 'electron';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { IPC } from '../../../shared/ipc';
 import {
+  DEFAULT_PERMISSION_MODE,
   isImageMediaType,
   isModelName,
   isSessionId,
@@ -87,7 +88,7 @@ async function startChat(owner: WebContents, options: unknown): Promise<ChatStar
   const claude = await locateClaude();
   if (!claude) return { ok: false, reason: 'not-found', message: NOT_FOUND_MESSAGE };
   const record = (options ?? {}) as Record<string, unknown>;
-  const mode = isMode(record['permissionMode']) ? record['permissionMode'] : 'default';
+  const mode = isMode(record['permissionMode']) ? record['permissionMode'] : DEFAULT_PERMISSION_MODE;
   const resumeId = isSessionId(record['resumeSessionId']) ? record['resumeSessionId'] : null;
   const model = isModelName(record['model']) ? record['model'] : null;
   try {

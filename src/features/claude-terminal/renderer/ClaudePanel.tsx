@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { DockviewPanelApi, IDockviewPanelProps } from 'dockview-react';
 import { MessageSquare, RotateCw, SquareTerminal } from 'lucide-react';
-import { isSessionId, PERMISSION_MODES, type PermissionMode } from '../../../shared/claudeChat';
+import { DEFAULT_PERMISSION_MODE, isSessionId, PERMISSION_MODES, type PermissionMode } from '../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
 import { setPanelTitle } from '../../../renderer/core/dockActions';
 import type { TabParams } from '../../../renderer/core/feature';
@@ -135,7 +135,7 @@ export function ClaudePanel({ api, params }: IDockviewPanelProps<TabParams>) {
   const session = useClaudeSessions((state) => state.sessions[api.id]);
   const restartTerminal = useRef<() => void>(() => undefined);
   const sessionId = isSessionId(params.sessionId) ? params.sessionId : null;
-  const mode = (PERMISSION_MODES as string[]).includes(params.permissionMode ?? '') ? (params.permissionMode as PermissionMode) : 'default';
+  const mode = (PERMISSION_MODES as string[]).includes(params.permissionMode ?? '') ? (params.permissionMode as PermissionMode) : DEFAULT_PERMISSION_MODE;
 
   // The tab closed (switching Chat/Terminal doesn't unmount the panel): drop it from the sidebar list.
   useEffect(() => () => useClaudeSessions.getState().remove(api.id), [api.id]);
