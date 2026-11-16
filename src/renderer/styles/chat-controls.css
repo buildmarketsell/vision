@@ -1,0 +1,187 @@
+/* Claude chat: the dock under the messages (requests, composer, live and task cards). */
+
+.chat-dock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.request-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-card);
+  box-shadow: var(--shadow-popover);
+}
+
+.option-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.option-button:hover {
+  background: var(--color-row-hover);
+}
+
+.option-button[data-selected='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.field {
+  height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  outline: none;
+  font: inherit;
+  user-select: text;
+}
+
+.field:focus {
+  border-color: var(--color-accent);
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+  border: 1px solid var(--color-border);
+}
+
+.composer:focus-within {
+  border-color: var(--color-accent);
+}
+
+.composer textarea {
+  resize: none;
+  outline: none;
+  border: none;
+  font: inherit;
+  line-height: 1.5;
+  background: transparent;
+  user-select: text;
+}
+
+.mode-select {
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-row-hover);
+  font-size: var(--size-small);
+  color: var(--color-text-muted);
+  outline: none;
+}
+
+.send-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: white;
+  transition: transform var(--duration-fast) var(--ease), opacity var(--duration-fast) var(--ease);
+}
+
+.send-button:disabled {
+  opacity: 0.35;
+}
+
+.send-button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.send-button[data-stop='true'] {
+  background: var(--color-text);
+}
+
+.live-card {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--color-terminal-background);
+  color: var(--color-terminal-text);
+}
+
+.live-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--color-terminal-muted);
+}
+
+.live-text {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  max-height: 3em;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tasks-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-sidebar);
+}
+
+.progress {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-row-selected);
+  overflow: hidden;
+}
+
+.progress > div {
+  height: 100%;
+  background: var(--color-accent);
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease);
+}
+
+.segmented {
+  display: flex;
+  padding: 2px;
+  border-radius: var(--radius-control);
+  background: var(--color-row-hover);
+}
+
+.segmented button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: 6px;
+  font-size: var(--size-small);
+  color: var(--color-text-muted);
+}
+
+.segmented button[data-active='true'] {
+  background: var(--color-card);
+  color: var(--color-text);
+  box-shadow: var(--shadow-control);
+}

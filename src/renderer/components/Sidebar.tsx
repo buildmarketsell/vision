@@ -5,10 +5,10 @@ import { runCommand } from '../core/commands';
 import { allSidebarViews } from '../core/featureIndex';
 import { baseName, useWorkspace } from '../core/workspaceStore';
 import { theme } from '../theme';
-import { ErrorBoundary } from './ErrorBoundary';
+import { useActiveView, ViewPanels, ViewSwitcher } from './SidebarViews';
 import { AppMark } from './Welcome';
 
-/** Room for the macOS traffic lights in the top-left corner. */
+/** Room for the macOS traffic lights at the start of the top row. */
 const TRAFFIC_LIGHTS_WIDTH = 76;
 const RUBBER_BAND = 0.55;
 
@@ -80,36 +80,30 @@ function BottomBar() {
   );
 }
 
-/** Notion-style sidebar: folder name on top, feature sections stacked (Claude, Files), a Claude button at the bottom. */
+/** Notion-style sidebar, flush left: traffic lights and folder name on top, view icons, the active view, a Claude button at the bottom. */
 export function Sidebar() {
   const folder = useWorkspace((state) => state.folder);
   const storedWidth = useWorkspace((state) => state.sidebarWidth);
   const [preview, setPreview] = useState<number | null>(null);
   const views = allSidebarViews();
+  const [activeView, selectView] = useActiveView(views);
   const settling = preview === null;
 
   return (
     <aside
-      className="card relative flex shrink-0 flex-col"
+      className="sidebar relative flex shrink-0 flex-col"
       style={{
         width: preview ?? storedWidth,
-        background: 'var(--color-sidebar)',
         transition: settling ? 'width var(--duration-base) var(--ease)' : 'none',
-        overflow: 'visible',
       }}
     >
-      <div className="drag-region flex h-13 shrink-0 items-center gap-2 pr-3" style={{ paddingLeft: TRAFFIC_LIGHTS_WIDTH }}>
+      <div className="drag-region flex h-(--title-bar-height) shrink-0 items-center gap-2 pr-3" style={{ paddingLeft: TRAFFIC_LIGHTS_WIDTH }}>
         <AppMark size={20} />
         <span className="title truncate" title={folder}>{baseName(folder)}</span>
       </div>
+      <ViewSwitcher views={views} active={activeView} onSelect={selectView} />
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {views.map((view) => (
-          <section key={view.id} aria-label={view.title} className={view.grow ? 'flex min-h-0 flex-1 flex-col' : 'contents'}>
-            <ErrorBoundary name={view.title}>
-              <view.component />
-            </ErrorBoundary>
-          </section>
-        ))}
+        <ViewPanels views={views} active={activeView} />
       </div>
       <BottomBar />
       <ResizeHandle onPreview={setPreview} />

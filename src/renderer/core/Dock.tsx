@@ -1,7 +1,6 @@
 import { useMemo, type FunctionComponent } from 'react';
 import { DockviewReact, themeLight, type DockviewApi, type DockviewReadyEvent, type DockviewTheme, type IDockviewPanelProps } from 'dockview-react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { theme } from '../theme';
 import type { TabParams } from './feature';
 import { allTabTypes } from './featureIndex';
 import { openDefaultPanels, setDockApi } from './dockActions';
@@ -11,7 +10,7 @@ const visionTheme: DockviewTheme = {
   ...themeLight,
   name: 'vision',
   className: `${themeLight.className} vision-dock`,
-  gap: theme.layout.gap,
+  gap: 0,
 };
 
 type PanelComponent = FunctionComponent<IDockviewPanelProps<TabParams>>;
@@ -41,7 +40,7 @@ interface DockProps {
   onLayoutChange: (layout: unknown) => void;
 }
 
-/** The main area: panes with tabs that can be split and dragged, one card per pane. */
+/** The main area: panes with tabs that can be split and dragged, separated by thin lines. */
 export function Dock({ savedLayout, onLayoutChange }: DockProps) {
   const components = useMemo(
     () => Object.fromEntries(allTabTypes().map((tabType) => [tabType.id, withBoundary(tabType.id, tabType.component)])),

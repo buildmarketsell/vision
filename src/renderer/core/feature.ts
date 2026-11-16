@@ -4,13 +4,12 @@ import type { IDockviewPanelProps } from 'dockview-react';
 /** Parameters stored with a tab (saved in the layout, so keep them plain JSON). */
 export type TabParams = Record<string, string>;
 
-/** A section of the sidebar. Sections stack top to bottom in registry order. */
+/** A view of the sidebar, picked with its icon at the top. One shows at a time, in registry order. */
 export interface SidebarView {
   id: string;
   title: string;
+  icon: ReactNode;
   component: ComponentType;
-  /** True for the section that takes the remaining height (the file tree). */
-  grow?: boolean;
 }
 
 export interface TabType {

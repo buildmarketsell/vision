@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type MouseEvent } from 'react';
-import { Eye, EyeOff, FilePlus, FolderPlus, Pencil, Trash2, X } from 'lucide-react';
+import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, Pencil, RefreshCw, Trash2, X, type LucideIcon } from 'lucide-react';
 import type { DirEntry } from '../../../shared/ipc';
 import { ContextMenu, type ContextMenuItem } from '../../../renderer/components/ContextMenu';
 import { parentPath, useWorkspace } from '../../../renderer/core/workspaceStore';
@@ -9,6 +9,8 @@ import { useTree } from './treeStore';
 
 const REFRESH_DELAY_MS = 120;
 const ICON = { size: 15, strokeWidth: 1.5 };
+const HEADER_BUTTON_SIZE = 24;
+
 
 /** Folder that "New File" goes into: the selected folder, the selected file's folder, or the root. */
 function targetFolder(root: string, entry: DirEntry | null): string {
@@ -41,6 +43,30 @@ function useLiveRefresh(): void {
       for (const timer of pending.values()) clearTimeout(timer);
     };
   }, []);
+}
+
+function HeaderButton({ label, icon: Icon, onClick }: { label: string; icon: LucideIcon; onClick: () => void }) {
+  return (
+    <button className="icon-button" style={{ width: HEADER_BUTTON_SIZE, height: HEADER_BUTTON_SIZE }} title={label} aria-label={label} onClick={onClick}>
+      <Icon {...ICON} />
+    </button>
+  );
+}
+
+function ExplorerHeader({ folder, showHidden }: { folder: string; showHidden: boolean }) {
+  const hiddenLabel = showHidden ? 'Hide hidden files' : 'Show hidden files';
+  return (
+    <div className="flex items-center justify-between pr-2">
+      <div className="section-label">Files</div>
+      <div className="flex items-center">
+        <HeaderButton label="New File" icon={FilePlus} onClick={() => startCreate('newFile')} />
+        <HeaderButton label="New Folder" icon={FolderPlus} onClick={() => startCreate('newDir')} />
+        <HeaderButton label="Refresh" icon={RefreshCw} onClick={() => void useTree.getState().refresh(folder)} />
+        <HeaderButton label="Collapse All" icon={ChevronsDownUp} onClick={() => useTree.getState().collapseAll()} />
+        <HeaderButton label={hiddenLabel} icon={showHidden ? Eye : EyeOff} onClick={() => useWorkspace.getState().toggleHidden()} />
+      </div>
+    </div>
+  );
 }
 
 function menuItems(entry: DirEntry | null): ContextMenuItem[] {
@@ -83,25 +109,7 @@ export function ExplorerView() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="group flex items-center justify-between pr-2">
-        <div className="section-label">Files</div>
-        <div className="flex items-center opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-          <button className="icon-button" title="New File" aria-label="New File" onClick={() => startCreate('newFile')}>
-            <FilePlus {...ICON} />
-          </button>
-          <button className="icon-button" title="New Folder" aria-label="New Folder" onClick={() => startCreate('newDir')}>
-            <FolderPlus {...ICON} />
-          </button>
-          <button
-            className="icon-button"
-            title={showHidden ? 'Hide hidden files' : 'Show hidden files'}
-            aria-label={showHidden ? 'Hide hidden files' : 'Show hidden files'}
-            onClick={() => useWorkspace.getState().toggleHidden()}
-          >
-            {showHidden ? <Eye {...ICON} /> : <EyeOff {...ICON} />}
-          </button>
-        </div>
-      </div>
+      <ExplorerHeader folder={folder} showHidden={showHidden} />
       {notice && (
         <div className="mx-2 mb-1 flex items-start gap-2 rounded-md px-2 py-1.5" style={{ background: 'var(--color-danger-soft)', fontSize: 'var(--size-small)' }}>
           <span className="flex-1">{notice}</span>

@@ -6,7 +6,7 @@ import { findTabType } from './featureIndex';
 import { requestClosePanel } from './dockActions';
 import { useTabStatus } from './tabStatus';
 
-/** Notion-style tab: icon, title, an unsaved dot that turns into a close button on hover. */
+/** Notion-style tab: icon and title, a close button on hover, an unsaved dot otherwise. */
 export function PanelTab({ api, params, containerApi }: IDockviewPanelHeaderProps<TabParams>) {
   const [title, setTitle] = useState(api.title ?? '');
   const [hovered, setHovered] = useState(false);
@@ -23,19 +23,18 @@ export function PanelTab({ api, params, containerApi }: IDockviewPanelHeaderProp
     void requestClosePanel(containerApi.getPanel(api.id));
   };
 
-  const showClose = tabType?.closable !== false && (hovered || !isDirty);
+  const showClose = tabType?.closable !== false && hovered;
 
   return (
     <div
-      className="flex h-full items-center gap-2 px-2"
-      style={{ maxWidth: 220 }}
+      className="flex h-full w-full min-w-0 items-center gap-2 px-3"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onAuxClick={(event) => event.button === 1 && close(event)}
       title={params.path ?? title}
     >
       <span className="flex shrink-0 items-center">{tabType?.icon?.(params)}</span>
-      <span className="truncate">{title}</span>
+      <span className="min-w-0 flex-1 truncate">{title}</span>
       <span className="flex w-4 shrink-0 items-center justify-center">
         {showClose && (
           <button className="icon-button" style={{ width: 16, height: 16 }} onClick={close} aria-label={`Close ${title}`}>

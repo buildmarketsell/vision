@@ -1,0 +1,37 @@
+/* Claude terminal and the live indicators (dots, logo pulse). */
+
+.terminal-host .xterm {
+  height: 100%;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.terminal-host .xterm-viewport {
+  background-color: var(--color-terminal-background) !important;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.live-dot[data-busy='true'] {
+  animation: pulse 1.4s var(--ease) infinite;
+}
+
+.live-dot[data-busy='false'] {
+  opacity: 0.45;
+}
+
+.claude-logo[data-busy='true'] {
+  animation: pulse 1.4s var(--ease) infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+}
+

@@ -72,8 +72,8 @@ export function App() {
   }, []);
 
   return (
-    <div className="relative h-full" style={{ background: 'var(--color-card)' }} onDragOver={onDragOver} onDrop={(event) => void onDrop(event)}>
-      <div className="drag-region absolute inset-x-0 top-0 h-(--gap)" />
+    <div className="relative h-full" onDragOver={onDragOver} onDrop={(event) => void onDrop(event)}>
+      {!boot?.folderExists && <div className="drag-region absolute inset-x-0 top-0 h-(--title-bar-height)" />}
       <Content boot={boot} />
       {dropError && (
         <div className="card absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2" role="status">

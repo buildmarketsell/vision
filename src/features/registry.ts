@@ -6,6 +6,6 @@ import { explorerFeature } from './explorer';
 /**
  * Renderer parts of every feature. Adding a feature = a new folder in src/features/
  * and one line here (plus src/main/registry.ts if it has a main-process part).
- * Order matters: sidebar sections stack in this order (Claude sessions above Files).
+ * Order matters: sidebar view icons follow this order (Files first).
  */
-export const features: Feature[] = [claudeTerminalFeature, explorerFeature, editorFeature];
+export const features: Feature[] = [explorerFeature, claudeTerminalFeature, editorFeature];

@@ -1,6 +1,6 @@
 /**
  * Every color, radius, spacing and font value in VISION. Change the look here.
- * The look: Notion's calm sidebar and page chrome on clonk-style floating cards.
+ * The look: Notion's flat sidebar, gray tab strip and white page, with clonk's orange accent.
  */
 export const theme = {
   colors: {
@@ -9,7 +9,6 @@ export const theme = {
     claude: '#D97757',
     accentHover: '#E35A28',
     accentSoft: 'rgba(242, 107, 58, 0.12)',
-    windowBackground: '#E8EEF0',
     card: '#FFFFFF',
     sidebar: '#F7F7F5',
     text: '#37352F',
@@ -34,7 +33,7 @@ export const theme = {
   },
   radius: {
     card: '16px',
-    /** Concentric with the card: card radius minus the 8px inset. */
+    /** Concentric with a card: card radius minus an 8px inset. */
     inner: '8px',
     control: '8px',
     row: '6px',
@@ -65,11 +64,13 @@ export const theme = {
     base: '200ms',
   },
   layout: {
-    gap: 8,
     sidebarDefaultWidth: 260,
     sidebarMinWidth: 200,
     sidebarMaxWidth: 480,
+    /** Sidebar top row and tab strip share this height, so they line up. */
     titleBarHeight: '44px',
+    tabWidth: '240px',
+    tabMinWidth: '96px',
   },
 } as const;
 
@@ -92,9 +93,10 @@ export function applyThemeVariables(root: HTMLElement): void {
   root.style.setProperty('--size-small', theme.font.sizeSmall);
   root.style.setProperty('--size-base', theme.font.sizeBase);
   root.style.setProperty('--size-title', theme.font.sizeTitle);
-  root.style.setProperty('--gap', `${theme.layout.gap}px`);
   root.style.setProperty('--ease', theme.motion.ease);
   root.style.setProperty('--duration-fast', theme.motion.fast);
   root.style.setProperty('--duration-base', theme.motion.base);
   root.style.setProperty('--title-bar-height', theme.layout.titleBarHeight);
+  root.style.setProperty('--tab-width', theme.layout.tabWidth);
+  root.style.setProperty('--tab-min-width', theme.layout.tabMinWidth);
 }

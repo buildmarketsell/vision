@@ -9,7 +9,7 @@ import { focusClaudeTerminal } from './renderer/useClaudeTerminal';
 export const claudeTerminalFeature: Feature = {
   id: 'claude-terminal',
   name: 'Claude',
-  sidebarViews: [{ id: 'claude-sessions', title: 'Claude', component: SessionsView }],
+  sidebarViews: [{ id: 'claude-sessions', title: 'Claude', icon: createElement(ClaudeLogo, { size: 15 }), component: SessionsView }],
   tabTypes: [
     {
       id: CLAUDE_TAB,

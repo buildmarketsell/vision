@@ -54,7 +54,7 @@ export function Workspace({ layout }: { layout: FolderLayout | null }) {
   const onLayoutChange = useLayoutSaver(layout?.dock ?? null);
 
   return (
-    <div className="flex h-full gap-(--gap) p-(--gap)">
+    <div className="flex h-full">
       <Sidebar />
       <main className="min-w-0 flex-1">
         <Dock savedLayout={layout?.dock ?? null} onLayoutChange={onLayoutChange} />

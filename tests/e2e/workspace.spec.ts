@@ -152,7 +152,11 @@ test('opens, names, lists and closes several Claude sessions', async () => {
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
-    const sessions = page.getByRole('region', { name: 'Claude', exact: true }).getByRole('button', { name: /^Claude session/ });
+    // Sessions live in the sidebar's Claude view; Files shows first.
+    const sidebar = page.locator('aside');
+    await expect(sidebar.getByRole('tabpanel', { name: 'Files' })).toBeVisible();
+    await sidebar.getByRole('tab', { name: 'Claude' }).click();
+    const sessions = sidebar.getByRole('tabpanel', { name: 'Claude' }).getByRole('button', { name: /^Claude session/ });
     await expect(sessions).toHaveCount(1, { timeout: 15_000 });
     // A conversation is named after its first message, in the sidebar and the tab.
     await sendMessage(page, 'Plan the launch');

@@ -22,7 +22,7 @@ let isQuitting = false;
 const DEFAULT_SIZE = { width: 1440, height: 900 };
 /** Background mode for tests: windows render but are never shown. */
 const HEADLESS = process.env['VISION_HEADLESS'] === '1';
-const BACKGROUND_COLOR = '#E8EEF0';
+const BACKGROUND_COLOR = '#FFFFFF';
 
 export function setQuitting(value: boolean): void {
   isQuitting = value;
@@ -106,7 +106,8 @@ export function createWindow(folder: string | null, bounds: WindowBounds | null 
     show: false,
     title: 'VISION',
     titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 20, y: 22 },
+    /** Centered in the sidebar's 44px top row. */
+    trafficLightPosition: { x: 16, y: 16 },
     backgroundColor: BACKGROUND_COLOR,
     webPreferences: {
       preload: join(app.getAppPath(), 'out/preload/index.cjs'),

@@ -1,0 +1,59 @@
+/*
+ * Dock (panes and tabs), flat like Notion: one white page area, panes split by 1px lines,
+ * a gray tab strip on top where the active tab is white and joins the page below it.
+ */
+
+.vision-dock {
+  --dv-group-view-background-color: var(--color-card);
+  --dv-tabs-and-actions-container-background-color: var(--color-sidebar);
+  --dv-tabs-and-actions-container-height: var(--title-bar-height);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--color-card);
+  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--color-card);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-activegroup-visiblepanel-tab-color: var(--color-text);
+  --dv-activegroup-hiddenpanel-tab-color: var(--color-text-muted);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--color-text-muted);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--color-text-muted);
+  --dv-tab-divider-color: transparent;
+  --dv-separator-border: var(--color-border);
+  --dv-sash-color: transparent;
+  --dv-active-sash-color: var(--color-accent-soft);
+  --dv-drag-over-background-color: var(--color-accent-soft);
+  --dv-drag-over-border-color: var(--color-accent);
+  --dv-tabs-container-scrollbar-color: var(--color-text-faint);
+  --dv-icon-hover-background-color: var(--color-row-hover);
+  --dv-scrollbar-background-color: var(--color-row-selected);
+  --dv-paneview-active-outline-color: transparent;
+  --dv-tab-font-size: var(--size-base);
+  --dv-border-radius: 0;
+  height: 100%;
+}
+
+/* The line under the strip is an inset shadow, so the white active tab paints over it. */
+.vision-dock .dv-tabs-and-actions-container {
+  box-shadow: inset 0 -1px 0 var(--color-border);
+}
+
+.vision-dock .dv-tab {
+  flex: 0 1 var(--tab-width);
+  min-width: var(--tab-min-width);
+  height: 100%;
+  padding: 0;
+  box-shadow: inset -1px 0 0 var(--color-border);
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.vision-dock .dv-tab:not(.dv-active-tab):hover {
+  background: var(--color-row-hover);
+}
+
+/* Empty strip space moves the window, like a title bar. */
+.vision-dock .dv-void-container {
+  -webkit-app-region: drag;
+}
+
+/* Tabs that stay alive (Claude, editors) draw on an overlay above the pane: keep it square too. */
+.vision-dock .dv-render-overlay {
+  border-radius: 0;
+}

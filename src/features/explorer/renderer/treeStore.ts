@@ -22,6 +22,9 @@ interface TreeState {
   toggle: (dir: string) => void;
   expand: (dir: string) => void;
   forget: (dir: string) => void;
+  collapseAll: () => void;
+  /** Lists the root and every open folder again. */
+  refresh: (root: string) => Promise<void>;
   select: (path: string | null) => void;
   setEdit: (edit: TreeEdit) => void;
   setNotice: (notice: string | null) => void;
@@ -64,6 +67,12 @@ export const useTree = create<TreeState>((set, get) => ({
     const listings = Object.fromEntries(Object.entries(get().listings).filter(([path]) => !isInside(path)));
     const expanded = new Set([...get().expanded].filter((path) => !isInside(path)));
     set({ listings, expanded });
+  },
+
+  collapseAll: () => set({ expanded: new Set() }),
+
+  refresh: async (root) => {
+    await Promise.all([root, ...get().expanded].map((dir) => get().loadDir(dir)));
   },
 
   select: (path) => set({ selected: path }),
