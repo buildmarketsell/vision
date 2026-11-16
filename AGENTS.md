@@ -14,4 +14,22 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Remote: private GitHub repo `vision` (account `buildmarketsell`).
 - Claude only through the `claude` CLI. No API keys, never touch its credentials.
 
-Add the folder layout, naming and IPC patterns here as soon as they exist.
+## Folder layout
+- `src/main/`: app start (`index.ts`), windows and session restore (`windows.ts`), menu, saved state (`appState.ts` pure, `stateStore.ts` disk), login-shell PATH (`shellEnv.ts`), path checks (`paths.ts`), file system and watcher (`workspace/`).
+- `src/preload/index.ts`: the only bridge; exposes `window.vision` (type `VisionApi` in `src/shared/ipc.ts`).
+- `src/shared/`: types, IPC channel names (`IPC`), constants (`app.ts`).
+- `src/renderer/`: `App.tsx`, `theme.ts` (all design tokens), `styles.css`, `core/` (feature types and index, commands and shortcuts, dock and its actions, workspace store, tab status), `components/` (Sidebar, Welcome, Workspace, ErrorBoundary, ContextMenu, fileIcons).
+- `src/features/<name>/`: `index.ts` (manifest), `renderer/`, optional `main/`.
+- `tests/unit/` (vitest), `tests/e2e/` (Playwright driving Electron, with `fixtures/fake-claude.sh`).
+
+## Adding a feature
+1. Create `src/features/<name>/index.ts` exporting a `Feature` (see `src/renderer/core/feature.ts`).
+2. Add it to `src/features/registry.ts`. If it has main-process code, add its register function to `src/main/registry.ts`.
+3. New IPC: add the channel to `IPC` and the method to `VisionApi` in `src/shared/ipc.ts`, then to `src/preload/index.ts`. Validate every argument in main; paths must pass `isInsideFolder`.
+4. Features never import each other's files. Shared things go in `src/renderer/core` or `src/renderer/components`.
+
+## Gotchas
+- Tailwind scans `src/features` through `@source` in `styles.css`; keep that line or feature styles vanish.
+- When run from inside VS Code, `ELECTRON_RUN_AS_NODE=1` is set and Electron starts as plain Node. The tests and `npm run dev` remove it; for any other Electron command, run `unset ELECTRON_RUN_AS_NODE` first.
+- Never touch `window.webContents` after a window closes (it throws); use `WindowContext.webContents`.
+- node-pty uses its prebuilt binary (no rebuild). `scripts/postinstall.mjs` makes its `spawn-helper` executable because npm blocks node-pty's own install script.

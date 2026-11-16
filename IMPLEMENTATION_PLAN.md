@@ -50,8 +50,8 @@ All free and open source.
 - **Electron** + **electron-vite**, **React**, **TypeScript** in strict mode
 - **Tailwind CSS**; every color, radius, spacing and font value in `src/renderer/theme.ts`
 - **Monaco Editor** via `@monaco-editor/react`, **configured to load the local `monaco-editor` package** (`loader.config({ monaco })`, workers bundled by Vite). By default it loads from a CDN, which breaks offline.
-- **xterm.js** (`@xterm/xterm`, `@xterm/addon-fit`) + **node-pty**. node-pty is a native module: mark it external in the electron-vite main build and rebuild it for Electron with `@electron/rebuild` in `postinstall`. Pin versions once it works.
-- **dockview** for panes, tabs and dragging tabs between panes
+- **xterm.js** (`@xterm/xterm`, `@xterm/addon-fit`) + **node-pty**. node-pty is a native module loaded from `node_modules` (electron-vite keeps it external). Its prebuilt binary works in Electron as is, so no rebuild; `scripts/postinstall.mjs` makes its helper executable.
+- **dockview-react** for panes, tabs and dragging tabs between panes
 - **chokidar** for file watching
 - **zustand** for renderer state
 - **lucide-react** icons
@@ -115,6 +115,10 @@ v0.1 ships three features: `explorer`, `editor`, `claude-terminal`.
 ## 4. Look and feel
 
 Follow section 8 of the coding rules (no emojis, no glassmorphism, no purple, useful text only, loading and error states everywhere).
+
+**Direction (Dan, 2026-11-16): a combo of Notion and the clonk reference.**
+- From **clonk** (`reference/clonk.png`): the wallpaper with floating rounded cards, the orange accent, the Claude pane with its live and task cards.
+- From **Notion** (`reference/notion.png`, Dan's Notion app): the sidebar and page chrome. Warm off-white sidebar (`#F7F7F5`), workspace name at the top, a row of small icon buttons, sections with small gray labels ("Recents", "Files"), rows of icon + name with a soft rounded gray hover and a gray "selected" fill, no heavy borders. Tabs with file icons along the top of each pane, a breadcrumb bar under them (`folder / sub / file.md`), lots of white space, calm text. A rounded "New chat" pill at the bottom of the sidebar that focuses Claude.
 
 - A soft landscape wallpaper behind the window (configurable). Panels float on top as **solid** rounded cards (radius 16px), with soft shadows and 8px gaps. No blur or see-through panels.
 - Spacing scale: 4 / 8 / 12 / 16 / 24 / 32 / 48 px only.
