@@ -19,9 +19,9 @@ if (!process.argv.includes('-p')) {
     const id = `msg_${++turn}`;
     out({ type: 'stream_event', api_message_id: id, event: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } } });
     for (const word of text.split(' ')) out({ type: 'stream_event', api_message_id: id, event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: `${word} ` } } });
-    out({ type: 'assistant', message: { id, content: [{ type: 'text', text }] } });
+    out({ type: 'assistant', message: { id, content: [{ type: 'text', text }], usage: { input_tokens: 1000, cache_read_input_tokens: 40000, output_tokens: 10 } } });
     out({ type: 'rate_limit_event', rate_limit_info: { unifiedWindows: { five_hour: { utilization: 0.29, resetsAt: 1900000000 }, seven_day: { utilization: 0.4, resetsAt: 1900500000 } } } });
-    out({ type: 'result', subtype: 'success', is_error: false, total_cost_usd: 0.001 });
+    out({ type: 'result', subtype: 'success', is_error: false, total_cost_usd: 0.001, modelUsage: { 'claude-fake': { contextWindow: 200000 } } });
   };
   const askTool = (name, input, then) => {
     const id = `msg_${++turn}`;
@@ -32,7 +32,16 @@ if (!process.argv.includes('-p')) {
   createInterface({ input: process.stdin }).on('line', (line) => {
     const message = JSON.parse(line);
     if (message.type === 'control_request' && message.request.subtype === 'initialize') {
-      out({ type: 'control_response', response: { subtype: 'success', request_id: message.request_id, response: {} } });
+      out({ type: 'control_response', response: { subtype: 'success', request_id: message.request_id, response: {
+        models: [
+          { value: 'default', displayName: 'Default (recommended)', description: 'Opus' },
+          { value: 'haiku', displayName: 'Haiku', description: 'Fastest' },
+        ],
+        commands: [
+          { name: 'review', description: 'Review the current changes', argumentHint: '' },
+          { name: 'compact', description: 'Clear history but keep a summary', argumentHint: '' },
+        ],
+      } } });
     } else if (message.type === 'control_request' && message.request.subtype === 'interrupt') {
       out({ type: 'user', message: { content: [{ type: 'text', text: '[Request interrupted by user]' }] } });
       out({ type: 'result', subtype: 'success', is_error: false, total_cost_usd: 0 });

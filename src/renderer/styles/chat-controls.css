@@ -56,6 +56,7 @@
 }
 
 .composer {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -119,21 +120,6 @@
   border-radius: var(--radius-row);
 }
 
-.mode-select {
-  height: 28px;
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-control);
-  background: transparent;
-  font-size: var(--size-small);
-  color: var(--color-text-muted);
-  outline: none;
-  transition: background-color var(--duration-fast) var(--ease);
-}
-
-.mode-select:hover {
-  background: var(--color-row-hover);
-}
-
 .send-button {
   display: inline-flex;
   align-items: center;
@@ -153,6 +139,11 @@
 
 .send-button:active:not(:disabled) {
   transform: scale(0.92);
+}
+
+.send-button[data-queue='true'] {
+  background: var(--color-row-selected);
+  color: var(--color-text);
 }
 
 .send-button[data-stop='true'] {

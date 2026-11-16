@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, ChevronRight, Circle } from 'lucide-react';
 import type { Todo } from './chatTypes';
+import { WaveText } from './WaveText';
 
 /** The dark "working" card from the clonk reference: what Claude is doing right now. */
 export function LiveCard({ activity }: { activity: string }) {
@@ -12,7 +13,9 @@ export function LiveCard({ activity }: { activity: string }) {
         <span className="flex-1" />
         <span className="live-label" style={{ color: 'var(--color-accent)' }}>LIVE</span>
       </div>
-      <div className="live-text">{activity || 'Working…'}</div>
+      <div className="live-text">
+        <WaveText text={activity || 'Working…'} />
+      </div>
     </div>
   );
 }

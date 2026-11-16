@@ -7,6 +7,7 @@ import { describeTool } from '../../src/features/claude-terminal/renderer/chat/e
 import { messagesFromTranscript, titleFromTail } from '../../src/features/claude-terminal/main/transcripts';
 import { toClaudeMessage } from '../../src/features/claude-terminal/main/chatProcess';
 import { mentionFor } from '../../src/features/claude-terminal/renderer/chat/useDraft';
+import { matchCommands, slashQuery } from '../../src/features/claude-terminal/renderer/chat/useSlashMenu';
 
 /** Replays a recorded real session: lines Claude printed, and what the host sent (`__sent__`). */
 function replay(name: string, stopAtFirst?: (state: ChatState) => boolean): ChatState {
@@ -136,5 +137,37 @@ describe('images and dropped paths', () => {
     expect(mentionFor('/work/site', '/work/site/src/a.ts')).toBe('@src/a.ts ');
     expect(mentionFor('/work/site', '/Users/dan/Desktop/shot.pdf')).toBe('@/Users/dan/Desktop/shot.pdf ');
     expect(mentionFor('/work/site', '/work/site-old/a.ts')).toBe('@/work/site-old/a.ts ');
+  });
+});
+
+describe('session info: models, slash commands, context', () => {
+  it('reads models and commands from the reply to initialize', () => {
+    const state = reduceClaudeEvent(emptyChatState(), {
+      type: 'control_response',
+      response: { subtype: 'success', request_id: 'i1', response: { models: [{ value: 'haiku', displayName: 'Haiku', description: 'Fast' }, { nope: 1 }], commands: [{ name: 'review', description: 'Review' }] } },
+    });
+    expect(state.info.models).toEqual([{ value: 'haiku', displayName: 'Haiku', description: 'Fast' }]);
+    expect(state.info.commands).toEqual([{ name: 'review', description: 'Review', argumentHint: '' }]);
+  });
+  it('tracks context use and the window from a real session', () => {
+    const state = replay('permission-allow.jsonl');
+    expect(state.info.contextUsed).toBeGreaterThan(20_000);
+    expect(state.info.contextWindow).toBe(1_000_000);
+  });
+  it('ignores subagent usage and keeps the same object when nothing changed', () => {
+    const before = emptyChatState();
+    const after = reduceClaudeEvent(before, { type: 'assistant', parent_tool_use_id: 't1', message: { usage: { input_tokens: 99 } } });
+    expect(after.info).toBe(before.info);
+  });
+  it('filters slash commands, prefix matches first', () => {
+    const commands = ['review', 'pr-review', 'compact'].map((name) => ({ name, description: '', argumentHint: '' }));
+    expect(slashQuery('/rev')).toBe('rev');
+    expect(slashQuery('/review now')).toBeNull();
+    expect(slashQuery('hi /rev')).toBeNull();
+    expect(matchCommands(commands, 'rev').map((command) => command.name)).toEqual(['review', 'pr-review']);
+  });
+  it('validates model switches', () => {
+    expect(toClaudeMessage({ kind: 'setModel', model: 'opus[1m]' })).toMatchObject({ request: { subtype: 'set_model', model: 'opus[1m]' } });
+    expect(toClaudeMessage({ kind: 'setModel', model: 'haiku; rm -rf /' })).toBeNull();
   });
 });

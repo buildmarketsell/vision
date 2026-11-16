@@ -1,5 +1,6 @@
 import type { ChatItem, ChatState, LocalAction, ToolCall } from './chatTypes';
 import { asArr, asObj, asStr, describeTool, parseQuestions, parseTodos, toolResultText, type Obj } from './eventParsing';
+import { reduceSessionInfo } from './sessionInfo';
 
 /**
  * Turns Claude's stream-json events (and the window's own actions) into chat state.
@@ -159,10 +160,12 @@ function reduceResult(state: ChatState, event: Obj): ChatState {
   return next;
 }
 
-export function reduceClaudeEvent(state: ChatState, raw: unknown): ChatState {
+export function reduceClaudeEvent(previous: ChatState, raw: unknown): ChatState {
   const event = asObj(raw);
   const type = asStr(event?.['type']);
-  if (!event || !type) return { ...state, unknownEvents: state.unknownEvents + 1 };
+  if (!event || !type) return { ...previous, unknownEvents: previous.unknownEvents + 1 };
+  const info = reduceSessionInfo(previous.info, event);
+  const state = info === previous.info ? previous : { ...previous, info };
   switch (type) {
     case 'system':
       return reduceSystem(state, event);

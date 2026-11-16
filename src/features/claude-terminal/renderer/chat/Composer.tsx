@@ -1,7 +1,11 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
-import { ArrowUp, Square, X } from 'lucide-react';
+import { ArrowUp, ListPlus, Square, X } from 'lucide-react';
 import { PERMISSION_MODES, type ChatImage, type PermissionMode } from '../../../../shared/claudeChat';
+import { ComposerMenu } from './ComposerMenu';
+import { ContextMeter, ModelPicker } from './ComposerControls';
+import type { SessionInfo } from './sessionInfo';
 import type { Draft } from './useDraft';
+import { useSlashMenu } from './useSlashMenu';
 
 const MAX_HEIGHT_PX = 200;
 
@@ -36,14 +40,19 @@ interface ComposerProps {
   working: boolean;
   disabled: boolean;
   mode: PermissionMode;
+  info: SessionInfo;
+  model: string;
+  /** Sends now, or queues while Claude is working. */
   onSend: (text: string, images: ChatImage[]) => void;
   onStop: () => void;
   onModeChange: (mode: PermissionMode) => void;
+  onModelChange: (model: string) => void;
 }
 
-export function Composer({ draft, working, disabled, mode, onSend, onStop, onModeChange }: ComposerProps) {
+export function Composer({ draft, working, disabled, mode, info, model, onSend, onStop, onModeChange, onModelChange }: ComposerProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const canSend = !disabled && (draft.text.trim() !== '' || draft.images.length > 0);
+  const slash = useSlashMenu(draft.text, info.commands, draft.setText);
 
   useEffect(() => {
     const area = ref.current;
@@ -59,6 +68,7 @@ export function Composer({ draft, working, disabled, mode, onSend, onStop, onMod
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (slash.onKeyDown(event)) return;
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       send();
@@ -67,6 +77,7 @@ export function Composer({ draft, working, disabled, mode, onSend, onStop, onMod
 
   return (
     <div className="composer">
+      {slash.open && <ComposerMenu label="Slash commands" items={slash.items} activeIndex={slash.active} onHover={slash.setActive} onPick={slash.pick} />}
       <Thumbnails images={draft.images} onRemove={draft.removeImage} />
       <textarea
         ref={ref}
@@ -81,12 +92,19 @@ export function Composer({ draft, working, disabled, mode, onSend, onStop, onMod
       />
       {draft.error && <div className="caption" role="alert" style={{ color: 'var(--color-danger)' }}>{draft.error}</div>}
       <div className="flex items-center gap-2">
-        <select className="mode-select" aria-label="Permission mode" value={mode} onChange={(event) => onModeChange(event.target.value as PermissionMode)}>
+        <select className="composer-pill" aria-label="Permission mode" value={mode} onChange={(event) => onModeChange(event.target.value as PermissionMode)}>
           {PERMISSION_MODES.map((item) => (
             <option key={item} value={item}>{MODE_LABELS[item]}</option>
           ))}
         </select>
+        <ModelPicker models={info.models} value={model} onChange={onModelChange} />
         <span className="flex-1" />
+        <ContextMeter info={info} />
+        {working && canSend && (
+          <button className="send-button" data-queue="true" aria-label="Queue message" title="Queue (Enter): sends when Claude is done" onClick={send}>
+            <ListPlus size={15} strokeWidth={2.25} />
+          </button>
+        )}
         {working ? (
           <button className="send-button" data-stop="true" aria-label="Stop Claude" title="Stop" onClick={onStop}>
             <Square size={12} strokeWidth={2.5} fill="currentColor" />

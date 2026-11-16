@@ -27,9 +27,14 @@ export interface ChatSession {
   deny: (requestId: string) => void;
   interrupt: () => void;
   setMode: (mode: PermissionMode) => void;
+  /** Model alias from Claude's list; "default" means Claude Code's own choice. */
+  model: string;
+  setModel: (model: string) => void;
   /** Starts over in another saved conversation (or a new one with null). */
   open: (sessionId: string | null) => void;
 }
+
+const DEFAULT_MODEL = 'default';
 
 /** One chat tab's link to a `claude -p` stream-json process. */
 export function useChatSession(initialSessionId: string | null, initialMode: PermissionMode): ChatSession {
@@ -39,6 +44,9 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
   const processId = useRef<number | null>(null);
   const modeRef = useRef(mode);
   modeRef.current = mode;
+  const [model, setModelState] = useState(DEFAULT_MODEL);
+  const modelRef = useRef(model);
+  modelRef.current = model;
 
   useEffect(() => {
     let cancelled = false;
@@ -53,7 +61,7 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
     const start = async () => {
       dispatch({ type: 'replace', state: target.sessionId ? await loadHistory(target.sessionId) : emptyChatState() });
       if (cancelled) return;
-      const options = { permissionMode: modeRef.current, ...(target.sessionId ? { resumeSessionId: target.sessionId } : {}) };
+      const options = { permissionMode: modeRef.current, model: modelRef.current, ...(target.sessionId ? { resumeSessionId: target.sessionId } : {}) };
       const result = await window.vision.chat.start(options);
       if (cancelled) {
         if (result.ok) window.vision.chat.stop(result.id);
@@ -102,6 +110,11 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
     setMode: (next) => {
       setModeState(next);
       sendRaw({ kind: 'setPermissionMode', mode: next });
+    },
+    model,
+    setModel: (next) => {
+      setModelState(next);
+      sendRaw({ kind: 'setModel', model: next });
     },
     open: (sessionId) => setTarget({ sessionId }),
   };

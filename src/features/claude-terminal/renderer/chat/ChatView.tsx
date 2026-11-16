@@ -5,6 +5,7 @@ import { baseName, useWorkspace } from '../../../../renderer/core/workspaceStore
 import type { ChatItem, ChatState } from './chatTypes';
 import { Composer } from './Composer';
 import { useDraft } from './useDraft';
+import { QueuedMessages, useMessageQueue } from './QueuedMessages';
 import { LiveCard, TasksCard } from './LiveCards';
 import { Markdown } from './Markdown';
 import { PermissionCard, QuestionCard } from './RequestCards';
@@ -89,6 +90,8 @@ export function ChatView({ chat }: { chat: ChatSession }) {
   const waiting = state.permissions.length > 0 || state.questions.length > 0;
   const working = state.phase === 'working';
   const draft = useDraft();
+  const ready = state.phase === 'idle' && !waiting;
+  const queue = useMessageQueue(ready, chat.send);
 
   return (
     <div className="flex h-full min-h-0 flex-col" onDragOver={draft.onDragOver} onDrop={draft.onDrop}>
@@ -119,12 +122,16 @@ export function ChatView({ chat }: { chat: ChatSession }) {
         ))}
         {working && !waiting && <LiveCard activity={state.activity} />}
         {state.todos.length > 0 && <TasksCard todos={state.todos} />}
+        <QueuedMessages queue={queue.queue} onRemove={queue.remove} />
         <Composer
           draft={draft}
           working={working}
           disabled={state.phase === 'stopped' || state.phase === 'starting'}
           mode={chat.mode}
-          onSend={chat.send}
+          info={state.info}
+          model={chat.model}
+          onSend={(text, images) => (working || queue.queue.length > 0 ? queue.add(text, images) : chat.send(text, images))}
+          onModelChange={chat.setModel}
           onStop={chat.interrupt}
           onModeChange={chat.setMode}
         />

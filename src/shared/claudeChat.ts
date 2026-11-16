@@ -8,6 +8,15 @@ export interface ChatStartOptions {
   /** Continue an earlier conversation. */
   resumeSessionId?: string;
   permissionMode: PermissionMode;
+  /** A model alias or id from Claude's own list (e.g. "sonnet", "opus[1m]"). */
+  model?: string;
+}
+
+/** Model names reach a command line: letters, digits and a few separators only. */
+export const MODEL_PATTERN = /^[a-zA-Z0-9.\-[\]]{1,64}$/;
+
+export function isModelName(value: unknown): value is string {
+  return typeof value === 'string' && MODEL_PATTERN.test(value);
 }
 
 export type ChatStartResult =
@@ -36,7 +45,8 @@ export type ChatOutgoing =
   | { kind: 'allow'; requestId: string; updatedInput: Record<string, unknown> }
   | { kind: 'deny'; requestId: string; message: string }
   | { kind: 'interrupt' }
-  | { kind: 'setPermissionMode'; mode: PermissionMode };
+  | { kind: 'setPermissionMode'; mode: PermissionMode }
+  | { kind: 'setModel'; model: string };
 
 /** One parsed line of Claude's stream-json output. Parsed defensively in the window. */
 export interface ChatEventMessage {

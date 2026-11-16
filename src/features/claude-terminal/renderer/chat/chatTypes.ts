@@ -1,3 +1,5 @@
+import { emptySessionInfo, type SessionInfo } from './sessionInfo';
+
 /** The chat's state, built from Claude's stream-json events by chatReducer.ts. */
 
 export type ToolStatus = 'running' | 'done' | 'error' | 'denied' | 'stopped';
@@ -62,6 +64,8 @@ export interface ChatState {
   /** What Claude is doing right now, for the live card. */
   activity: string;
   costUsd: number;
+  /** Models, slash commands and context use. */
+  info: SessionInfo;
   /** Streaming text items by `${messageId}:${blockIndex}`. */
   streamingKeys: Record<string, string>;
   /** Events VISION didn't recognise (logged, never fatal). */
@@ -81,6 +85,7 @@ export function emptyChatState(): ChatState {
     model: null,
     activity: '',
     costUsd: 0,
+    info: emptySessionInfo(),
     streamingKeys: {},
     unknownEvents: 0,
     nextKey: 1,

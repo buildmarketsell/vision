@@ -3,6 +3,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { IPC } from '../../../shared/ipc';
 import {
   isImageMediaType,
+  isModelName,
   isSessionId,
   MAX_IMAGE_BYTES,
   MAX_IMAGES_PER_MESSAGE,
@@ -32,7 +33,7 @@ function isMode(value: unknown): value is PermissionMode {
   return typeof value === 'string' && (PERMISSION_MODES as string[]).includes(value);
 }
 
-function chatArgs(mode: PermissionMode, resumeId: string | null): string[] {
+function chatArgs(mode: PermissionMode, resumeId: string | null, model: string | null): string[] {
   const args = [
     '-p',
     '--input-format', 'stream-json',
@@ -44,6 +45,7 @@ function chatArgs(mode: PermissionMode, resumeId: string | null): string[] {
     '--permission-mode', mode,
   ];
   if (resumeId) args.push('--resume', resumeId);
+  if (model && model !== 'default') args.push('--model', model);
   return args;
 }
 
@@ -87,8 +89,9 @@ async function startChat(owner: WebContents, options: unknown): Promise<ChatStar
   const record = (options ?? {}) as Record<string, unknown>;
   const mode = isMode(record['permissionMode']) ? record['permissionMode'] : 'default';
   const resumeId = isSessionId(record['resumeSessionId']) ? record['resumeSessionId'] : null;
+  const model = isModelName(record['model']) ? record['model'] : null;
   try {
-    const child = spawn(claude.executable, chatArgs(mode, resumeId), { cwd: folder, env: claude.env });
+    const child = spawn(claude.executable, chatArgs(mode, resumeId, model), { cwd: folder, env: claude.env });
     const id = nextId++;
     const session: ChatSession = { child, owner, errorTail: '' };
     sessions.set(id, session);
@@ -155,6 +158,8 @@ export function toClaudeMessage(outgoing: unknown): object | null {
       return controlRequest({ subtype: 'interrupt' });
     case 'setPermissionMode':
       return isMode(message['mode']) ? controlRequest({ subtype: 'set_permission_mode', mode: message['mode'] }) : null;
+    case 'setModel':
+      return isModelName(message['model']) ? controlRequest({ subtype: 'set_model', model: message['model'] }) : null;
     default:
       return null;
   }

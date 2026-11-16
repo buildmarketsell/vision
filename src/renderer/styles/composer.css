@@ -1,0 +1,109 @@
+/*
+ * Message box extras, after Kokonut UI's AI components: pill controls, menus that grow up out of
+ * the box (models, slash commands, context), the message queue and the wave loading text.
+ */
+
+.composer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: var(--size-small);
+  color: var(--color-text-muted);
+  outline: none;
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.composer-pill:hover,
+.composer-pill[aria-expanded='true'] {
+  background: var(--color-row-hover);
+  color: var(--color-text);
+}
+
+.composer-pill:active {
+  transform: scale(0.97);
+  transition-duration: 0ms;
+}
+
+.composer-menu {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 20;
+  width: min(420px, calc(100vw - 32px));
+  max-height: 320px;
+  overflow-y: auto;
+  padding: var(--space-1);
+  border-radius: 14px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-popover);
+  transform-origin: bottom left;
+}
+
+/* Concentric with the menu: 14px radius minus the 4px inset. */
+.composer-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: default;
+}
+
+.composer-menu-item[data-active='true'] {
+  background: var(--color-row-hover);
+}
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: 14px;
+  background: var(--color-sidebar);
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-1) 0 var(--space-3);
+  border-radius: 10px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+}
+
+.wave-text > span {
+  display: inline-block;
+  white-space: pre;
+  animation: wave 1.6s var(--ease) infinite;
+}
+
+@keyframes wave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(-2px);
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-text > span {
+    animation: none;
+  }
+
+  .composer-pill:active {
+    transform: none;
+  }
+}

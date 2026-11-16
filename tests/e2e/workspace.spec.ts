@@ -172,6 +172,37 @@ test('pastes a screenshot into the chat and sends it', async () => {
   }
 });
 
+test('slash commands, model picker, context meter and message queue', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    await sendMessage(page, 'hi');
+    await expect(page.getByRole('button', { name: 'Context 21% used' })).toBeVisible();
+
+    await messageBox(page).first().fill('/rev');
+    const commands = page.getByRole('listbox', { name: 'Slash commands' });
+    await expect(commands.getByRole('option')).toHaveCount(1);
+    await messageBox(page).first().press('Enter');
+    await expect(messageBox(page).first()).toHaveValue('/review ');
+    await messageBox(page).first().fill('');
+
+    await page.getByRole('button', { name: 'Default model' }).click();
+    await page.getByRole('listbox', { name: 'Model' }).getByRole('option', { name: /Haiku/ }).click();
+    await expect(page.getByRole('button', { name: 'Haiku' })).toBeVisible();
+
+    await sendMessage(page, 'slow one');
+    await messageBox(page).first().fill('queued follow-up');
+    await messageBox(page).first().press('Enter');
+    await expect(page.getByLabel('Queued messages')).toContainText('queued follow-up');
+    await page.screenshot({ animations: 'disabled', path: 'test-results/queue.png' });
+    await page.getByRole('button', { name: 'Stop Claude' }).click();
+    await expect(page.locator('.assistant-text').last()).toContainText('You said: queued follow-up');
+    await expect(page.getByLabel('Queued messages')).toHaveCount(0);
+  } finally {
+    await app.close();
+  }
+});
+
 test('opens, names, lists and closes several Claude sessions', async () => {
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);
