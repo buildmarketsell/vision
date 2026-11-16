@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9FC4DE"/>
+      <stop offset="0.55" stop-color="#D3E3EA"/>
+      <stop offset="1" stop-color="#EEE6D8"/>
+    </linearGradient>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9BFC9"/>
+      <stop offset="1" stop-color="#C6D3D3"/>
+    </linearGradient>
+    <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9DB98A"/>
+      <stop offset="1" stop-color="#86A673"/>
+    </linearGradient>
+    <linearGradient id="near" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7FA162"/>
+      <stop offset="1" stop-color="#5E8447"/>
+    </linearGradient>
+    <linearGradient id="front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6A9050"/>
+      <stop offset="1" stop-color="#46693A"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="haze">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <g fill="#FFFFFF" opacity="0.75" filter="url(#soft)">
+    <ellipse cx="300" cy="210" rx="220" ry="48"/>
+    <ellipse cx="420" cy="180" rx="140" ry="40"/>
+    <ellipse cx="1180" cy="150" rx="260" ry="52"/>
+    <ellipse cx="1320" cy="190" rx="160" ry="38"/>
+    <ellipse cx="820" cy="300" rx="200" ry="30"/>
+  </g>
+  <path filter="url(#haze)" fill="url(#far)" d="M0 560 L120 500 L230 530 L360 440 L470 500 L600 430 L720 480 L860 410 L980 470 L1100 420 L1240 480 L1380 430 L1500 470 L1600 450 L1600 1000 L0 1000 Z"/>
+  <path fill="url(#mid)" d="M0 640 C200 580 360 610 520 590 C700 565 860 620 1040 590 C1220 560 1400 600 1600 570 L1600 1000 L0 1000 Z"/>
+  <path fill="url(#near)" d="M0 740 C180 690 380 720 560 700 C760 676 940 740 1140 712 C1320 688 1460 700 1600 680 L1600 1000 L0 1000 Z"/>
+  <path fill="url(#front)" d="M0 860 C240 800 460 840 700 820 C940 800 1160 860 1400 830 C1490 820 1550 815 1600 812 L1600 1000 L0 1000 Z"/>
+</svg>
