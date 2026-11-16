@@ -9,6 +9,7 @@
 - Design polish (branch `feature/design-polish`): San Francisco type with size-specific tracking, press feedback, menus that grow from the click, Welcome card entrance, sidebar rubber-band resize, one Claude header with a Working/Ready pill, warm editor colors, card shadows and rounded pane corners fixed, Reduce Motion and Increase Contrast support, headless test mode.
 - Claude button (branch `feature/claude-button`): the sidebar's bottom button is now "Claude" and opens a new Claude terminal (⌘T); every Claude tab, header and session row uses the Claude starburst logo, pulsing while working and dimmed when stopped.
 - v0.2 Claude chat (branch `feature/v0-2-claude-chat`): each Claude tab is a chat by default (streamed formatted replies, tool rows with diffs, Allow/Deny cards, question cards, live Working card, Tasks card when Claude keeps a to-do list, Stop, permission mode picker, drop a file to @mention it, recent conversations to reopen), with a Terminal switch that resumes the same conversation. Tabs remember their conversation across restarts.
+- Markdown preview (on `feature/notion-layout`, 2026-11-16): `.md` files open as a formatted page (Preview) with a Preview / Edit switch in the breadcrumb row; Edit is the Monaco editor. Shared renderer in `src/renderer/components/Markdown.tsx`, page styles in `styles/markdown-document.css`.
 
 ## Next
 - Notion-style redesign (branch `feature/notion-layout`, Dan chose "Like Notion" on 2026-11-16; reference: his Notion app screenshot):

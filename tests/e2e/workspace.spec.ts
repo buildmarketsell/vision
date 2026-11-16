@@ -61,6 +61,9 @@ test('opens a folder, edits and saves a file, and chats with Claude', async () =
     await expect(page.locator('.assistant-text').last()).toContainText('Hello from fake Claude. You said: hi there');
 
     await page.getByRole('treeitem', { name: /hello\.md/ }).click();
+    await expect(page.locator('.markdown-document h1')).toHaveText('Hello', { timeout: 15_000 });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/markdown-preview.png' });
+    await page.getByRole('button', { name: 'Edit' }).click();
     const editor = page.locator('.monaco-editor').first();
     await expect(editor).toBeVisible({ timeout: 15_000 });
     await expect(editor).toContainText('# Hello');

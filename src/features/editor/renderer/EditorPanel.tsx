@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import type { IDockviewPanelProps } from 'dockview-react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Code, Eye } from 'lucide-react';
+import { Markdown } from '../../../renderer/components/Markdown';
 import type { TabParams } from '../../../renderer/core/feature';
 import { relativeParts, useWorkspace, baseName } from '../../../renderer/core/workspaceStore';
 import { reloadFromDisk, useEditor, type Buffer } from './editorStore';
@@ -10,7 +11,27 @@ const MonacoEditor = lazy(async () => {
   return import('./MonacoEditor');
 });
 
-function Breadcrumbs({ path }: { path: string }) {
+type View = 'preview' | 'edit';
+
+function isMarkdown(path: string): boolean {
+  return /\.(md|markdown)$/i.test(path);
+}
+
+/** Preview / Edit switch shown on .md tabs. */
+function ViewSwitch({ view, onChange }: { view: View; onChange: (view: View) => void }) {
+  return (
+    <div className="view-switch ml-auto shrink-0" role="group" aria-label="Markdown view">
+      <button aria-pressed={view === 'preview'} onClick={() => onChange('preview')}>
+        <Eye size={12} strokeWidth={1.75} /> Preview
+      </button>
+      <button aria-pressed={view === 'edit'} onClick={() => onChange('edit')}>
+        <Code size={12} strokeWidth={1.75} /> Edit
+      </button>
+    </div>
+  );
+}
+
+function Breadcrumbs({ path, children }: { path: string; children?: ReactNode }) {
   const folder = useWorkspace((state) => state.folder);
   const parts = [baseName(folder), ...relativeParts(folder, path)];
   return (
@@ -21,6 +42,7 @@ function Breadcrumbs({ path }: { path: string }) {
           <span className={`truncate ${index === parts.length - 1 ? 'text-(--color-text)' : ''}`}>{part}</span>
         </span>
       ))}
+      {children}
     </div>
   );
 }
@@ -74,7 +96,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function EditorBody({ path, buffer }: { path: string; buffer: Buffer | undefined }) {
+function EditorBody({ path, buffer, view }: { path: string; buffer: Buffer | undefined; view: View }) {
   if (!buffer || buffer.status === 'loading') return <Message title="Opening…" action={<div className="spinner" />} />;
   if (buffer.status === 'binary') return <Message title="This file can't be shown as text." detail="Images, PDFs and other file types get their own viewers in a later version." />;
   if (buffer.status === 'tooLarge') return <Message title={`This file is too large to edit (${formatSize(buffer.sizeBytes)}).`} detail="Files up to 5 MB open in the editor." />;
@@ -90,7 +112,12 @@ function EditorBody({ path, buffer }: { path: string; buffer: Buffer | undefined
   return (
     <div className="flex h-full flex-col">
       <DiskBanners path={path} buffer={buffer} />
-      <div className="min-h-0 flex-1">
+      {view === 'preview' && (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <Markdown text={buffer.current} className="markdown-document" />
+        </div>
+      )}
+      <div className="min-h-0 flex-1" hidden={view === 'preview'}>
         <Suspense fallback={<Message title="Loading editor…" action={<div className="spinner" />} />}>
           <MonacoEditor path={path} value={buffer.current} />
         </Suspense>
@@ -99,10 +126,12 @@ function EditorBody({ path, buffer }: { path: string; buffer: Buffer | undefined
   );
 }
 
-/** A file tab: breadcrumbs on top, the editor below. */
+/** A file tab: breadcrumbs on top, the editor below. Markdown files open in Preview, with a switch to Edit. */
 export function EditorPanel({ params }: IDockviewPanelProps<TabParams>) {
   const path = params.path ?? '';
   const buffer = useEditor((state) => state.buffers[path]);
+  const markdown = isMarkdown(path);
+  const [view, setView] = useState<View>(markdown ? 'preview' : 'edit');
 
   useEffect(() => {
     if (path && !useEditor.getState().buffers[path]) void useEditor.getState().load(path);
@@ -110,9 +139,9 @@ export function EditorPanel({ params }: IDockviewPanelProps<TabParams>) {
 
   return (
     <div className="flex h-full flex-col bg-(--color-card)">
-      <Breadcrumbs path={path} />
+      <Breadcrumbs path={path}>{markdown && <ViewSwitch view={view} onChange={setView} />}</Breadcrumbs>
       <div className="min-h-0 flex-1">
-        <EditorBody path={path} buffer={buffer} />
+        <EditorBody path={path} buffer={buffer} view={view} />
       </div>
     </div>
   );
