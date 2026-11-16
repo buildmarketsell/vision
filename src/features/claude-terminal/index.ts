@@ -1,32 +1,34 @@
 import { createElement } from 'react';
 import type { Feature } from '../../renderer/core/feature';
-import { focusPanel } from '../../renderer/core/dockActions';
 import { ClaudeIcon, ClaudePanel } from './renderer/ClaudePanel';
+import { SessionsView } from './renderer/SessionsView';
+import { CLAUDE_TAB, DEFAULT_TITLE, focusOrStartClaude, newClaudeSession } from './renderer/sessionsStore';
 import { focusClaudeTerminal } from './renderer/useClaudeTerminal';
-
-export const CLAUDE_PANEL_ID = 'claude';
 
 export const claudeTerminalFeature: Feature = {
   id: 'claude-terminal',
   name: 'Claude',
+  sidebarViews: [{ id: 'claude-sessions', title: 'Claude', component: SessionsView }],
   tabTypes: [
     {
-      id: 'claude-terminal',
+      id: CLAUDE_TAB,
       component: ClaudePanel,
-      closable: false,
+      closable: true,
+      ownGroup: true,
       icon: () => createElement(ClaudeIcon, { size: 16 }),
     },
   ],
-  defaultPanels: [{ id: CLAUDE_PANEL_ID, tabType: 'claude-terminal', title: 'Claude' }],
+  defaultPanels: [{ id: 'claude:first', tabType: CLAUDE_TAB, title: DEFAULT_TITLE }],
   commands: [
     {
       id: 'claude.focus',
       title: 'Ask Claude',
       shortcut: 'Mod+L',
       run: () => {
-        focusPanel(CLAUDE_PANEL_ID);
-        focusClaudeTerminal();
+        const id = focusOrStartClaude();
+        if (id) focusClaudeTerminal(id);
       },
     },
+    { id: 'claude.new', title: 'New Claude Session', shortcut: 'Mod+T', run: newClaudeSession },
   ],
 };

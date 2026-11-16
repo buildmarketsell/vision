@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { theme } from '../../../renderer/theme';
+import { setPanelTitle } from '../../../renderer/core/dockActions';
+import { cleanTitle, useClaudeSessions } from './sessionsStore';
 
 export type ClaudeStatus =
   | { kind: 'starting' }
@@ -9,11 +11,16 @@ export type ClaudeStatus =
   | { kind: 'exited'; exitCode: number }
   | { kind: 'failed'; message: string; notInstalled: boolean };
 
-let focusedTerminal: Terminal | null = null;
+/** How long after the last output a session still counts as working. */
+const BUSY_TIMEOUT_MS = 1200;
+/** Output this soon after a key press is just the echo of typing, not Claude working. */
+const TYPING_ECHO_MS = 500;
 
-/** Puts the keyboard in the Claude terminal (used by the "Ask Claude" button). */
-export function focusClaudeTerminal(): void {
-  focusedTerminal?.focus();
+const terminals = new Map<string, Terminal>();
+
+/** Puts the keyboard in a session's terminal. */
+export function focusClaudeTerminal(panelId: string): void {
+  terminals.get(panelId)?.focus();
 }
 
 function createTerminal(): Terminal {
@@ -23,7 +30,6 @@ function createTerminal(): Terminal {
     fontSize: font.sizeTerminal,
     lineHeight: 1.25,
     cursorBlink: true,
-    allowProposedApi: false,
     scrollback: 5000,
     macOptionIsMeta: true,
     theme: {
@@ -36,12 +42,41 @@ function createTerminal(): Terminal {
   });
 }
 
+function sessionStatusOf(status: ClaudeStatus) {
+  if (status.kind === 'exited') return 'stopped' as const;
+  return status.kind === 'failed' ? ('failed' as const) : status.kind;
+}
+
+/** Marks the session busy while output flows, idle shortly after it stops. */
+function busyTracker(panelId: string) {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const update = useClaudeSessions.getState().update;
+  return {
+    ping() {
+      update(panelId, { busy: true });
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => update(panelId, { busy: false }), BUSY_TIMEOUT_MS);
+    },
+    stop() {
+      if (timer) clearTimeout(timer);
+    },
+  };
+}
+
 /** Runs `claude` in the open folder inside an xterm.js terminal mounted on `hostRef`. */
-export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>) {
-  const [status, setStatus] = useState<ClaudeStatus>({ kind: 'starting' });
+export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>, panelId: string) {
+  const [status, setStatusState] = useState<ClaudeStatus>({ kind: 'starting' });
   const terminalRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const ptyIdRef = useRef<number | null>(null);
+
+  const setStatus = useCallback(
+    (next: ClaudeStatus) => {
+      setStatusState(next);
+      useClaudeSessions.getState().update(panelId, { status: sessionStatusOf(next), busy: false });
+    },
+    [panelId],
+  );
 
   const start = useCallback(async () => {
     const terminal = terminalRef.current;
@@ -59,26 +94,39 @@ export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>) {
     ptyIdRef.current = result.id;
     setStatus({ kind: 'running' });
     terminal.focus();
-  }, []);
+  }, [setStatus]);
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
     const terminal = createTerminal();
     const fit = new FitAddon();
+    const busy = busyTracker(panelId);
     terminal.loadAddon(fit);
     terminal.open(host);
     terminalRef.current = terminal;
     fitRef.current = fit;
-    focusedTerminal = terminal;
+    terminals.set(panelId, terminal);
 
+    let lastInputAt = 0;
     const input = terminal.onData((data) => {
+      lastInputAt = Date.now();
       if (ptyIdRef.current !== null) window.vision.pty.write(ptyIdRef.current, data);
     });
-    const offData = window.vision.pty.onData(({ id, data }) => id === ptyIdRef.current && terminal.write(data));
+    const titleChange = terminal.onTitleChange((raw) => {
+      const title = cleanTitle(raw);
+      useClaudeSessions.getState().update(panelId, { title });
+      setPanelTitle(panelId, title);
+    });
+    const offData = window.vision.pty.onData(({ id, data }) => {
+      if (id !== ptyIdRef.current) return;
+      terminal.write(data);
+      if (Date.now() - lastInputAt > TYPING_ECHO_MS) busy.ping();
+    });
     const offExit = window.vision.pty.onExit(({ id, exitCode }) => {
       if (id !== ptyIdRef.current) return;
       ptyIdRef.current = null;
+      busy.stop();
       setStatus({ kind: 'exited', exitCode });
     });
     const resizeObserver = new ResizeObserver(() => {
@@ -91,15 +139,19 @@ export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>) {
 
     return () => {
       resizeObserver.disconnect();
+      busy.stop();
       input.dispose();
+      titleChange.dispose();
       offData();
       offExit();
       if (ptyIdRef.current !== null) window.vision.pty.kill(ptyIdRef.current);
       ptyIdRef.current = null;
-      if (focusedTerminal === terminal) focusedTerminal = null;
+      terminals.delete(panelId);
       terminal.dispose();
+      // The tab closed: drop the session from the sidebar list.
+      useClaudeSessions.getState().remove(panelId);
     };
-  }, [hostRef, start]);
+  }, [hostRef, panelId, start, setStatus]);
 
   return { status, restart: start };
 }

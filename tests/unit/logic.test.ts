@@ -3,6 +3,7 @@ import { isInsideFolder, looksBinary, parseShellPath, SHELL_PATH_MARKER, validat
 import { normalizeAppState, pruneLayouts, withRecentFolder } from '../../src/main/appState';
 import { shortcutFromEvent } from '../../src/renderer/core/commands';
 import { relativeParts } from '../../src/renderer/core/workspaceStore';
+import { cleanTitle } from '../../src/features/claude-terminal/renderer/sessionsStore';
 
 describe('isInsideFolder', () => {
   it('accepts the folder and paths inside it', () => {
@@ -77,5 +78,16 @@ describe('shortcutFromEvent', () => {
 describe('relativeParts', () => {
   it('splits a path inside the folder for breadcrumbs', () => {
     expect(relativeParts('/x/project', '/x/project/src/app.ts')).toEqual(['src', 'app.ts']);
+  });
+});
+
+describe('cleanTitle', () => {
+  it('drops the status symbol Claude Code puts before the conversation name', () => {
+    expect(cleanTitle('✳ Workspace Electron app plan')).toBe('Workspace Electron app plan');
+    expect(cleanTitle('⠂ Fix login bug')).toBe('Fix login bug');
+  });
+  it('keeps "Claude" until the conversation has a real name', () => {
+    expect(cleanTitle('✳ Claude Code')).toBe('Claude');
+    expect(cleanTitle('')).toBe('Claude');
   });
 });

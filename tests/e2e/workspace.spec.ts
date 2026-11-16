@@ -42,7 +42,7 @@ test('opens a folder, edits and saves a file, and starts Claude', async () => {
   const { app, page } = await launch(userData);
   try {
     // Claude pane runs the CLI in the open folder.
-    await expect(page.locator('.xterm-rows')).toContainText('Fake Claude ready', { timeout: 15_000 });
+    await expect(page.locator('.xterm-rows').first()).toContainText('Fake Claude ready', { timeout: 15_000 });
 
     // File tree shows the folder's files; clicking one opens it in the editor.
     await page.getByRole('treeitem', { name: /hello\.md/ }).click();
@@ -84,7 +84,7 @@ test('closing a window with Claude running raises no errors in the main process'
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
-    await expect(page.locator('.xterm-rows')).toContainText('Fake Claude ready', { timeout: 15_000 });
+    await expect(page.locator('.xterm-rows').first()).toContainText('Fake Claude ready', { timeout: 15_000 });
     await app.evaluate(({ BrowserWindow }) => {
       const store = globalThis as unknown as { visionErrors: string[] };
       store.visionErrors = [];
@@ -94,6 +94,32 @@ test('closing a window with Claude running raises no errors in the main process'
     await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(0);
     const errors = await app.evaluate(() => (globalThis as unknown as { visionErrors: string[] }).visionErrors);
     expect(errors).toEqual([]);
+  } finally {
+    await app.close();
+  }
+});
+
+test('opens, names, lists and closes several Claude sessions', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    const sessions = page.getByRole('region', { name: 'Claude' }).getByRole('button', { name: /^Claude session/ });
+    // The first session is named after its conversation, in the sidebar and the tab.
+    await expect(sessions).toHaveCount(1, { timeout: 15_000 });
+    await expect(sessions.first()).toHaveAccessibleName('Claude session Test conversation');
+    await expect(page.locator('.dv-tab', { hasText: 'Test conversation' })).toHaveCount(1);
+
+    // A second session opens as another tab next to the first.
+    await page.getByRole('button', { name: 'New session' }).click();
+    await expect(sessions).toHaveCount(2);
+    await expect(page.locator('.xterm-rows')).toHaveCount(2);
+
+    // Closing one from the sidebar stops it and removes it from the list.
+    await sessions.first().hover();
+    await page.getByRole('button', { name: 'Close Test conversation' }).first().click();
+    await expect(sessions).toHaveCount(1);
+    await expect(page.locator('.xterm-rows')).toHaveCount(1);
+    await page.screenshot({ path: 'test-results/sessions.png' });
   } finally {
     await app.close();
   }

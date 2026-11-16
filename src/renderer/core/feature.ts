@@ -4,17 +4,22 @@ import type { IDockviewPanelProps } from 'dockview-react';
 /** Parameters stored with a tab (saved in the layout, so keep them plain JSON). */
 export type TabParams = Record<string, string>;
 
+/** A section of the sidebar. Sections stack top to bottom in registry order. */
 export interface SidebarView {
   id: string;
   title: string;
   component: ComponentType;
+  /** True for the section that takes the remaining height (the file tree). */
+  grow?: boolean;
 }
 
 export interface TabType {
   id: string;
   component: FunctionComponent<IDockviewPanelProps<TabParams>>;
-  /** Tabs that can't be closed (only moved), like Claude. */
+  /** False for tabs that can't be closed, only moved. */
   closable: boolean;
+  /** Tabs like Claude keep to their own pane: files never open next to them. */
+  ownGroup?: boolean;
   /** Small icon shown in the tab. */
   icon?: (params: TabParams) => ReactNode;
   /** Asked before the tab closes; return false to keep it open. */
@@ -29,7 +34,7 @@ export interface FileHandler {
   matches: (path: string) => boolean;
 }
 
-/** A tab that always exists, created on first launch and after a layout restore. */
+/** A tab opened the first time a folder is opened (no saved layout yet). */
 export interface DefaultPanel {
   id: string;
   tabType: string;

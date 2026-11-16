@@ -1,11 +1,14 @@
 import { useRef } from 'react';
+import type { IDockviewPanelProps } from 'dockview-react';
 import { RotateCw, Sparkles } from 'lucide-react';
+import type { TabParams } from '../../../renderer/core/feature';
 import { baseName, useWorkspace } from '../../../renderer/core/workspaceStore';
+import { useClaudeSessions } from './sessionsStore';
 import { useClaudeTerminal, type ClaudeStatus } from './useClaudeTerminal';
 
-function statusLabel(status: ClaudeStatus): string {
+function statusLabel(status: ClaudeStatus, busy: boolean): string {
   if (status.kind === 'starting') return 'Starting';
-  if (status.kind === 'running') return 'Running';
+  if (status.kind === 'running') return busy ? 'Working' : 'Ready';
   if (status.kind === 'exited') return 'Stopped';
   return status.notInstalled ? 'Not installed' : 'Did not start';
 }
@@ -21,13 +24,13 @@ export function ClaudeIcon({ size = 28 }: { size?: number }) {
   );
 }
 
-function Header({ status, onRestart }: { status: ClaudeStatus; onRestart: () => void }) {
+function Header({ title, label, onRestart }: { title: string; label: string; onRestart: () => void }) {
   return (
     <div className="flex h-14 shrink-0 items-center gap-3 px-4">
       <ClaudeIcon />
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="font-semibold" style={{ fontSize: 'var(--size-title)' }}>Claude</span>
-        <span className="text-(--color-text-muted)">· {statusLabel(status)}</span>
+        <span className="truncate font-semibold" style={{ fontSize: 'var(--size-title)' }}>{title}</span>
+        <span className="shrink-0 text-(--color-text-muted)">· {label}</span>
       </div>
       <button className="icon-button" title="Restart Claude" aria-label="Restart Claude" onClick={onRestart}>
         <RotateCw size={15} strokeWidth={1.5} />
@@ -56,20 +59,22 @@ function Overlay({ status, onRestart }: { status: ClaudeStatus; onRestart: () =>
   );
 }
 
-/** The Claude pane: a header and a dark card running the `claude` CLI in the open folder. */
-export function ClaudePanel() {
+/** One Claude session: a header and a dark card running the `claude` CLI in the open folder. */
+export function ClaudePanel({ api }: IDockviewPanelProps<TabParams>) {
   const hostRef = useRef<HTMLDivElement>(null);
   const folder = useWorkspace((state) => state.folder);
-  const { status, restart } = useClaudeTerminal(hostRef);
-  const isLive = status.kind === 'running';
+  const session = useClaudeSessions((state) => state.sessions[api.id]);
+  const { status, restart } = useClaudeTerminal(hostRef, api.id);
+  const busy = session?.busy === true;
+  const label = statusLabel(status, busy);
 
   return (
     <div className="flex h-full flex-col bg-(--color-card)">
-      <Header status={status} onRestart={() => void restart()} />
+      <Header title={session?.title ?? 'Claude'} label={label} onRestart={() => void restart()} />
       <div className="relative mx-3 mb-3 flex min-h-0 flex-1 flex-col overflow-hidden" style={{ background: 'var(--color-terminal-background)', borderRadius: 'var(--radius-inner)' }}>
         <div className="flex h-9 shrink-0 items-center gap-2 px-4" style={{ color: 'var(--color-terminal-muted)', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.12em' }}>
-          {isLive && <span className="live-dot" />}
-          <span>{isLive ? 'LIVE' : statusLabel(status).toUpperCase()}</span>
+          {status.kind === 'running' && <span className="live-dot" style={busy ? undefined : { animation: 'none', opacity: 0.5 }} />}
+          <span>{busy ? 'LIVE' : label.toUpperCase()}</span>
           <span className="ml-auto truncate" style={{ letterSpacing: 0 }}>{baseName(folder)}</span>
         </div>
         <div ref={hostRef} className="terminal-host min-h-0 flex-1" />

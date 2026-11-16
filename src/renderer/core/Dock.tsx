@@ -4,7 +4,7 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { theme } from '../theme';
 import type { TabParams } from './feature';
 import { allTabTypes } from './featureIndex';
-import { ensureDefaultPanels, setDockApi } from './dockActions';
+import { openDefaultPanels, setDockApi } from './dockActions';
 import { PanelTab } from './PanelTab';
 
 const visionTheme: DockviewTheme = {
@@ -51,7 +51,7 @@ export function Dock({ savedLayout, onLayoutChange }: DockProps) {
   const onReady = ({ api }: DockviewReadyEvent) => {
     setDockApi(api);
     restoreLayout(api, savedLayout);
-    ensureDefaultPanels();
+    if (api.panels.length === 0) openDefaultPanels();
     api.onDidLayoutChange(() => onLayoutChange(api.toJSON()));
   };
 

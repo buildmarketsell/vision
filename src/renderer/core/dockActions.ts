@@ -4,9 +4,17 @@ import { allDefaultPanels, findTabType, tabTypeForFile } from './featureIndex';
 import { baseName } from './workspaceStore';
 
 let dockApi: DockviewApi | null = null;
+const readyListeners: Array<(api: DockviewApi) => void> = [];
 
 export function setDockApi(api: DockviewApi | null): void {
   dockApi = api;
+  if (api) for (const listener of readyListeners) listener(api);
+}
+
+/** Runs `listener` with the dock once it exists (right away if it already does). */
+export function onDockReady(listener: (api: DockviewApi) => void): void {
+  readyListeners.push(listener);
+  if (dockApi) listener(dockApi);
 }
 
 export function getDockApi(): DockviewApi | null {
@@ -17,19 +25,24 @@ export function fileTabId(path: string): string {
   return `file:${path}`;
 }
 
-function isPinnedPanel(panel: IDockviewPanel): boolean {
-  return findTabType(panel.view.contentComponent)?.closable === false;
+function tabTypeOf(panel: IDockviewPanel): string {
+  return panel.view.contentComponent;
 }
 
-function groupHasPinnedPanel(group: DockviewGroupPanel): boolean {
-  return group.panels.some(isPinnedPanel);
+/** Tab types like Claude keep to their own pane; files don't open next to them. */
+function keepsOwnGroup(panel: IDockviewPanel): boolean {
+  return findTabType(tabTypeOf(panel))?.ownGroup === true;
 }
 
-/** Files open in the active group, or the first group without a pinned tab like Claude. */
+function groupIsForFiles(group: DockviewGroupPanel): boolean {
+  return !group.panels.some(keepsOwnGroup);
+}
+
+/** Files open in the active pane, or the first pane that isn't Claude's. */
 function targetGroupForFiles(api: DockviewApi): DockviewGroupPanel | undefined {
   const active = api.activeGroup;
-  if (active && !groupHasPinnedPanel(active)) return active;
-  return api.groups.find((group) => !groupHasPinnedPanel(group));
+  if (active && groupIsForFiles(active)) return active;
+  return api.groups.find(groupIsForFiles);
 }
 
 export function openFile(path: string): void {
@@ -44,17 +57,31 @@ export function openFile(path: string): void {
   }
   const params: TabParams = { path };
   const group = targetGroupForFiles(api);
-  const pinned = api.panels.find(isPinnedPanel);
+  const sidePanel = api.panels.find(keepsOwnGroup);
   const base = { id, component: tabType, title: baseName(path), params, renderer: 'always' as const };
   if (group) api.addPanel({ ...base, position: { referenceGroup: group } });
-  else if (pinned) api.addPanel({ ...base, position: { referencePanel: pinned, direction: 'left' } });
+  else if (sidePanel) api.addPanel({ ...base, position: { referencePanel: sidePanel, direction: 'left' } });
   else api.addPanel(base);
 }
 
-/** Closes a tab after asking its feature (e.g. "Close without saving?"). Pinned tabs stay. */
+/**
+ * Opens a tab of a type that keeps its own pane (like Claude): next to its siblings,
+ * or in a new pane on the right.
+ */
+export function openOwnGroupPanel(tabType: string, id: string, title: string, params: TabParams = {}): void {
+  const api = dockApi;
+  if (!api) return;
+  const sibling = api.panels.find((panel) => tabTypeOf(panel) === tabType);
+  const base = { id, component: tabType, title, params, renderer: 'always' as const };
+  if (sibling) api.addPanel({ ...base, position: { referenceGroup: sibling.group } });
+  else if (api.groups[0]) api.addPanel({ ...base, position: { referenceGroup: api.groups[0], direction: 'right' } });
+  else api.addPanel(base);
+}
+
+/** Closes a tab after asking its feature (e.g. "Close without saving?"). */
 export async function requestClosePanel(panel: IDockviewPanel | undefined): Promise<void> {
   if (!panel) return;
-  const tabType = findTabType(panel.view.contentComponent);
+  const tabType = findTabType(tabTypeOf(panel));
   if (!tabType || !tabType.closable) return;
   const params = (panel.params ?? {}) as TabParams;
   if (tabType.canClose && !(await tabType.canClose(params))) return;
@@ -66,15 +93,24 @@ export function closeActivePanel(): void {
   void requestClosePanel(dockApi?.activePanel);
 }
 
+export function closePanelById(id: string): void {
+  void requestClosePanel(dockApi?.getPanel(id));
+}
+
 /** Params of the active tab when it is of the given type. */
 export function activeParams(tabType: string): TabParams | null {
   const panel = dockApi?.activePanel;
-  if (!panel || panel.view.contentComponent !== tabType) return null;
+  if (!panel || tabTypeOf(panel) !== tabType) return null;
   return (panel.params ?? {}) as TabParams;
 }
 
 export function focusPanel(id: string): void {
   dockApi?.getPanel(id)?.api.setActive();
+}
+
+export function setPanelTitle(id: string, title: string): void {
+  const panel = dockApi?.getPanel(id);
+  if (panel && panel.title !== title) panel.api.setTitle(title);
 }
 
 /** Closes the tab of a file without asking (used after the file was deleted or renamed). */
@@ -83,22 +119,12 @@ export function closeFileTab(path: string): void {
   if (!panel) return;
   const params = (panel.params ?? {}) as TabParams;
   panel.api.close();
-  findTabType(panel.view.contentComponent)?.onClosed?.(params);
+  findTabType(tabTypeOf(panel))?.onClosed?.(params);
 }
 
-/** Makes sure tabs like Claude exist, on the right side. */
-export function ensureDefaultPanels(): void {
-  const api = dockApi;
-  if (!api) return;
+/** First launch in a folder: open the default tabs (one Claude session). */
+export function openDefaultPanels(): void {
   for (const panel of allDefaultPanels()) {
-    if (api.getPanel(panel.id)) continue;
-    const firstGroup = api.groups[0];
-    api.addPanel({
-      id: panel.id,
-      component: panel.tabType,
-      title: panel.title,
-      renderer: 'always',
-      ...(firstGroup ? { position: { referenceGroup: firstGroup, direction: 'right' as const } } : {}),
-    });
+    if (!dockApi?.getPanel(panel.id)) openOwnGroupPanel(panel.tabType, panel.id, panel.title);
   }
 }

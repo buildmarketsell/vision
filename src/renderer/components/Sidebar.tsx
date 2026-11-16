@@ -1,4 +1,4 @@
-import { useState, type PointerEvent } from 'react';
+import type { PointerEvent } from 'react';
 import { FolderOpen, Sparkles } from 'lucide-react';
 import { runCommand } from '../core/commands';
 import { allSidebarViews } from '../core/featureIndex';
@@ -36,13 +36,11 @@ function ResizeHandle() {
   );
 }
 
-/** Notion-style sidebar: folder name on top, feature views (Files), "Ask Claude" at the bottom. */
+/** Notion-style sidebar: folder name on top, feature sections stacked (Claude, Files), "Ask Claude" at the bottom. */
 export function Sidebar() {
   const folder = useWorkspace((state) => state.folder);
   const width = useWorkspace((state) => state.sidebarWidth);
   const views = allSidebarViews();
-  const [activeId, setActiveId] = useState(views[0]?.id);
-  const active = views.find((view) => view.id === activeId) ?? views[0];
 
   return (
     <aside className="card relative flex shrink-0 flex-col" style={{ width, background: 'var(--color-sidebar)' }}>
@@ -50,20 +48,13 @@ export function Sidebar() {
         <AppMark size={22} />
         <span className="truncate font-semibold" title={folder}>{baseName(folder)}</span>
       </div>
-      {views.length > 1 && (
-        <div className="flex gap-1 px-3 pb-1">
-          {views.map((view) => (
-            <button key={view.id} className="button-secondary" data-active={view.id === active?.id} onClick={() => setActiveId(view.id)}>
-              {view.title}
-            </button>
-          ))}
-        </div>
-      )}
-      {active && (
-        <ErrorBoundary name={active.title}>
-          <active.component />
-        </ErrorBoundary>
-      )}
+      {views.map((view) => (
+        <section key={view.id} aria-label={view.title} className={view.grow ? 'flex min-h-0 flex-1 flex-col' : 'contents'}>
+          <ErrorBoundary name={view.title}>
+            <view.component />
+          </ErrorBoundary>
+        </section>
+      ))}
       <div className="flex shrink-0 items-center gap-2 p-3">
         <button
           className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-(--color-card) font-medium"
