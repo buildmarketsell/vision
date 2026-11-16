@@ -32,6 +32,14 @@ export const theme = {
     terminalText: '#ECE9E4',
     terminalMuted: '#8F8A84',
     focusRing: 'rgba(242, 107, 58, 0.45)',
+    /** Inbox: WhatsApp's chat colors (beige wall, green outgoing bubbles, blue ticks). */
+    inboxWall: '#EFEAE2',
+    inboxBar: '#F0F2F5',
+    inboxBubble: '#D9FDD3',
+    inboxMeta: '#667781',
+    inboxTicks: '#53BDEB',
+    inboxSend: '#00A884',
+    inboxSendHover: '#008F72',
     /** Sidebar view switcher: recessed tray and the spinning ring around the active view. */
     trayGradient: 'linear-gradient(180deg, #DCDCDF 0%, #D3D3D7 50%, #CCCCD1 100%)',
     ringGradient: 'conic-gradient(from 220deg, #F26B3A 0%, #F7A072 18%, #FFD8B8 36%, #F7A072 54%, #D97757 72%, #E35A28 86%, #F26B3A 100%)',

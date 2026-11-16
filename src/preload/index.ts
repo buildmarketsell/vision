@@ -40,6 +40,13 @@ const api: VisionApi = {
     onData: (callback) => subscribe(IPC.ptyData, callback),
     onExit: (callback) => subscribe(IPC.ptyExit, callback),
   },
+  inbox: {
+    list: () => ipcRenderer.invoke(IPC.inboxList),
+    add: (text) => ipcRenderer.invoke(IPC.inboxAdd, text),
+    setDone: (id, done) => ipcRenderer.invoke(IPC.inboxSetDone, id, done),
+    remove: (id) => ipcRenderer.invoke(IPC.inboxRemove, id),
+    onChange: (callback) => subscribe(IPC.inboxChanged, callback),
+  },
   chat: {
     start: (options) => ipcRenderer.invoke(IPC.chatStart, options),
     send: (id, message) => ipcRenderer.send(IPC.chatSend, id, message),

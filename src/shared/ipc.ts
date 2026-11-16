@@ -1,4 +1,5 @@
 /** Types shared by the main process, the preload bridge and the renderer. */
+import type { InboxMessage } from './inbox';
 import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions, ChatStartResult, PastConversation } from './claudeChat';
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -89,6 +90,15 @@ export interface VisionApi {
     onData(callback: (event: PtyDataEvent) => void): Unsubscribe;
     onExit(callback: (event: PtyExitEvent) => void): Unsubscribe;
   };
+  inbox: {
+    list(): Promise<InboxMessage[]>;
+    /** Each returns the whole inbox after the change. */
+    add(text: string): Promise<InboxMessage[]>;
+    setDone(id: string, done: boolean): Promise<InboxMessage[]>;
+    remove(id: string): Promise<InboxMessage[]>;
+    /** Fires in every window when any window changes the inbox. */
+    onChange(callback: (messages: InboxMessage[]) => void): Unsubscribe;
+  };
   chat: {
     start(options: ChatStartOptions): Promise<ChatStartResult>;
     send(id: number, message: ChatOutgoing): void;
@@ -136,4 +146,9 @@ export const IPC = {
   chatExit: 'claude-chat:exit',
   chatList: 'claude-chat:list',
   chatHistory: 'claude-chat:history',
+  inboxList: 'inbox:list',
+  inboxAdd: 'inbox:add',
+  inboxSetDone: 'inbox:setDone',
+  inboxRemove: 'inbox:remove',
+  inboxChanged: 'inbox:changed',
 } as const;

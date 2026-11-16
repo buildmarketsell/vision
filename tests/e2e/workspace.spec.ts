@@ -238,6 +238,37 @@ test('slash commands, model picker, context meter and message queue', async () =
   }
 });
 
+test('inbox: message yourself, mark done, delete, and keep it after a restart', async () => {
+  const { userData } = makeFixture();
+  let { app, page } = await launch(userData);
+  try {
+    await page.locator('aside').getByRole('tab', { name: 'Inbox' }).click();
+    const box = page.getByRole('textbox', { name: 'Message yourself' });
+    await box.fill('Call the bank');
+    await box.press('Enter');
+    await box.fill('Renew the domain');
+    await page.getByRole('button', { name: 'Send to inbox' }).click();
+    const list = page.getByRole('log', { name: 'Inbox messages' });
+    await expect(list.locator('.inbox-bubble')).toHaveCount(2);
+    await expect(list.getByText('Today')).toBeVisible();
+
+    await list.getByText('Call the bank').click({ button: 'right' });
+    await page.getByText('Mark as done').click();
+    await expect(list.locator('.inbox-bubble[data-done="true"]')).toHaveText(/Call the bank/);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/inbox.png' });
+    await list.getByText('Renew the domain').click({ button: 'right' });
+    await page.getByText('Delete').click();
+    await expect(list.locator('.inbox-bubble')).toHaveCount(1);
+
+    await app.close();
+    ({ app, page } = await launch(userData));
+    await page.locator('aside').getByRole('tab', { name: 'Inbox' }).click();
+    await expect(page.getByRole('log', { name: 'Inbox messages' }).locator('.inbox-bubble[data-done="true"]')).toHaveText(/Call the bank/);
+  } finally {
+    await app.close();
+  }
+});
+
 test('opens, names, lists and closes several Claude sessions', async () => {
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);

@@ -1,0 +1,176 @@
+/* Inbox: a chat with yourself, laid out like a WhatsApp chat (colors in theme.ts). */
+
+.inbox {
+  margin-top: var(--space-1);
+  border-top: 1px solid var(--color-border);
+}
+
+.inbox-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 52px;
+  padding: 0 var(--space-3);
+  background: var(--color-inbox-bar);
+  flex-shrink: 0;
+}
+
+.inbox-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dfe5e7;
+  color: var(--color-inbox-meta);
+}
+
+.inbox-subtitle {
+  font-size: var(--size-small);
+  color: var(--color-inbox-meta);
+}
+
+.inbox-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  background: var(--color-inbox-wall);
+}
+
+.inbox-chip {
+  align-self: center;
+  margin: var(--space-1) 0;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--color-card);
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  font-size: var(--size-small);
+  color: var(--color-inbox-meta);
+  text-align: center;
+}
+
+.inbox-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.inbox-row[data-tail='true'] {
+  margin-top: var(--space-1);
+}
+
+.inbox-bubble {
+  position: relative;
+  max-width: 88%;
+  padding: 6px 7px 8px 9px;
+  border-radius: 7.5px;
+  background: var(--color-inbox-bubble);
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  user-select: text;
+}
+
+.inbox-row[data-tail='true'] .inbox-bubble {
+  border-top-right-radius: 0;
+}
+
+.inbox-tail {
+  position: absolute;
+  top: 0;
+  right: -8px;
+  fill: var(--color-inbox-bubble);
+}
+
+.inbox-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.inbox-bubble[data-done='true'] .inbox-text {
+  text-decoration: line-through;
+  color: var(--color-inbox-meta);
+}
+
+/* Time and ticks float at the end of the last line, as in WhatsApp. */
+.inbox-meta {
+  float: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 6px 0 -4px 10px;
+  font-size: 11px;
+  color: var(--color-inbox-meta);
+}
+
+.inbox-ticks {
+  color: var(--color-inbox-ticks);
+}
+
+.inbox-error {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--size-small);
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.inbox-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-inbox-bar);
+  flex-shrink: 0;
+}
+
+.inbox-composer textarea {
+  flex: 1;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  resize: none;
+  font: inherit;
+  line-height: 20px;
+  background: var(--color-card);
+  user-select: text;
+}
+
+.inbox-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-inbox-send);
+  color: white;
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.inbox-send:hover:not(:disabled) {
+  background: var(--color-inbox-send-hover);
+}
+
+.inbox-send:active:not(:disabled) {
+  transform: scale(0.92);
+  transition-duration: 0ms;
+}
+
+.inbox-send:disabled {
+  background: var(--color-row-selected);
+  color: var(--color-text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inbox-send:active:not(:disabled) {
+    transform: none;
+  }
+}
