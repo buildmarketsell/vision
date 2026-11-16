@@ -17,12 +17,11 @@ export interface SessionWindow {
 export interface AppState {
   recentFolders: string[];
   windows: SessionWindow[];
-  wallpaperPath: string | null;
   layouts: Record<string, FolderLayout>;
 }
 
 export function emptyAppState(): AppState {
-  return { recentFolders: [], windows: [], wallpaperPath: null, layouts: {} };
+  return { recentFolders: [], windows: [], layouts: {} };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -73,7 +72,6 @@ export function normalizeAppState(raw: unknown): AppState {
   return {
     recentFolders: toStringList(raw['recentFolders']).slice(0, MAX_RECENT_FOLDERS),
     windows: toWindows(raw['windows']),
-    wallpaperPath: typeof raw['wallpaperPath'] === 'string' ? raw['wallpaperPath'] : null,
     layouts,
   };
 }

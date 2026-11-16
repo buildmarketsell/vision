@@ -1,33 +1,16 @@
 import { useEffect, useState, type DragEvent } from 'react';
 import type { BootState, MenuCommandId } from '../shared/ipc';
-import defaultWallpaper from './assets/wallpaper.svg';
 import { installKeybindings, registerCommands, runCommand } from './core/commands';
 import { closeActivePanel } from './core/dockActions';
 import { useWorkspace } from './core/workspaceStore';
 import { FolderMissing, Welcome } from './components/Welcome';
 import { Workspace } from './components/Workspace';
 
-function useWallpaper(): [string, (url: string) => void] {
-  const [wallpaper, setWallpaper] = useState(defaultWallpaper);
-  useEffect(() => {
-    void window.vision.app.getWallpaper().then((custom) => custom && setWallpaper(custom));
-  }, []);
-  return [wallpaper, setWallpaper];
-}
-
-function useAppCommands(setWallpaper: (url: string) => void): void {
+function useAppCommands(): void {
   useEffect(() => {
     registerCommands([
       { id: 'tab.close', title: 'Close Tab', shortcut: 'Mod+W', run: closeActivePanel },
       { id: 'view.toggleHidden', title: 'Show Hidden Files', shortcut: 'Mod+Shift+.', run: () => useWorkspace.getState().toggleHidden() },
-      {
-        id: 'view.changeWallpaper',
-        title: 'Change Wallpaper',
-        run: async () => {
-          const chosen = await window.vision.app.chooseWallpaper();
-          if (chosen) setWallpaper(chosen);
-        },
-      },
     ]);
     const uninstall = installKeybindings();
     const offMenu = window.vision.app.onMenuCommand((id: MenuCommandId) => runCommand(id));
@@ -35,7 +18,7 @@ function useAppCommands(setWallpaper: (url: string) => void): void {
       uninstall();
       offMenu();
     };
-  }, [setWallpaper]);
+  }, []);
 }
 
 /** Dropping a folder from Finder opens it (here if this window has none, otherwise in a new one). */
@@ -72,9 +55,8 @@ function Content({ boot }: { boot: BootState | null }) {
 
 export function App() {
   const [boot, setBoot] = useState<BootState | null>(null);
-  const [wallpaper, setWallpaper] = useWallpaper();
   const { dropError, onDragOver, onDrop } = useFolderDrop();
-  useAppCommands(setWallpaper);
+  useAppCommands();
 
   useEffect(() => {
     void window.vision.app.getBootState().then((state) => {
@@ -90,7 +72,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="wallpaper relative h-full" style={{ backgroundImage: `url("${wallpaper}")` }} onDragOver={onDragOver} onDrop={(event) => void onDrop(event)}>
+    <div className="relative h-full" style={{ background: 'var(--color-card)' }} onDragOver={onDragOver} onDrop={(event) => void onDrop(event)}>
       <div className="drag-region absolute inset-x-0 top-0 h-(--gap)" />
       <Content boot={boot} />
       {dropError && (

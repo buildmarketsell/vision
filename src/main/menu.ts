@@ -47,7 +47,6 @@ function viewMenu(): MenuItemConstructorOptions {
     label: 'View',
     submenu: [
       rendererItem('Show Hidden Files', 'CmdOrCtrl+Shift+.', 'view.toggleHidden'),
-      { label: 'Change Wallpaper…', click: () => sendToFocusedWindow('view.changeWallpaper') },
       { type: 'separator' },
       ...devItems,
       { role: 'toggleDevTools' },

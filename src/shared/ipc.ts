@@ -50,7 +50,7 @@ export interface PtyExitEvent {
 }
 
 /** Commands the main process sends to a window (from the app menu). */
-export type MenuCommandId = 'editor.save' | 'tab.close' | 'view.toggleHidden' | 'view.changeWallpaper';
+export type MenuCommandId = 'editor.save' | 'tab.close' | 'view.toggleHidden';
 
 export type Unsubscribe = () => void;
 
@@ -60,8 +60,6 @@ export interface VisionApi {
     openFolderDialog(): Promise<void>;
     openFolder(path: string): Promise<Result<void>>;
     removeRecent(path: string): Promise<string[]>;
-    getWallpaper(): Promise<string | null>;
-    chooseWallpaper(): Promise<string | null>;
     saveLayout(layout: FolderLayout): void;
     setDirtyFiles(paths: string[]): void;
     onMenuCommand(callback: (id: MenuCommandId) => void): Unsubscribe;
@@ -108,8 +106,6 @@ export const IPC = {
   openFolderDialog: 'app:openFolderDialog',
   openFolder: 'app:openFolder',
   removeRecent: 'app:removeRecent',
-  getWallpaper: 'app:getWallpaper',
-  chooseWallpaper: 'app:chooseWallpaper',
   saveLayout: 'app:saveLayout',
   setDirtyFiles: 'app:setDirtyFiles',
   menuCommand: 'app:menuCommand',
