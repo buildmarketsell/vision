@@ -1,5 +1,14 @@
-/* Excalidraw restyled toward tldraw: VISION's system font and colors, softer rounded panels.
-   Uses VISION tokens only, so every theme (light and dark) follows. */
+/* Boards look like tldraw: Excalidraw draws the canvas, VISION draws the controls around it.
+   App chrome uses VISION tokens only, so every theme (light and dark) follows. */
+
+/* Excalidraw's own controls are replaced by ours (BoardToolbar, StylePanel, BoardCorners).
+   Its keyboard shortcuts, right-click menu, text editing and dialogs still work. */
+.board-canvas .excalidraw .layer-ui__wrapper,
+.board-canvas .excalidraw .App-top-bar,
+.board-canvas .excalidraw .App-bottom-bar {
+  display: none;
+}
+
 .board-canvas .excalidraw {
   --ui-font: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --border-radius-md: 8px;
@@ -11,8 +20,144 @@
   --color-surface-primary-container: var(--color-accent-soft);
   --shadow-island: var(--shadow-popover);
   --island-bg-color: var(--color-card);
+  /* Drawn on the canvas, which Excalidraw inverts in dark mode, so it's a fixed color (tldraw's blue). */
+  --color-selection: #2f80ed;
 }
 
-.board-canvas .excalidraw .Island {
-  border: none;
+/* ---- Our controls ---- */
+.board-panel {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--color-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-popover);
+}
+
+.board-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px; /* concentric: panel 12px minus 4px inset */
+  color: var(--color-text);
+  transition: transform 120ms var(--ease);
+}
+.board-button:hover:not(:disabled) {
+  background: var(--color-row-hover);
+}
+.board-button:active:not(:disabled) {
+  background: var(--color-row-pressed);
+  transform: scale(0.94);
+}
+.board-button[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.board-button:disabled {
+  color: var(--color-text-faint);
+}
+.board-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.board-toolbar {
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  overflow-x: auto;
+}
+
+.board-top-left {
+  top: 12px;
+  left: 12px;
+}
+
+.board-zoom {
+  bottom: 12px;
+  left: 12px;
+}
+.board-zoom-level {
+  width: 52px;
+  font-size: var(--size-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.board-style-panel {
+  top: 12px;
+  right: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  width: 156px;
+}
+.board-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+.board-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+.board-style-row {
+  display: flex;
+  gap: 2px;
+}
+.board-style-row .board-button {
+  flex: 1;
+  width: auto;
+}
+.board-text-button {
+  font-size: var(--size-small);
+  font-weight: 600;
+}
+.board-style-panel .board-button[aria-pressed='true'] {
+  background: var(--color-row-selected);
+  color: var(--color-text);
+}
+.board-style-panel .board-color-grid .board-button[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 2px var(--color-text-faint);
+}
+
+.board-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--color-row-pressed);
+}
+.board-vertical-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 2px;
+  background: var(--color-row-pressed);
+}
+
+.board-fill-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+}
+.board-fill-semi {
+  background: color-mix(in srgb, currentColor 25%, transparent);
+}
+.board-fill-solid {
+  background: currentColor;
+}
+.board-fill-pattern {
+  background: repeating-linear-gradient(-45deg, currentColor 0 1.5px, transparent 1.5px 4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-button {
+    transition: none;
+  }
+  .board-button:active:not(:disabled) {
+    transform: none;
+  }
 }

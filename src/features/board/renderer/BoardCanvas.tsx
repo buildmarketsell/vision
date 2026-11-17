@@ -1,24 +1,32 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Excalidraw, FONT_FAMILY, MainMenu, restore, serializeAsJSON } from '@excalidraw/excalidraw';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Excalidraw, restore, serializeAsJSON } from '@excalidraw/excalidraw';
 import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import '@excalidraw/excalidraw/index.css';
 import './board.css';
 import { useAppTheme } from '../../../renderer/core/appTheme';
 import { parseBoardText, type BoardScene } from '../boardFile';
+import { CANVAS_BACKGROUND, DEFAULT_STYLE } from '../boardStyle';
+import { addStickyNote, applyStyle, currentItemState } from './boardActions';
+import { BoardTopLeft, BoardZoom } from './BoardCorners';
+import { BoardToolbar } from './BoardToolbar';
 import { watchBoard } from './boardWatch';
+import { StylePanel } from './StylePanel';
+import { useBoardChrome } from './useBoardChrome';
 
 // Fonts are copied next to the page at install time (scripts/postinstall.mjs), so boards work offline.
 window.EXCALIDRAW_ASSET_PATH = new URL('excalidraw/', window.location.href).href;
 
 const SAVE_DELAY_MS = 300;
+/** Below this width the style panel shows only while drawing or with something selected. */
+const ROOMY_WIDTH = 900;
+const STYLELESS_TOOLS = new Set(['selection', 'hand', 'eraser', 'laser']);
 
-/** The tldraw feel: clean lines, a clean font, rounded corners, real arrowheads. */
-const TLDRAW_STYLE: Partial<AppState> = {
-  currentItemRoughness: 0,
-  currentItemFontFamily: FONT_FAMILY.Nunito,
-  currentItemStrokeWidth: 2,
+/** The tldraw feel for new shapes: its default style, round corners, real arrowheads, its canvas color. */
+const TLDRAW_DEFAULTS: Partial<AppState> = {
+  ...currentItemState(DEFAULT_STYLE),
   currentItemRoundness: 'round',
   currentItemEndArrowhead: 'arrow',
+  viewBackgroundColor: CANVAS_BACKGROUND,
 };
 
 type Restored = ReturnType<typeof restore>;
@@ -26,6 +34,10 @@ type Restored = ReturnType<typeof restore>;
 function restoreScene(scene: BoardScene | null): Restored {
   // restore() checks and repairs every element, so a hand-edited file can't break the canvas.
   return restore(scene as Parameters<typeof restore>[0], null, null);
+}
+
+function isTyping(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA'].includes(target.tagName));
 }
 
 interface BoardCanvasProps {
@@ -40,10 +52,13 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
   const [saveError, setSaveError] = useState<string | null>(null);
   const lastSaved = useRef(initialText);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapper = useRef<HTMLDivElement>(null);
+  const chrome = useBoardChrome(api);
+  const container = () => wrapper.current?.querySelector<HTMLElement>('.excalidraw') ?? null;
 
   const initialData = useMemo(() => {
     const restored = restoreScene(initialScene);
-    return { elements: restored.elements, files: restored.files, appState: { ...restored.appState, ...TLDRAW_STYLE } };
+    return { elements: restored.elements, files: restored.files, appState: { ...restored.appState, ...TLDRAW_DEFAULTS } };
   }, [initialScene]);
 
   useEffect(() => {
@@ -81,6 +96,10 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
     };
   }, [api, path]);
 
+  const addNote = useCallback(() => {
+    if (api) addStickyNote(api, container(), chrome.style);
+  }, [api, chrome.style]);
+
   return (
     <div className="flex h-full flex-col">
       {saveError && (
@@ -88,22 +107,33 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
           Could not save this board: {saveError}. Your drawing is still here; the next change tries again.
         </div>
       )}
-      <div className="min-h-0 flex-1">
+      <div
+        ref={wrapper}
+        className="board-stage relative min-h-0 flex-1"
+        onKeyDown={(event) => {
+          // N = sticky note, as in tldraw (Excalidraw doesn't use the key).
+          if (event.key === 'n' && !event.metaKey && !event.ctrlKey && !event.altKey && !isTyping(event.target)) {
+            event.preventDefault();
+            addNote();
+          }
+        }}
+      >
         <Excalidraw
           excalidrawAPI={setApi}
           initialData={initialData}
           theme={scheme}
           UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false, toggleTheme: false } }}
-        >
-          <MainMenu>
-            <MainMenu.DefaultItems.SaveAsImage />
-            <MainMenu.DefaultItems.SearchMenu />
-            <MainMenu.DefaultItems.Help />
-            <MainMenu.DefaultItems.ClearCanvas />
-            <MainMenu.Separator />
-            <MainMenu.DefaultItems.ChangeCanvasBackground />
-          </MainMenu>
-        </Excalidraw>
+        />
+        {api && (
+          <>
+            <BoardTopLeft api={api} getContainer={container} hasSelection={chrome.hasSelection} />
+            {(chrome.width >= ROOMY_WIDTH || chrome.hasSelection || !STYLELESS_TOOLS.has(chrome.tool)) && (
+              <StylePanel style={chrome.style} onChange={(style) => applyStyle(api, style)} />
+            )}
+            <BoardZoom api={api} zoom={chrome.zoom} />
+            <BoardToolbar activeTool={chrome.tool} onPickTool={(type) => api.setActiveTool({ type } as Parameters<typeof api.setActiveTool>[0])} onAddNote={addNote} />
+          </>
+        )}
       </div>
     </div>
   );
