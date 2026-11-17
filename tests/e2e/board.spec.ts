@@ -48,6 +48,15 @@ test('boards: tldraw-style tools, styles, sticky notes and undo, all saved to th
     await expect.poll(() => savedElements(file).filter((element) => element.customData?.boardNote).length).toBe(1);
     await expect.poll(() => savedElements(file).some((element) => element.type === 'text')).toBe(true);
 
+    // After the note, new shapes keep the color picked before (blue), not the note's dark text.
+    await page.getByRole('button', { name: 'Ellipse' }).click();
+    await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.15);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.3, { steps: 5 });
+    await page.mouse.up();
+    await expect.poll(() => savedElements(file).find((element) => element.type === 'ellipse')?.strokeColor).toBe('#4465e9');
+    await page.getByRole('button', { name: 'Undo' }).click();
+
     await page.getByRole('button', { name: 'Undo' }).click();
     await page.getByRole('button', { name: 'Undo' }).click();
     await expect.poll(() => savedElements(file).filter((element) => element.customData?.boardNote).length).toBe(0);
