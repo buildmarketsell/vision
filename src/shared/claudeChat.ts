@@ -12,7 +12,14 @@ export const DEFAULT_PERMISSION_MODE: PermissionMode = 'auto';
 
 /** New chats run Opus 5.5 on medium effort (Dan's choice, 2026-11-17); the model picker can still switch. */
 export const DEFAULT_MODEL = 'opus';
-export const DEFAULT_EFFORT = 'medium';
+export const EFFORT_LEVELS = ['low', 'medium', 'high', 'xhigh', 'max'] as const;
+export type EffortLevel = (typeof EFFORT_LEVELS)[number];
+export const DEFAULT_EFFORT: EffortLevel = 'medium';
+
+/** Claude accepts any effort string without complaint, so VISION checks it before it reaches the CLI. */
+export function isEffortLevel(value: unknown): value is EffortLevel {
+  return (EFFORT_LEVELS as readonly unknown[]).includes(value);
+}
 
 /** Fixed id for the MCP status request, so the window can pick out its reply. */
 export const MCP_STATUS_REQUEST_ID = 'vision-mcp-status';
@@ -23,6 +30,7 @@ export interface ChatStartOptions {
   permissionMode: PermissionMode;
   /** A model alias or id from Claude's own list (e.g. "sonnet", "opus[1m]"). */
   model?: string;
+  effort?: EffortLevel;
 }
 
 /** Model names reach a command line: letters, digits and a few separators only. */
@@ -60,6 +68,7 @@ export type ChatOutgoing =
   | { kind: 'interrupt' }
   | { kind: 'setPermissionMode'; mode: PermissionMode }
   | { kind: 'setModel'; model: string }
+  | { kind: 'setEffort'; effort: EffortLevel }
   | { kind: 'mcpStatus' };
 
 /** One parsed line of Claude's stream-json output. Parsed defensively in the window. */

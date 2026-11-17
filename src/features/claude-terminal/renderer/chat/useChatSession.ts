@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { DEFAULT_MODEL, type ChatImage, type PermissionMode } from '../../../../shared/claudeChat';
+import { DEFAULT_EFFORT, DEFAULT_MODEL, type ChatImage, type EffortLevel, type PermissionMode } from '../../../../shared/claudeChat';
 import { recordChatEvent } from '../usage/usageStore';
 import { reduceClaudeEvent, reduceLocal } from './chatReducer';
 import { emptyChatState, type ChatState, type LocalAction } from './chatTypes';
@@ -31,6 +31,8 @@ export interface ChatSession {
   /** Model alias from Claude's list; "default" means Claude Code's own choice. */
   model: string;
   setModel: (model: string) => void;
+  effort: EffortLevel;
+  setEffort: (effort: EffortLevel) => void;
   /** Starts over in another saved conversation (or a new one with null). */
   open: (sessionId: string | null) => void;
 }
@@ -46,6 +48,9 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
   const [model, setModelState] = useState(DEFAULT_MODEL);
   const modelRef = useRef(model);
   modelRef.current = model;
+  const [effort, setEffortState] = useState<EffortLevel>(DEFAULT_EFFORT);
+  const effortRef = useRef(effort);
+  effortRef.current = effort;
 
   useEffect(() => {
     let cancelled = false;
@@ -62,7 +67,7 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
     const start = async () => {
       dispatch({ type: 'replace', state: target.sessionId ? await loadHistory(target.sessionId) : emptyChatState() });
       if (cancelled) return;
-      const options = { permissionMode: modeRef.current, model: modelRef.current, ...(target.sessionId ? { resumeSessionId: target.sessionId } : {}) };
+      const options = { permissionMode: modeRef.current, model: modelRef.current, effort: effortRef.current, ...(target.sessionId ? { resumeSessionId: target.sessionId } : {}) };
       const result = await window.vision.chat.start(options);
       if (cancelled) {
         if (result.ok) window.vision.chat.stop(result.id);
@@ -121,6 +126,11 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
     setModel: (next) => {
       setModelState(next);
       sendRaw({ kind: 'setModel', model: next });
+    },
+    effort,
+    setEffort: (next) => {
+      setEffortState(next);
+      sendRaw({ kind: 'setEffort', effort: next });
     },
     open: (sessionId) => setTarget({ sessionId }),
   };

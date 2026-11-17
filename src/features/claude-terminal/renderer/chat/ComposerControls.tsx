@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { DEFAULT_EFFORT } from '../../../../shared/claudeChat';
+import { EFFORT_LEVELS, type EffortLevel } from '../../../../shared/claudeChat';
 import { ComposerMenu } from './ComposerMenu';
 import type { ModelOption, SessionInfo } from './sessionInfo';
 
@@ -10,7 +10,7 @@ const RING_STROKE = 2;
 const CONTEXT_WARNING = 0.8;
 /** Below this share the meter stays hidden, like VS Code: a fresh session already uses ~20% (Dan, 2026-11-17). */
 const CONTEXT_SHOW = 0.5;
-const EFFORT_LABEL = `${DEFAULT_EFFORT.charAt(0).toUpperCase()}${DEFAULT_EFFORT.slice(1)}`;
+const EFFORT_LABELS: Record<EffortLevel, string> = { low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra', max: 'Max' };
 
 /** Closes a popover on a click outside it or on Escape. */
 function useDismiss(ref: RefObject<HTMLElement | null>, open: boolean, close: () => void): void {
@@ -35,19 +35,43 @@ export function modelLabel(models: ModelOption[], value: string): string {
   return found.value === 'default' ? 'Default model' : found.displayName;
 }
 
-export function ModelPicker({ models, value, onChange }: { models: ModelOption[]; value: string; onChange: (model: string) => void }) {
+interface ModelPickerProps {
+  models: ModelOption[];
+  value: string;
+  onChange: (model: string) => void;
+  effort: EffortLevel;
+  onEffortChange: (effort: EffortLevel) => void;
+}
+
+/** Effort steps under the model list, like VS Code's picker. Applies to the running chat at once. */
+function EffortControl({ effort, onChange }: { effort: EffortLevel; onChange: (effort: EffortLevel) => void }) {
+  return (
+    <div className="composer-menu-footer">
+      <span>Effort</span>
+      <div className="segmented" role="radiogroup" aria-label="Effort">
+        {EFFORT_LEVELS.map((level) => (
+          <button key={level} role="radio" aria-checked={level === effort} data-active={level === effort} onClick={() => level !== effort && onChange(level)}>
+            {EFFORT_LABELS[level]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ModelPicker({ models, value, onChange, effort, onEffortChange }: ModelPickerProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(ref, open, () => setOpen(false));
   if (models.length === 0) return null;
   const items = models.map((model) => ({ id: model.value, label: model.displayName, detail: model.description, selected: model.value === value }));
-  const effort = models.find((model) => model.value === value)?.supportsEffort ? EFFORT_LABEL : null;
+  const supportsEffort = models.find((model) => model.value === value)?.supportsEffort === true;
   return (
     <div ref={ref} className="relative">
       <button className="composer-pill" aria-haspopup="listbox" aria-expanded={open} title="Model" onClick={() => setOpen(!open)}>
         {modelLabel(models, value)}
-        {effort && <span className="composer-pill-detail">{effort}</span>}
+        {supportsEffort && <span className="composer-pill-detail">{EFFORT_LABELS[effort]}</span>}
         <ChevronDown size={12} strokeWidth={2} className="chevron" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
       {open && (
@@ -56,6 +80,7 @@ export function ModelPicker({ models, value, onChange }: { models: ModelOption[]
           items={items}
           activeIndex={active}
           onHover={setActive}
+          footer={supportsEffort && <EffortControl effort={effort} onChange={onEffortChange} />}
           onPick={(item) => {
             setOpen(false);
             if (item.id !== value) onChange(item.id);

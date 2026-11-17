@@ -1,6 +1,6 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { ArrowUp, ListPlus, Square, X } from 'lucide-react';
-import { PERMISSION_MODES, type ChatImage, type PermissionMode } from '../../../../shared/claudeChat';
+import { PERMISSION_MODES, type ChatImage, type EffortLevel, type PermissionMode } from '../../../../shared/claudeChat';
 import { ComposerMenu } from './ComposerMenu';
 import { ContextMeter, ModelPicker } from './ComposerControls';
 import type { SessionInfo } from './sessionInfo';
@@ -48,9 +48,11 @@ interface ComposerProps {
   onStop: () => void;
   onModeChange: (mode: PermissionMode) => void;
   onModelChange: (model: string) => void;
+  effort: EffortLevel;
+  onEffortChange: (effort: EffortLevel) => void;
 }
 
-export function Composer({ draft, working, disabled, mode, info, model, onSend, onStop, onModeChange, onModelChange }: ComposerProps) {
+export function Composer({ draft, working, disabled, mode, info, model, effort, onSend, onStop, onModeChange, onModelChange, onEffortChange }: ComposerProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const canSend = !disabled && (draft.text.trim() !== '' || draft.images.length > 0);
   const slash = useSlashMenu(draft.text, info.commands, draft.setText);
@@ -98,7 +100,7 @@ export function Composer({ draft, working, disabled, mode, info, model, onSend, 
             <option key={item} value={item}>{MODE_LABELS[item]}</option>
           ))}
         </select>
-        <ModelPicker models={info.models} value={model} onChange={onModelChange} />
+        <ModelPicker models={info.models} value={model} onChange={onModelChange} effort={effort} onEffortChange={onEffortChange} />
         <span className="flex-1" />
         <ContextMeter info={info} />
         {working && canSend && (

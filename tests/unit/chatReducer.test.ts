@@ -113,6 +113,12 @@ describe('toClaudeMessage (validation in main)', () => {
       response: { request_id: 'r1', response: { behavior: 'allow', updatedInput: { a: 1 } } },
     });
   });
+  it('changes effort in a running chat, and only to a level Claude knows', () => {
+    expect(toClaudeMessage({ kind: 'setEffort', effort: 'high' })).toMatchObject({ type: 'control_request', request: { subtype: 'apply_flag_settings', settings: { effortLevel: 'high' } } });
+    expect(toClaudeMessage({ kind: 'setEffort', effort: 'banana' })).toBeNull();
+    expect(toClaudeMessage({ kind: 'setEffort' })).toBeNull();
+  });
+
   it('rejects anything malformed', () => {
     expect(toClaudeMessage({ kind: 'message', text: '   ' })).toBeNull();
     expect(toClaudeMessage({ kind: 'allow', requestId: 'r1', updatedInput: 'nope' })).toBeNull();

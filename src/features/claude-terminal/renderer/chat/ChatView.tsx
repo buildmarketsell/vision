@@ -134,6 +134,8 @@ export function ChatView({ chat }: { chat: ChatSession }) {
           model={chat.model}
           onSend={(text, images) => (working || queue.queue.length > 0 ? queue.add(text, images) : chat.send(text, images))}
           onModelChange={chat.setModel}
+          effort={chat.effort}
+          onEffortChange={chat.setEffort}
           onStop={chat.interrupt}
           onModeChange={chat.setMode}
         />

@@ -15,10 +15,12 @@ interface ComposerMenuProps {
   onHover: (index: number) => void;
   onPick: (item: MenuItem) => void;
   empty?: ReactNode;
+  /** Shown under the list (the model picker's effort control). */
+  footer?: ReactNode;
 }
 
 /** A popover list that grows up out of the message box (model picker, slash commands). */
-export function ComposerMenu({ label, items, activeIndex, onHover, onPick, empty }: ComposerMenuProps) {
+export function ComposerMenu({ label, items, activeIndex, onHover, onPick, empty, footer }: ComposerMenuProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export function ComposerMenu({ label, items, activeIndex, onHover, onPick, empty
           {item.selected && <Check size={14} strokeWidth={2} color="var(--color-accent)" />}
         </div>
       ))}
+      {footer}
     </div>
   );
 }

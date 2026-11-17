@@ -4,6 +4,7 @@ import { IPC } from '../../../shared/ipc';
 import {
   DEFAULT_EFFORT,
   DEFAULT_PERMISSION_MODE,
+  isEffortLevel,
   isImageMediaType,
   isModelName,
   isSessionId,
@@ -13,6 +14,7 @@ import {
   PERMISSION_MODES,
   type ChatOutgoing,
   type ChatStartResult,
+  type EffortLevel,
   type PermissionMode,
 } from '../../../shared/claudeChat';
 import { onWindowClosed, windowContextFor } from '../../../main/windows';
@@ -36,7 +38,7 @@ function isMode(value: unknown): value is PermissionMode {
   return typeof value === 'string' && (PERMISSION_MODES as string[]).includes(value);
 }
 
-function chatArgs(mode: PermissionMode, resumeId: string | null, model: string | null): string[] {
+function chatArgs(mode: PermissionMode, resumeId: string | null, model: string | null, effort: EffortLevel): string[] {
   const args = [
     '-p',
     '--input-format', 'stream-json',
@@ -46,7 +48,7 @@ function chatArgs(mode: PermissionMode, resumeId: string | null, model: string |
     // Permission requests and questions come to VISION as control requests.
     '--permission-prompt-tool', 'stdio',
     '--permission-mode', mode,
-    '--effort', DEFAULT_EFFORT,
+    '--effort', effort,
   ];
   if (resumeId) args.push('--resume', resumeId);
   if (model && model !== 'default') args.push('--model', model);
@@ -94,8 +96,9 @@ async function startChat(owner: WebContents, options: unknown): Promise<ChatStar
   const mode = isMode(record['permissionMode']) ? record['permissionMode'] : DEFAULT_PERMISSION_MODE;
   const resumeId = isSessionId(record['resumeSessionId']) ? record['resumeSessionId'] : null;
   const model = isModelName(record['model']) ? record['model'] : null;
+  const effort = isEffortLevel(record['effort']) ? record['effort'] : DEFAULT_EFFORT;
   try {
-    const child = spawn(claude.executable, chatArgs(mode, resumeId, model), { cwd: folder, env: claude.env });
+    const child = spawn(claude.executable, chatArgs(mode, resumeId, model, effort), { cwd: folder, env: claude.env });
     const id = nextId++;
     const session: ChatSession = { child, owner, errorTail: '' };
     sessions.set(id, session);
@@ -164,6 +167,8 @@ export function toClaudeMessage(outgoing: unknown): object | null {
       return isMode(message['mode']) ? controlRequest({ subtype: 'set_permission_mode', mode: message['mode'] }) : null;
     case 'setModel':
       return isModelName(message['model']) ? controlRequest({ subtype: 'set_model', model: message['model'] }) : null;
+    case 'setEffort':
+      return isEffortLevel(message['effort']) ? controlRequest({ subtype: 'apply_flag_settings', settings: { effortLevel: message['effort'] } }) : null;
     case 'mcpStatus':
       return { type: 'control_request', request_id: MCP_STATUS_REQUEST_ID, request: { subtype: 'mcp_status' } };
     default:

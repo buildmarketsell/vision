@@ -227,6 +227,9 @@ test('slash commands, model picker, context meter and message queue', async () =
     await expect(page.locator('.chat-banner')).toHaveText(['Needs sign-in: Gmail']);
 
     await page.getByRole('button', { name: 'Opus 5.5 Medium' }).click();
+    await page.getByRole('radiogroup', { name: 'Effort' }).getByRole('radio', { name: 'High' }).click();
+    await expect(page.getByRole('button', { name: 'Opus 5.5 High' })).toBeVisible();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/effort.png' });
     await page.getByRole('listbox', { name: 'Model' }).getByRole('option', { name: /Haiku/ }).click();
     await expect(page.getByRole('button', { name: 'Haiku' })).toBeVisible();
 
