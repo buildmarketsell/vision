@@ -43,8 +43,11 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - New chats start in `auto` permission mode (Dan, 2026-11-17: "I want it to actually edit automatically"). `acceptEdits` still asked before every command. Don't change the default back.
 - Saved conversations: `~/.claude/projects/<folder path with non-alphanumerics as ->/<session-id>.jsonl`; titles from `ai-title` lines. Read-only; never touch credentials.
 
+## Settings (gear after the Inbox)
+- `src/features/settings/`: the sidebar view for settings, and where Dan will add his other app features (Dan, 2026-11-17). Each new setting or feature gets its own section in `SettingsView.tsx`; state shared with another feature goes in `src/renderer/core`.
+
 ## Terminal light / dark
-- Sun/moon button in the Claude panel header (Terminal view) switches every terminal; remembered in localStorage (`terminalTheme.ts`). It sets `body[data-terminal-theme]`, which overrides the `--color-terminal-*` variables (terminal.css), so the chat's working card follows too.
+- Sun/moon button in the Claude panel header (Terminal view) switches every terminal; remembered in localStorage (`src/renderer/core/terminalTheme.ts`, shared because Settings sets it too). It sets `body[data-terminal-theme]`, which overrides the `--color-terminal-*` variables (terminal.css), so the chat's working card follows too.
 - Claude Code's own colors follow on their own: with its theme on `auto` it asks the terminal for its background (OSC 11) at start, and xterm.js answers with the current one. Checked 2026-11-17 in Claude's debug log (`detected=light`). A terminal already open keeps Claude's colors until Restart.
 
 ## Images in Markdown

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { ITheme } from '@xterm/xterm';
-import { theme } from '../../../renderer/theme';
+import { theme } from '../theme';
 
 export type TerminalAppearance = 'dark' | 'light';
 
@@ -36,24 +36,26 @@ function applyToPage(appearance: TerminalAppearance): void {
 
 interface TerminalThemeState {
   appearance: TerminalAppearance;
+  setAppearance: (appearance: TerminalAppearance) => void;
   toggle: () => void;
 }
 
-/** Light or dark for every Claude terminal (and the chat's working card), remembered across launches. */
+/** Light or dark for every Claude terminal (and the chat's working card), remembered across launches. Set from the Claude panel and Settings. */
 export const useTerminalTheme = create<TerminalThemeState>((set, get) => {
   const initial = readStored();
   applyToPage(initial);
+  const setAppearance = (next: TerminalAppearance) => {
+    applyToPage(next);
+    set({ appearance: next });
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Not remembering it is fine; it still switches.
+    }
+  };
   return {
     appearance: initial,
-    toggle: () => {
-      const next = get().appearance === 'dark' ? 'light' : 'dark';
-      applyToPage(next);
-      set({ appearance: next });
-      try {
-        localStorage.setItem(STORAGE_KEY, next);
-      } catch {
-        // Not remembering it is fine; it still switches.
-      }
-    },
+    setAppearance,
+    toggle: () => setAppearance(get().appearance === 'dark' ? 'light' : 'dark'),
   };
 });

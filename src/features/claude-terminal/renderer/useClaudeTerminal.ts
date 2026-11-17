@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { theme } from '../../../renderer/theme';
-import { useTerminalTheme, xtermTheme } from './terminalTheme';
+import { useTerminalTheme, xtermTheme } from '../../../renderer/core/terminalTheme';
 import { setPanelTitle } from '../../../renderer/core/dockActions';
 import { cleanTitle, useClaudeSessions } from './sessionsStore';
 

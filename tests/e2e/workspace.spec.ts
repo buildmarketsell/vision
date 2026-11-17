@@ -255,6 +255,22 @@ test('slash commands, model picker, context meter and message queue', async () =
   }
 });
 
+test('settings: the gear after the inbox switches the terminal appearance', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    const tabs = page.locator('aside').getByRole('tab');
+    await expect(tabs.last()).toHaveAccessibleName('Settings');
+    await tabs.last().click();
+    await page.getByRole('radiogroup', { name: 'Terminal appearance' }).getByRole('radio', { name: 'Light' }).click();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/settings.png' });
+    await page.getByRole('tab', { name: 'Terminal' }).click();
+    await expect(page.locator('.terminal-host .xterm-viewport')).toHaveCSS('background-color', 'rgb(247, 246, 243)');
+  } finally {
+    await app.close();
+  }
+});
+
 test('inbox: message yourself, mark done, delete, and keep it after a restart', async () => {
   const { userData } = makeFixture();
   let { app, page } = await launch(userData);

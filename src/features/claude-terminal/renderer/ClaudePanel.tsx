@@ -9,7 +9,7 @@ import { ChatView } from './chat/ChatView';
 import { useChatSession, type ChatSession } from './chat/useChatSession';
 import { DEFAULT_TITLE, useClaudeSessions, type ClaudeSession } from './sessionsStore';
 import { useClaudeTerminal, type ClaudeStatus } from './useClaudeTerminal';
-import { useTerminalTheme } from './terminalTheme';
+import { useTerminalTheme } from '../../../renderer/core/terminalTheme';
 
 type ViewMode = 'chat' | 'terminal';
 const TITLE_FROM_MESSAGE_CHARS = 48;
