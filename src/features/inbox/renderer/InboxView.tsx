@@ -7,10 +7,11 @@ import { InboxComposer } from './InboxComposer';
 
 const ICON = { size: 15, strokeWidth: 1.5 };
 
-/** The saved messages, kept in sync with every window. Null while loading. */
+/** The saved messages, kept in sync with every window. Null while loading. `now` is when they last changed, for day labels. */
 function useInbox() {
-  const [messages, setMessages] = useState<InboxMessage[] | null>(null);
+  const [inbox, setInbox] = useState<{ messages: InboxMessage[]; now: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const setMessages = (messages: InboxMessage[]) => setInbox({ messages, now: Date.now() });
   useEffect(() => {
     window.vision.inbox.list().then(setMessages, () => setError('Could not load the inbox.'));
     return window.vision.inbox.onChange(setMessages);
@@ -18,7 +19,7 @@ function useInbox() {
   const run = (action: Promise<InboxMessage[]>) => {
     action.then(setMessages, () => setError('That did not save. Try again.'));
   };
-  return { messages, error, run };
+  return { messages: inbox?.messages ?? null, now: inbox?.now ?? 0, error, run };
 }
 
 function Bubble({ message, tail, onMenu }: { message: InboxMessage; tail: boolean; onMenu: (event: MouseEvent, message: InboxMessage) => void }) {
@@ -54,7 +55,7 @@ function menuFor(message: InboxMessage, run: (action: Promise<InboxMessage[]>) =
 
 /** Sidebar view: a chat with yourself for notes and reminders, styled like a WhatsApp chat. */
 export function InboxView() {
-  const { messages, error, run } = useInbox();
+  const { messages, now, error, run } = useInbox();
   const [menu, setMenu] = useState<{ x: number; y: number; message: InboxMessage } | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -81,7 +82,7 @@ export function InboxView() {
         {messages === null && !error && <div className="spinner mx-auto mt-6" aria-label="Loading inbox" />}
         {messages?.length === 0 && <div className="inbox-chip">Send yourself notes and reminders. They stay on this Mac.</div>}
         {messages &&
-          groupByDay(messages, Date.now()).map((day) => (
+          groupByDay(messages, now).map((day) => (
             <div key={day.label} className="flex flex-col gap-0.5">
               <div className="inbox-chip">{day.label}</div>
               {day.messages.map(({ message, tail }) => <Bubble key={message.id} message={message} tail={tail} onMenu={openMenu} />)}

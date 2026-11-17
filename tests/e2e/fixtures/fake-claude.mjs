@@ -13,7 +13,7 @@ if (!process.argv.includes('-p')) {
   process.stdout.write('\u001b]0;✳ Test conversation\u0007');
   process.stdout.write(`Fake Claude ready in ${process.cwd()}\n`);
   process.stdout.write('\u001b]11;?\u0007');
-  process.stdin.on('data', (data) => process.stdout.write(data.toString().replace(/\u001b/g, '^[')));
+  process.stdin.on('data', (data) => process.stdout.write(data.toString().replaceAll('\u001b', '^[')));
 } else {
   let pending = null;
   let turn = 0;
@@ -25,10 +25,10 @@ if (!process.argv.includes('-p')) {
     out({ type: 'rate_limit_event', rate_limit_info: { unifiedWindows: { five_hour: { utilization: 0.29, resetsAt: 1900000000 }, seven_day: { utilization: 0.4, resetsAt: 1900500000 } } } });
     out({ type: 'result', subtype: 'success', is_error: false, total_cost_usd: 0.001, modelUsage: { 'claude-fake': { contextWindow: 200000 } } });
   };
-  const askTool = (name, input, then) => {
+  const askTool = (name, input, onAnswer) => {
     const id = `msg_${++turn}`;
     out({ type: 'assistant', message: { id, content: [{ type: 'tool_use', id: `tool_${turn}`, name, input }] } });
-    pending = { requestId: `req_${turn}`, toolId: `tool_${turn}`, then };
+    pending = { requestId: `req_${turn}`, toolId: `tool_${turn}`, onAnswer };
     out({ type: 'control_request', request_id: pending.requestId, request: { subtype: 'can_use_tool', tool_name: name, input, tool_use_id: `tool_${turn}` } });
   };
   createInterface({ input: process.stdin }).on('line', (line) => {
@@ -59,11 +59,11 @@ if (!process.argv.includes('-p')) {
       out({ type: 'user', message: { content: [{ type: 'text', text: '[Request interrupted by user]' }] } });
       out({ type: 'result', subtype: 'success', is_error: false, total_cost_usd: 0 });
     } else if (message.type === 'control_response' && pending) {
-      const { toolId, then } = pending;
+      const { toolId, onAnswer } = pending;
       const answer = message.response.response;
       pending = null;
       out({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: toolId, content: answer.behavior === 'allow' ? 'ok' : 'denied', is_error: answer.behavior !== 'allow' } ] } });
-      then(answer);
+      onAnswer(answer);
     } else if (message.type === 'user') {
       const content = message.message.content;
       const blocks = Array.isArray(content) ? content : [];
