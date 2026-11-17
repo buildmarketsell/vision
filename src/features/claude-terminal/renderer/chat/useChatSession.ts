@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useLatest } from '../../../../renderer/core/useLatest';
 import { DEFAULT_EFFORT, DEFAULT_MODEL, type ChatImage, type EffortLevel, type PermissionMode } from '../../../../shared/claudeChat';
 import { recordChatEvent } from '../usage/usageStore';
 import { reduceClaudeEvent, reduceLocal } from './chatReducer';
@@ -43,14 +44,11 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
   const [mode, setModeState] = useState(initialMode);
   const [target, setTarget] = useState<{ sessionId: string | null }>({ sessionId: initialSessionId });
   const processId = useRef<number | null>(null);
-  const modeRef = useRef(mode);
-  modeRef.current = mode;
+  const modeRef = useLatest(mode);
   const [model, setModelState] = useState(DEFAULT_MODEL);
-  const modelRef = useRef(model);
-  modelRef.current = model;
+  const modelRef = useLatest(model);
   const [effort, setEffortState] = useState<EffortLevel>(DEFAULT_EFFORT);
-  const effortRef = useRef(effort);
-  effortRef.current = effort;
+  const effortRef = useLatest(effort);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,7 +86,7 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
       if (processId.current !== null) window.vision.chat.stop(processId.current);
       processId.current = null;
     };
-  }, [target]);
+  }, [target, modeRef, modelRef, effortRef]);
 
   const sendRaw = useCallback((message: Parameters<typeof window.vision.chat.send>[1]) => {
     if (processId.current !== null) window.vision.chat.send(processId.current, message);

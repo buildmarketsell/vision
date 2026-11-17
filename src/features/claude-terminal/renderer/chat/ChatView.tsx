@@ -87,7 +87,7 @@ function useStickToBottom(dependency: unknown) {
 /** A Claude conversation as a chat, like Claude Code in VS Code. */
 export function ChatView({ chat }: { chat: ChatSession }) {
   const { state } = chat;
-  const scroll = useStickToBottom(state);
+  const { ref: scrollRef, onScroll } = useStickToBottom(state);
   const waiting = state.permissions.length > 0 || state.questions.length > 0;
   const working = state.phase === 'working';
   const draft = useDraft();
@@ -96,7 +96,7 @@ export function ChatView({ chat }: { chat: ChatSession }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col" onDragOver={draft.onDragOver} onDrop={draft.onDrop}>
-      <div ref={scroll.ref} onScroll={scroll.onScroll} className="reading-surface min-h-0 flex-1 overflow-y-auto">
+      <div ref={scrollRef} onScroll={onScroll} className="reading-surface min-h-0 flex-1 overflow-y-auto">
         {state.items.length === 0 && state.phase !== 'starting' ? (
           <EmptyState onOpen={(sessionId) => chat.open(sessionId)} />
         ) : (

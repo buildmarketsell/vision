@@ -1,4 +1,4 @@
-import { File, FileCode, FileJson, FileText, Folder, FolderOpen, Image, type LucideIcon } from 'lucide-react';
+import { File, FileCode, FileJson, FileText, Folder, FolderOpen, Image, type LucideProps } from 'lucide-react';
 
 const CODE = ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'py', 'rb', 'go', 'rs', 'java', 'swift', 'kt', 'c', 'h', 'cpp', 'cs', 'php', 'sh', 'zsh', 'liquid', 'html', 'css', 'scss', 'vue', 'svelte', 'sql', 'yml', 'yaml', 'toml'];
 const TEXT = ['md', 'mdx', 'txt', 'rtf', 'csv', 'log'];
@@ -9,13 +9,13 @@ function extensionOf(name: string): string {
   return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
 }
 
-function iconForFile(name: string): LucideIcon {
+function iconForFile(name: string, props: LucideProps) {
   const ext = extensionOf(name);
-  if (ext === 'json') return FileJson;
-  if (CODE.includes(ext)) return FileCode;
-  if (TEXT.includes(ext)) return FileText;
-  if (IMAGE.includes(ext)) return Image;
-  return File;
+  if (ext === 'json') return <FileJson {...props} />;
+  if (CODE.includes(ext)) return <FileCode {...props} />;
+  if (TEXT.includes(ext)) return <FileText {...props} />;
+  if (IMAGE.includes(ext)) return <Image {...props} />;
+  return <File {...props} />;
 }
 
 interface EntryIconProps {
@@ -27,6 +27,7 @@ interface EntryIconProps {
 
 /** The gray file or folder icon used in the tree and in tabs. */
 export function EntryIcon({ name, isDirectory = false, isOpen = false, size = 16 }: EntryIconProps) {
-  const Icon = isDirectory ? (isOpen ? FolderOpen : Folder) : iconForFile(name);
-  return <Icon size={size} strokeWidth={1.5} color="var(--color-text-muted)" aria-hidden />;
+  const props: LucideProps = { size, strokeWidth: 1.5, color: 'var(--color-text-muted)', 'aria-hidden': true };
+  if (isDirectory) return isOpen ? <FolderOpen {...props} /> : <Folder {...props} />;
+  return iconForFile(name, props);
 }

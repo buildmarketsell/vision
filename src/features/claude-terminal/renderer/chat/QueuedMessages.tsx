@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CornerDownLeft, X } from 'lucide-react';
+import { useLatest } from '../../../../renderer/core/useLatest';
 import type { ChatImage } from '../../../../shared/claudeChat';
 
 export interface QueuedMessage {
@@ -12,15 +13,15 @@ export interface QueuedMessage {
 export function useMessageQueue(ready: boolean, send: (text: string, images: ChatImage[]) => void) {
   const [queue, setQueue] = useState<QueuedMessage[]>([]);
   const nextId = useRef(1);
-  const sendRef = useRef(send);
-  sendRef.current = send;
+  const sendRef = useLatest(send);
 
   useEffect(() => {
     const [first, ...rest] = queue;
     if (!ready || !first) return;
+    // oxlint-disable-next-line react/set-state-in-effect -- the effect sends to Claude (outside React) the moment it becomes free; removing the sent message must happen in the same step
     setQueue(rest);
     sendRef.current(first.text, first.images);
-  }, [ready, queue]);
+  }, [ready, queue, sendRef]);
 
   return {
     queue,

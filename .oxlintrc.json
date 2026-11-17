@@ -1,0 +1,131 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "react",
+    "import",
+    "unicorn",
+    "oxc"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": [
+    "dist",
+    "out",
+    "build",
+    "node_modules",
+    "coverage",
+    "test-results",
+    "playwright-report"
+  ],
+  "rules": {
+    "typescript/no-explicit-any": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "max-lines": [
+      "error",
+      {
+        "max": 300,
+        "skipBlankLines": true,
+        "skipComments": true
+      }
+    ],
+    "max-lines-per-function": [
+      "warn",
+      {
+        "max": 50,
+        "skipBlankLines": true,
+        "skipComments": true
+      }
+    ],
+    "no-console": [
+      "error",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
+    "no-warning-comments": [
+      "warn",
+      {
+        "terms": [
+          "todo",
+          "fixme",
+          "hack"
+        ]
+      }
+    ],
+    "eqeqeq": "error",
+    "import/default": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/renderer/**",
+        "src/features/*/renderer/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/main/**",
+                  "electron",
+                  "node:*",
+                  "fs",
+                  "path",
+                  "child_process"
+                ],
+                "message": "Window (renderer) code cannot use main-process or Node code. Add an IPC method in src/shared/ipc.ts and call it through window.vision."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/main/**",
+        "src/features/*/main/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/renderer/**"
+                ],
+                "message": "Main-process code cannot import window (renderer) code. Move shared types or helpers to src/shared."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "tests/**",
+        "**/*.test.ts",
+        "**/*.test.tsx"
+      ],
+      "rules": {
+        "max-lines": "off",
+        "max-lines-per-function": "off",
+        "no-console": "off"
+      }
+    }
+  ]
+}

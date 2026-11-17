@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { DockviewPanelApi, IDockviewPanelProps } from 'dockview-react';
 import { MessageSquare, Moon, RotateCw, SquareTerminal, Sun } from 'lucide-react';
 import { DEFAULT_PERMISSION_MODE, isSessionId, PERMISSION_MODES, type PermissionMode } from '../../../shared/claudeChat';
@@ -138,7 +138,9 @@ interface TerminalTabProps {
 function TerminalTab({ panelId, sessionId, restartRef }: TerminalTabProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const { status, restart } = useClaudeTerminal(hostRef, panelId, sessionId);
-  restartRef.current = () => void restart();
+  useLayoutEffect(() => {
+    restartRef.current = () => void restart();
+  });
   return (
     <div className="relative mx-2 mb-2 flex min-h-0 flex-1 flex-col overflow-hidden pt-1" style={{ background: 'var(--color-terminal-background)', borderRadius: 'var(--radius-inner)' }}>
       <div ref={hostRef} className="terminal-host min-h-0 flex-1" />
