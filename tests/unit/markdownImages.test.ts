@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { convertEmbeds, imageExtension, imageUrl, pastedImageName, relativeImageLink, resolveImagePath } from '../../src/shared/markdownImages';
+import { convertEmbeds, imageExtension, imageUrl, pastedImageName, relativeImageLink, resolveLocalPath } from '../../src/shared/markdownImages';
 
 describe('markdown images', () => {
   it('resolves relative links against the note folder and skips web links', () => {
-    expect(resolveImagePath('/w/notes', 'images/a.png')).toBe('/w/notes/images/a.png');
-    expect(resolveImagePath('/w/notes', '../b%20c.png')).toBe('/w/b c.png');
-    expect(resolveImagePath('/w/notes', './x.png?v=1')).toBe('/w/notes/x.png');
-    expect(resolveImagePath('/w/notes', 'https://e.com/a.png')).toBeNull();
-    expect(resolveImagePath('/w/notes', 'data:image/png;base64,AA')).toBeNull();
+    expect(resolveLocalPath('/w/notes', 'images/a.png')).toBe('/w/notes/images/a.png');
+    expect(resolveLocalPath('/w/notes', '../b%20c.png')).toBe('/w/b c.png');
+    expect(resolveLocalPath('/w/notes', './x.png?v=1')).toBe('/w/notes/x.png');
+    expect(resolveLocalPath('/w/notes', 'https://e.com/a.png')).toBeNull();
+    expect(resolveLocalPath('/w/notes', 'data:image/png;base64,AA')).toBeNull();
+    expect(resolveLocalPath('/w', '%F0%9F%91%A4%20CLIENTS/brief.md#L42')).toBe('/w/👤 CLIENTS/brief.md');
+    expect(resolveLocalPath('/w', '#heading')).toBeNull();
   });
 
   it('turns Obsidian embeds into Markdown images', () => {

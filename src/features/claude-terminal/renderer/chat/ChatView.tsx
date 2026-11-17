@@ -55,6 +55,7 @@ function EmptyState({ onOpen }: { onOpen: (sessionId: string) => void }) {
 }
 
 function Item({ item, state }: { item: ChatItem; state: ChatState }) {
+  const folder = useWorkspace((current) => current.folder);
   if (item.kind === 'user') {
     return (
       <div className="user-bubble enter">
@@ -63,7 +64,7 @@ function Item({ item, state }: { item: ChatItem; state: ChatState }) {
       </div>
     );
   }
-  if (item.kind === 'text') return <div className={item.streaming ? 'assistant-text streaming' : 'assistant-text'}><Markdown text={item.text} /></div>;
+  if (item.kind === 'text') return <div className={item.streaming ? 'assistant-text streaming' : 'assistant-text'}><Markdown text={item.text} baseDir={folder} /></div>;
   if (item.kind === 'notice') return <div className="notice" data-tone={item.tone}>{item.text}</div>;
   const tool = state.tools[item.toolId];
   return tool && tool.name !== 'AskUserQuestion' ? <ToolRow tool={tool} /> : null;

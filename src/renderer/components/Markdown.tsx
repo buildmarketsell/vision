@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, type MouseEvent } from 'react';
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { convertEmbeds, imageUrl, resolveImagePath } from '../../shared/markdownImages';
+import { convertEmbeds, imageUrl, resolveLocalPath } from '../../shared/markdownImages';
+import { openFile } from '../core/dockActions';
 
-// Links open in the browser (the main process routes new windows there).
+// Web links open in the browser (the main process routes new windows there); file links are caught in Markdown's onClick.
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   if (node.tagName === 'A') {
     node.setAttribute('target', '_blank');
@@ -20,7 +21,7 @@ function toHtml(text: string, baseDir: string | undefined): string {
     breaks: false,
     walkTokens: (token) => {
       if (token.type !== 'image' || !baseDir) return;
-      const path = resolveImagePath(baseDir, token.href);
+      const path = resolveLocalPath(baseDir, token.href);
       if (path) token.href = imageUrl(path);
     },
   });
@@ -55,7 +56,8 @@ function addCopyButtons(root: HTMLElement): void {
 
 /**
  * Markdown as formatted text: Claude's replies and the .md preview. HTML in the source is sanitized.
- * With `baseDir` (the note's folder), relative images and Obsidian `![[embeds]]` show the local file.
+ * With `baseDir` (the note's folder, or Claude's working folder), relative images and Obsidian
+ * `![[embeds]]` show the local file, and links to local files open them in a tab.
  */
 export function Markdown({ text, className = '', baseDir }: { text: string; className?: string; baseDir?: string }) {
   const html = useMemo(() => toHtml(text, baseDir), [text, baseDir]);
@@ -63,5 +65,12 @@ export function Markdown({ text, className = '', baseDir }: { text: string; clas
   useEffect(() => {
     if (ref.current) addCopyButtons(ref.current);
   }, [html]);
-  return <div ref={ref} className={`markdown ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;
+  const openLocalLink = (event: MouseEvent<HTMLDivElement>) => {
+    const href = (event.target as Element).closest('a')?.getAttribute('href');
+    const path = baseDir && href ? resolveLocalPath(baseDir, href) : null;
+    if (!path) return;
+    event.preventDefault();
+    openFile(path);
+  };
+  return <div ref={ref} className={`markdown ${className}`} onClick={openLocalLink} dangerouslySetInnerHTML={{ __html: html }} />;
 }

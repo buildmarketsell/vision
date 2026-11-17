@@ -378,3 +378,20 @@ test('opens, names, lists and closes several Claude sessions', async () => {
     await app.close();
   }
 });
+
+test('a file link in a Claude reply opens the file in a tab', async () => {
+  const { folder, userData } = makeFixture();
+  mkdirSync(join(folder, '👤 CLIENTS'));
+  writeFileSync(join(folder, '👤 CLIENTS', 'brief.md'), '# The brief\n');
+  const { app, page } = await launch(userData);
+  try {
+    await sendMessage(page, 'see [brief.md](%F0%9F%91%A4%20CLIENTS/brief.md#L1)');
+    const link = page.locator('.assistant-text').last().getByRole('link', { name: 'brief.md' });
+    await link.click();
+    await expect(page.locator('.dv-tab', { hasText: /^brief\.md$/ })).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator('.markdown-document h1')).toHaveText('The brief', { timeout: 15_000 });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/chat-file-link.png' });
+  } finally {
+    await app.close();
+  }
+});
