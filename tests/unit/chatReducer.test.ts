@@ -146,7 +146,7 @@ describe('session info: models, slash commands, context', () => {
       type: 'control_response',
       response: { subtype: 'success', request_id: 'i1', response: { models: [{ value: 'haiku', displayName: 'Haiku', description: 'Fast' }, { nope: 1 }], commands: [{ name: 'review', description: 'Review' }] } },
     });
-    expect(state.info.models).toEqual([{ value: 'haiku', displayName: 'Haiku', description: 'Fast' }]);
+    expect(state.info.models).toEqual([{ value: 'haiku', displayName: 'Haiku', description: 'Fast', supportsEffort: false }]);
     expect(state.info.commands).toEqual([{ name: 'review', description: 'Review', argumentHint: '' }]);
   });
   it('tracks context use and the window from a real session', () => {

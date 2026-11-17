@@ -35,6 +35,7 @@ if (!process.argv.includes('-p')) {
       out({ type: 'control_response', response: { subtype: 'success', request_id: message.request_id, response: {
         models: [
           { value: 'default', displayName: 'Default (recommended)', description: 'Opus' },
+          { value: 'opus', displayName: 'Opus 5.5', description: 'Complex work', supportsEffort: true },
           { value: 'haiku', displayName: 'Haiku', description: 'Fastest' },
         ],
         account: { subscriptionType: 'Claude Pro' },
@@ -43,6 +44,11 @@ if (!process.argv.includes('-p')) {
           { name: 'compact', description: 'Clear history but keep a summary', argumentHint: '' },
         ],
       } } });
+    } else if (message.type === 'control_request' && message.request.subtype === 'mcp_status') {
+      out({ type: 'control_response', response: { subtype: 'success', request_id: message.request_id, response: { mcpServers: [
+        { name: 'claude-in-chrome', status: 'connected' },
+        { name: 'claude.ai Gmail', status: 'needs-auth' },
+      ] } } });
     } else if (message.type === 'control_request' && message.request.subtype === 'interrupt') {
       out({ type: 'user', message: { content: [{ type: 'text', text: '[Request interrupted by user]' }] } });
       out({ type: 'result', subtype: 'success', is_error: false, total_cost_usd: 0 });

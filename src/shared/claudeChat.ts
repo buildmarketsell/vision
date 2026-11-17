@@ -1,11 +1,21 @@
 /** Types for the Claude chat: VISION runs `claude -p` with stream-json in and out. */
 
-export type PermissionMode = 'default' | 'acceptEdits' | 'plan';
+export type PermissionMode = 'auto' | 'acceptEdits' | 'default' | 'plan';
 
-export const PERMISSION_MODES: PermissionMode[] = ['default', 'acceptEdits', 'plan'];
+export const PERMISSION_MODES: PermissionMode[] = ['auto', 'acceptEdits', 'default', 'plan'];
 
-/** New chats edit files without asking (Dan's choice); the picker still offers the others. */
-export const DEFAULT_PERMISSION_MODE: PermissionMode = 'acceptEdits';
+/**
+ * New chats never stop to ask (Dan's choice, 2026-11-17): in auto mode Claude approves safe actions itself
+ * and refuses risky ones. "Edit automatically" still asked before commands. The picker offers the others.
+ */
+export const DEFAULT_PERMISSION_MODE: PermissionMode = 'auto';
+
+/** New chats run Opus 5.5 on medium effort (Dan's choice, 2026-11-17); the model picker can still switch. */
+export const DEFAULT_MODEL = 'opus';
+export const DEFAULT_EFFORT = 'medium';
+
+/** Fixed id for the MCP status request, so the window can pick out its reply. */
+export const MCP_STATUS_REQUEST_ID = 'vision-mcp-status';
 
 export interface ChatStartOptions {
   /** Continue an earlier conversation. */
@@ -49,7 +59,8 @@ export type ChatOutgoing =
   | { kind: 'deny'; requestId: string; message: string }
   | { kind: 'interrupt' }
   | { kind: 'setPermissionMode'; mode: PermissionMode }
-  | { kind: 'setModel'; model: string };
+  | { kind: 'setModel'; model: string }
+  | { kind: 'mcpStatus' };
 
 /** One parsed line of Claude's stream-json output. Parsed defensively in the window. */
 export interface ChatEventMessage {

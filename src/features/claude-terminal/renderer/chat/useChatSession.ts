@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import type { ChatImage, PermissionMode } from '../../../../shared/claudeChat';
+import { DEFAULT_MODEL, type ChatImage, type PermissionMode } from '../../../../shared/claudeChat';
+import { recordChatEvent } from '../usage/usageStore';
 import { reduceClaudeEvent, reduceLocal } from './chatReducer';
 import { emptyChatState, type ChatState, type LocalAction } from './chatTypes';
 
@@ -34,8 +35,6 @@ export interface ChatSession {
   open: (sessionId: string | null) => void;
 }
 
-const DEFAULT_MODEL = 'default';
-
 /** One chat tab's link to a `claude -p` stream-json process. */
 export function useChatSession(initialSessionId: string | null, initialMode: PermissionMode): ChatSession {
   const [state, dispatch] = useReducer(reducer, undefined, emptyChatState);
@@ -51,7 +50,9 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
   useEffect(() => {
     let cancelled = false;
     const offEvent = window.vision.chat.onEvent(({ id, event }) => {
-      if (id === processId.current) dispatch({ type: 'claude', event });
+      if (id !== processId.current) return;
+      recordChatEvent(event);
+      dispatch({ type: 'claude', event });
     });
     const offExit = window.vision.chat.onExit(({ id, exitCode, errorTail }) => {
       if (id !== processId.current) return;
@@ -87,6 +88,11 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
   const sendRaw = useCallback((message: Parameters<typeof window.vision.chat.send>[1]) => {
     if (processId.current !== null) window.vision.chat.send(processId.current, message);
   }, []);
+
+  // Connection status for the bars above the composer: on start and after every turn (servers that were still connecting settle by then).
+  useEffect(() => {
+    if (state.phase === 'idle') sendRaw({ kind: 'mcpStatus' });
+  }, [state.phase, sendRaw]);
 
   return {
     state,

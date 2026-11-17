@@ -12,6 +12,8 @@ export interface UsageWindow {
   utilization: number;
   /** Milliseconds since 1970. */
   resetsAt: number;
+  /** Claude's own verdict: "allowed", "allowed_warning" (past its warning threshold) or "rejected". */
+  status: string;
 }
 
 export interface Usage {
@@ -44,9 +46,9 @@ export function parseRateLimit(event: unknown): UsageWindow[] | null {
   if (!isRecord(windows)) return null;
   return Object.entries(windows).flatMap(([key, raw]) => {
     if (!isRecord(raw)) return [];
-    const { utilization, resetsAt } = raw;
+    const { utilization, resetsAt, status } = raw;
     if (typeof utilization !== 'number' || typeof resetsAt !== 'number') return [];
-    return [{ key, utilization: Math.min(1, Math.max(0, utilization)), resetsAt: resetsAt * 1000 }];
+    return [{ key, utilization: Math.min(1, Math.max(0, utilization)), resetsAt: resetsAt * 1000, status: typeof status === 'string' ? status : 'allowed' }];
   });
 }
 
@@ -76,7 +78,7 @@ function load(): Usage {
     const saved: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
     if (isRecord(saved) && Array.isArray(saved['windows'])) {
       return {
-        windows: saved['windows'].filter(isWindow),
+        windows: saved['windows'].filter(isWindow).map((window) => ({ ...window, status: typeof window.status === 'string' ? window.status : 'allowed' })),
         plan: typeof saved['plan'] === 'string' ? saved['plan'] : null,
         updatedAt: typeof saved['updatedAt'] === 'number' ? saved['updatedAt'] : null,
       };

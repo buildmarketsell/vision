@@ -17,8 +17,8 @@ const live = {
 describe('Claude usage', () => {
   it('reads every window from a rate_limit_event', () => {
     expect(parseRateLimit(live)).toEqual([
-      { key: 'five_hour', utilization: 0.92, resetsAt: 1794876000_000 },
-      { key: 'seven_day', utilization: 0.48, resetsAt: 1795024800_000 },
+      { key: 'five_hour', utilization: 0.92, resetsAt: 1794876000_000, status: 'allowed_warning' },
+      { key: 'seven_day', utilization: 0.48, resetsAt: 1795024800_000, status: 'allowed' },
     ]);
     expect(parseRateLimit({ type: 'assistant' })).toBeNull();
     expect(parseRateLimit({ type: 'rate_limit_event', rate_limit_info: { unifiedWindows: { five_hour: { utilization: 'x' } } } })).toEqual([]);
@@ -30,9 +30,9 @@ describe('Claude usage', () => {
   });
   it('keeps windows until they reset, known ones first', () => {
     const now = 1_000;
-    const kept = { key: 'seven_day_fable', utilization: 0.6, resetsAt: 5_000 };
-    const expired = { key: 'seven_day_opus', utilization: 0.9, resetsAt: 500 };
-    const merged = mergeWindows([kept, expired], [{ key: 'five_hour', utilization: 0.1, resetsAt: 9_000 }], now);
+    const kept = { key: 'seven_day_fable', utilization: 0.6, resetsAt: 5_000, status: 'allowed' };
+    const expired = { key: 'seven_day_opus', utilization: 0.9, resetsAt: 500, status: 'allowed' };
+    const merged = mergeWindows([kept, expired], [{ key: 'five_hour', utilization: 0.1, resetsAt: 9_000, status: 'allowed' }], now);
     expect(merged.map((window) => window.key)).toEqual(['five_hour', 'seven_day_fable']);
   });
   it('takes only the plan name from the account', () => {

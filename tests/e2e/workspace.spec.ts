@@ -212,7 +212,8 @@ test('slash commands, model picker, context meter and message queue', async () =
   const { app, page } = await launch(userData);
   try {
     await sendMessage(page, 'hi');
-    await expect(page.getByRole('button', { name: 'Context 21% used' })).toBeVisible();
+    await expect(page.locator('.assistant-text').last()).toContainText('You said: hi');
+    await expect(page.getByRole('button', { name: /^Context \d+% used$/ })).toHaveCount(0);
 
     await messageBox(page).first().fill('/rev');
     const commands = page.getByRole('listbox', { name: 'Slash commands' });
@@ -221,7 +222,11 @@ test('slash commands, model picker, context meter and message queue', async () =
     await expect(messageBox(page).first()).toHaveValue('/review ');
     await messageBox(page).first().fill('');
 
-    await page.getByRole('button', { name: 'Default model' }).click();
+    await expect(page.locator('.chat-banner')).toHaveText(['Browser connected', 'Needs sign-in: Gmail']);
+    await page.locator('.chat-banner').filter({ hasText: 'Browser connected' }).getByRole('button', { name: 'Dismiss' }).click();
+    await expect(page.locator('.chat-banner')).toHaveText(['Needs sign-in: Gmail']);
+
+    await page.getByRole('button', { name: 'Opus 5.5 Medium' }).click();
     await page.getByRole('listbox', { name: 'Model' }).getByRole('option', { name: /Haiku/ }).click();
     await expect(page.getByRole('button', { name: 'Haiku' })).toBeVisible();
 

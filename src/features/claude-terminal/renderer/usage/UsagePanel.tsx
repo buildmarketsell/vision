@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { recordChatEvent, useUsage, windowLabel, type UsageWindow } from './usageStore';
+import { useUsage, windowLabel, type UsageWindow } from './usageStore';
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
@@ -30,7 +30,7 @@ function updatedLabel(updatedAt: number, now: number): string {
 }
 
 /** Re-renders every minute so "resets in" counts down. */
-function useNow(): number {
+export function useNow(): number {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), MINUTE_MS);
@@ -61,8 +61,6 @@ function Meter({ limit, now }: { limit: UsageWindow; now: number }) {
 export function UsagePanel() {
   const { windows, plan, updatedAt } = useUsage();
   const now = useNow();
-
-  useEffect(() => window.vision.chat.onEvent(({ event }) => recordChatEvent(event)), []);
 
   return (
     <section className="usage-card" aria-label="Usage">

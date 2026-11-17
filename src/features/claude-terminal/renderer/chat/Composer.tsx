@@ -10,6 +10,7 @@ import { useSlashMenu } from './useSlashMenu';
 const MAX_HEIGHT_PX = 200;
 
 const MODE_LABELS: Record<PermissionMode, string> = {
+  auto: 'Auto (never ask)',
   default: 'Ask before edits',
   acceptEdits: 'Edit automatically',
   plan: 'Plan first',

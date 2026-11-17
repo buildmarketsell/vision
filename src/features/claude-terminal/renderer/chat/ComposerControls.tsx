@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { DEFAULT_EFFORT } from '../../../../shared/claudeChat';
 import { ComposerMenu } from './ComposerMenu';
 import type { ModelOption, SessionInfo } from './sessionInfo';
 
@@ -7,6 +8,9 @@ const RING_SIZE = 16;
 const RING_STROKE = 2;
 /** Above this share of the context window the meter turns red: Claude will compact soon. */
 const CONTEXT_WARNING = 0.8;
+/** Below this share the meter stays hidden, like VS Code: a fresh session already uses ~20% (Dan, 2026-11-17). */
+const CONTEXT_SHOW = 0.5;
+const EFFORT_LABEL = `${DEFAULT_EFFORT.charAt(0).toUpperCase()}${DEFAULT_EFFORT.slice(1)}`;
 
 /** Closes a popover on a click outside it or on Escape. */
 function useDismiss(ref: RefObject<HTMLElement | null>, open: boolean, close: () => void): void {
@@ -38,10 +42,12 @@ export function ModelPicker({ models, value, onChange }: { models: ModelOption[]
   useDismiss(ref, open, () => setOpen(false));
   if (models.length === 0) return null;
   const items = models.map((model) => ({ id: model.value, label: model.displayName, detail: model.description, selected: model.value === value }));
+  const effort = models.find((model) => model.value === value)?.supportsEffort ? EFFORT_LABEL : null;
   return (
     <div ref={ref} className="relative">
       <button className="composer-pill" aria-haspopup="listbox" aria-expanded={open} title="Model" onClick={() => setOpen(!open)}>
         {modelLabel(models, value)}
+        {effort && <span className="composer-pill-detail">{effort}</span>}
         <ChevronDown size={12} strokeWidth={2} className="chevron" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
       {open && (
@@ -71,8 +77,8 @@ export function ContextMeter({ info }: { info: SessionInfo }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(ref, open, () => setOpen(false));
-  if (info.contextUsed === 0) return null;
   const share = Math.min(1, info.contextUsed / info.contextWindow);
+  if (share < CONTEXT_SHOW) return null;
   const percent = Math.round(share * 100);
   const radius = (RING_SIZE - RING_STROKE) / 2;
   const circumference = 2 * Math.PI * radius;

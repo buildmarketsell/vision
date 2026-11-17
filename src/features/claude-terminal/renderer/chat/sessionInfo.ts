@@ -1,3 +1,4 @@
+import { MCP_STATUS_REQUEST_ID } from '../../../../shared/claudeChat';
 import { asArr, asObj, asStr, type Obj } from './eventParsing';
 
 /**
@@ -9,6 +10,14 @@ export interface ModelOption {
   value: string;
   displayName: string;
   description: string;
+  /** Whether this model takes an effort level (Haiku doesn't). */
+  supportsEffort: boolean;
+}
+
+/** An MCP server and how its connection stands: connected, pending, needs-auth, failed or disabled. */
+export interface McpServer {
+  name: string;
+  status: string;
 }
 
 export interface SlashCommand {
@@ -20,6 +29,8 @@ export interface SlashCommand {
 export interface SessionInfo {
   models: ModelOption[];
   commands: SlashCommand[];
+  /** From the latest `mcp_status` reply; empty until the first one arrives. */
+  mcpServers: McpServer[];
   /** Tokens in the context after the latest reply (input, cached and output). */
   contextUsed: number;
   contextWindow: number;
@@ -28,7 +39,7 @@ export interface SessionInfo {
 export const DEFAULT_CONTEXT_WINDOW = 200_000;
 
 export function emptySessionInfo(): SessionInfo {
-  return { models: [], commands: [], contextUsed: 0, contextWindow: DEFAULT_CONTEXT_WINDOW };
+  return { models: [], commands: [], mcpServers: [], contextUsed: 0, contextWindow: DEFAULT_CONTEXT_WINDOW };
 }
 
 const num = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
@@ -37,7 +48,8 @@ function parseModels(raw: unknown): ModelOption[] {
   return asArr(raw).flatMap((item) => {
     const model = asObj(item);
     const value = asStr(model?.['value']);
-    return value ? [{ value, displayName: asStr(model?.['displayName']) ?? value, description: asStr(model?.['description']) ?? '' }] : [];
+    if (!value) return [];
+    return [{ value, displayName: asStr(model?.['displayName']) ?? value, description: asStr(model?.['description']) ?? '', supportsEffort: model?.['supportsEffort'] === true }];
   });
 }
 
@@ -49,8 +61,22 @@ function parseCommands(raw: unknown): SlashCommand[] {
   });
 }
 
-function fromInitialize(info: SessionInfo, event: Obj): SessionInfo {
-  const reply = asObj(asObj(event['response'])?.['response']);
+function parseMcpServers(raw: unknown): McpServer[] {
+  return asArr(raw).flatMap((item) => {
+    const server = asObj(item);
+    const name = asStr(server?.['name']);
+    const status = asStr(server?.['status']);
+    return name && status ? [{ name, status }] : [];
+  });
+}
+
+function fromControlResponse(info: SessionInfo, event: Obj): SessionInfo {
+  const response = asObj(event['response']);
+  const reply = asObj(response?.['response']);
+  if (response?.['request_id'] === MCP_STATUS_REQUEST_ID) {
+    const mcpServers = parseMcpServers(reply?.['mcpServers']);
+    return JSON.stringify(mcpServers) === JSON.stringify(info.mcpServers) ? info : { ...info, mcpServers };
+  }
   if (!reply || (!('models' in reply) && !('commands' in reply))) return info;
   return { ...info, models: parseModels(reply['models']), commands: parseCommands(reply['commands']) };
 }
@@ -74,7 +100,7 @@ function fromResult(info: SessionInfo, event: Obj): SessionInfo {
 export function reduceSessionInfo(info: SessionInfo, event: Obj): SessionInfo {
   switch (event['type']) {
     case 'control_response':
-      return fromInitialize(info, event);
+      return fromControlResponse(info, event);
     case 'assistant':
       return fromAssistant(info, event);
     case 'result':

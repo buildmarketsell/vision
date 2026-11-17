@@ -2,11 +2,13 @@ import { ipcMain, type WebContents } from 'electron';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { IPC } from '../../../shared/ipc';
 import {
+  DEFAULT_EFFORT,
   DEFAULT_PERMISSION_MODE,
   isImageMediaType,
   isModelName,
   isSessionId,
   MAX_IMAGE_BYTES,
+  MCP_STATUS_REQUEST_ID,
   MAX_IMAGES_PER_MESSAGE,
   PERMISSION_MODES,
   type ChatOutgoing,
@@ -44,6 +46,7 @@ function chatArgs(mode: PermissionMode, resumeId: string | null, model: string |
     // Permission requests and questions come to VISION as control requests.
     '--permission-prompt-tool', 'stdio',
     '--permission-mode', mode,
+    '--effort', DEFAULT_EFFORT,
   ];
   if (resumeId) args.push('--resume', resumeId);
   if (model && model !== 'default') args.push('--model', model);
@@ -161,6 +164,8 @@ export function toClaudeMessage(outgoing: unknown): object | null {
       return isMode(message['mode']) ? controlRequest({ subtype: 'set_permission_mode', mode: message['mode'] }) : null;
     case 'setModel':
       return isModelName(message['model']) ? controlRequest({ subtype: 'set_model', model: message['model'] }) : null;
+    case 'mcpStatus':
+      return { type: 'control_request', request_id: MCP_STATUS_REQUEST_ID, request: { subtype: 'mcp_status' } };
     default:
       return null;
   }

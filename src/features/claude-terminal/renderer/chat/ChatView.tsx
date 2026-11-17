@@ -3,6 +3,7 @@ import type { PastConversation } from '../../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../../renderer/components/ClaudeLogo';
 import { baseName, useWorkspace } from '../../../../renderer/core/workspaceStore';
 import type { ChatItem, ChatState } from './chatTypes';
+import { Banners } from './Banners';
 import { Composer } from './Composer';
 import { useDraft } from './useDraft';
 import { QueuedMessages, useMessageQueue } from './QueuedMessages';
@@ -123,6 +124,7 @@ export function ChatView({ chat }: { chat: ChatSession }) {
         {working && !waiting && <LiveCard activity={state.activity} />}
         {state.todos.length > 0 && <TasksCard todos={state.todos} />}
         <QueuedMessages queue={queue.queue} onRemove={queue.remove} />
+        <Banners servers={state.info.mcpServers} />
         <Composer
           draft={draft}
           working={working}
