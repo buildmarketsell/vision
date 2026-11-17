@@ -65,12 +65,14 @@ export const theme = {
     popover: '0 0 0 0.5px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.16)',
   },
   font: {
-    /** San Francisco: macOS's own font, with optical sizing and size-specific tracking built in. */
-    ui: "system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif",
+    /** Notion's font stack (San Francisco on a Mac), chosen by Dan 2026-11-17. */
+    ui: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Display', 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, sans-serif",
     mono: "'SF Mono', Menlo, Monaco, monospace",
-    sizeSmall: '11px',
-    sizeBase: '13px',
-    sizeTitle: '14px',
+    /** Notion's sizes: 12 for captions, 14 for controls (its sidebar), 16 for reading (its pages). */
+    sizeSmall: '12px',
+    sizeBase: '14px',
+    sizeTitle: '15px',
+    sizeReading: '16px',
     sizeTerminal: 12.5,
     sizeEditor: 13,
   },
@@ -110,6 +112,7 @@ export function applyThemeVariables(root: HTMLElement): void {
   root.style.setProperty('--size-small', theme.font.sizeSmall);
   root.style.setProperty('--size-base', theme.font.sizeBase);
   root.style.setProperty('--size-title', theme.font.sizeTitle);
+  root.style.setProperty('--size-reading', theme.font.sizeReading);
   root.style.setProperty('--ease', theme.motion.ease);
   root.style.setProperty('--duration-fast', theme.motion.fast);
   root.style.setProperty('--duration-base', theme.motion.base);

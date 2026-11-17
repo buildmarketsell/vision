@@ -125,3 +125,9 @@
     transform: none;
   }
 }
+
+/* Typing reads at the same size as the messages. */
+.composer textarea {
+  font-size: var(--size-reading);
+  line-height: 1.5;
+}

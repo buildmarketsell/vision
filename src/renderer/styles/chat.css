@@ -19,6 +19,13 @@
   user-select: text;
 }
 
+/* Messages read like a Notion page. */
+.user-bubble,
+.assistant-text {
+  font-size: var(--size-reading);
+  line-height: 1.5;
+}
+
 .assistant-text {
   user-select: text;
 }
@@ -27,7 +34,7 @@
   content: '';
   display: inline-block;
   width: 6px;
-  height: 14px;
+  height: 1em;
   margin-left: 2px;
   vertical-align: -2px;
   border-radius: 1px;
@@ -36,7 +43,7 @@
 }
 
 .markdown {
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .markdown > * + * {
@@ -51,9 +58,9 @@
   margin-top: var(--space-4);
 }
 
-.markdown h1 { font-size: 18px; }
-.markdown h2 { font-size: 16px; }
-.markdown h3 { font-size: 14px; }
+.markdown h1 { font-size: 1.5em; }
+.markdown h2 { font-size: 1.25em; }
+.markdown h3 { font-size: 1.1em; }
 
 .markdown ul,
 .markdown ol {
