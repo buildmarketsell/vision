@@ -1,4 +1,4 @@
-import { File, FileCode, FileJson, FileText, Folder, FolderOpen, Image, type LucideProps } from 'lucide-react';
+import { File, FileCode, FileJson, FileText, Folder, FolderOpen, Image, Shapes, type LucideProps } from 'lucide-react';
 
 const CODE = ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'py', 'rb', 'go', 'rs', 'java', 'swift', 'kt', 'c', 'h', 'cpp', 'cs', 'php', 'sh', 'zsh', 'liquid', 'html', 'css', 'scss', 'vue', 'svelte', 'sql', 'yml', 'yaml', 'toml'];
 const TEXT = ['md', 'mdx', 'txt', 'rtf', 'csv', 'log'];
@@ -12,6 +12,7 @@ function extensionOf(name: string): string {
 function iconForFile(name: string, props: LucideProps) {
   const ext = extensionOf(name);
   if (ext === 'json') return <FileJson {...props} />;
+  if (ext === 'excalidraw') return <Shapes {...props} />;
   if (CODE.includes(ext)) return <FileCode {...props} />;
   if (TEXT.includes(ext)) return <FileText {...props} />;
   if (IMAGE.includes(ext)) return <Image {...props} />;

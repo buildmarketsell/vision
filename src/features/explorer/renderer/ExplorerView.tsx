@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type MouseEvent } from 'react';
-import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, Pencil, RefreshCw, Trash2, X, type LucideIcon } from 'lucide-react';
+import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, Pencil, RefreshCw, Shapes, Trash2, X, type LucideIcon } from 'lucide-react';
 import type { DirEntry } from '../../../shared/ipc';
 import { ContextMenu, type ContextMenuItem } from '../../../renderer/components/ContextMenu';
+import { runCommand } from '../../../renderer/core/commands';
 import { parentPath, useWorkspace } from '../../../renderer/core/workspaceStore';
 import { trashEntry } from './treeActions';
 import { TreeChildren } from './TreeChildren';
@@ -61,6 +62,7 @@ function ExplorerHeader({ folder, showHidden }: { folder: string; showHidden: bo
       <div className="flex items-center">
         <HeaderButton label="New File" icon={FilePlus} onClick={() => startCreate('newFile')} />
         <HeaderButton label="New Folder" icon={FolderPlus} onClick={() => startCreate('newDir')} />
+        <HeaderButton label="New Board" icon={Shapes} onClick={() => runCommand('board.new')} />
         <HeaderButton label="Refresh" icon={RefreshCw} onClick={() => void useTree.getState().refresh(folder)} />
         <HeaderButton label="Collapse All" icon={ChevronsDownUp} onClick={() => useTree.getState().collapseAll()} />
         <HeaderButton label={hiddenLabel} icon={showHidden ? Eye : EyeOff} onClick={() => useWorkspace.getState().toggleHidden()} />

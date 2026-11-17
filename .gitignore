@@ -6,3 +6,5 @@ dist/
 *.log
 test-results/
 playwright-report/
+# Copied from node_modules by scripts/postinstall.mjs
+src/renderer/public/excalidraw/
