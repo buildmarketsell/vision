@@ -6,6 +6,8 @@ import { launch, makeFixture } from './helpers';
 interface SavedElement {
   type: string;
   roughness: number;
+  strokeColor: string;
+  customData?: { boardNote?: boolean };
 }
 
 function savedElements(path: string): SavedElement[] {
@@ -16,7 +18,7 @@ function savedElements(path: string): SavedElement[] {
   }
 }
 
-test('boards: New Board opens a canvas, drawing saves to the file with clean lines', async () => {
+test('boards: tldraw-style tools, styles, sticky notes and undo, all saved to the file', async () => {
   const { folder, userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
@@ -27,8 +29,10 @@ test('boards: New Board opens a canvas, drawing saves to the file with clean lin
 
     const box = await canvas.boundingBox();
     if (!box) throw new Error('The board canvas has no size');
-    await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.8);
-    await page.keyboard.press('r');
+    // In a narrow pane the style panel appears once a drawing tool is picked, as in tldraw.
+    await expect(page.getByRole('button', { name: 'blue', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Rectangle' }).click();
+    await page.getByRole('button', { name: 'blue', exact: true }).click();
     await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.55, { steps: 8 });
@@ -36,7 +40,17 @@ test('boards: New Board opens a canvas, drawing saves to the file with clean lin
 
     const file = join(folder, 'Untitled board.excalidraw');
     await expect.poll(() => savedElements(file).map((element) => element.type)).toEqual(['rectangle']);
-    expect(savedElements(file)[0]?.roughness).toBe(0);
+    expect(savedElements(file)[0]).toMatchObject({ roughness: 0, strokeColor: '#4465e9' });
+
+    await page.getByRole('button', { name: 'Sticky note' }).click();
+    await page.keyboard.type('Idea');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => savedElements(file).filter((element) => element.customData?.boardNote).length).toBe(1);
+    await expect.poll(() => savedElements(file).some((element) => element.type === 'text')).toBe(true);
+
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect.poll(() => savedElements(file).filter((element) => element.customData?.boardNote).length).toBe(0);
     await page.screenshot({ animations: 'disabled', path: 'test-results/board.png' });
   } finally {
     await app.close();

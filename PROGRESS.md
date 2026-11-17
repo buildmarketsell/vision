@@ -15,6 +15,7 @@
 
 - Notion-style redesign and chat extras (branch `feature/notion-layout`, 2026-11-16/17): flat full-window layout, gray tab strip with white active tab, traffic lights in the sidebar's top row, no wallpaper. Sidebar views picked from a gradient switcher (after cult-ui's gradient button group): Files (New File, New Folder, Refresh, Collapse All, hidden files), Claude (sessions plus a Usage card from `rate_limit_event`, plan from `initialize`), Inbox (WhatsApp-style chat with yourself, saved in userData/inbox.json). Chat: paste or drop images and files (no Shift), model picker, context meter, slash command menu, message queue, wave loading text (after Kokonut UI). New chats default to Edit automatically.
 - Boards (branch `feature/boards`, 2026-11-17): Excalidraw canvas for `.excalidraw` files, New Board button in Files, autosave, tldraw-style defaults, follows the theme.
+- Boards look like tldraw (branch `feature/boards-tldraw-look`, 2026-11-17): own toolbar, style panel, menu/undo and zoom around the canvas; sticky notes; tldraw palette and canvas color.
 
 ## Next
 - Merge `feature/notion-layout` into `main` once Dan has used it for a bit.
