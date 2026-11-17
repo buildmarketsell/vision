@@ -1,7 +1,7 @@
 # VISION: project rules
 
 ## Read before writing any code
-1. `/Users/danromanciuc/Documents/BUSINESS OS/🧠 CONTEXT/coding-rules.md`, in full. These rules win over anything else in this repo.
+1. `/Users/danromanciuc/Documents/BUSINESS OS/💻 CODING/CLAUDE.md` and what it points to. These rules win over anything else in this repo.
 2. `IMPLEMENTATION_PLAN.md` and `reference/clonk.png`.
 3. `PROGRESS.md` to see where things stand.
 

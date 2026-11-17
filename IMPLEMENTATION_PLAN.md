@@ -14,7 +14,7 @@ The app starts small and grows for years. Two rules shape everything:
 - [ ] `git init` in this folder, branch `main`, first commit with this plan, `reference/` and a `.gitignore` (`node_modules`, `out`, `dist`, `.env`, `.DS_Store`).
 - [ ] Create a **private** GitHub repo and add it as `origin` (only after Dan's OK). From then on, push after every commit.
 - [ ] Write `AGENTS.md` (project rules: stack, folder layout, naming, IPC pattern) and a one-line `CLAUDE.md` containing `@AGENTS.md`, because Claude Code reads `CLAUDE.md`, not `AGENTS.md`.
-- [ ] `AGENTS.md` must say: "Follow `/Users/danromanciuc/Documents/BUSINESS OS/🧠 CONTEXT/coding-rules.md`. Read it before writing code." Those rules win over anything in this plan.
+- [ ] `AGENTS.md` must say: "Follow `/Users/danromanciuc/Documents/BUSINESS OS/💻 CODING/CLAUDE.md`. Read it before writing code." Those rules win over anything in this plan.
 - [ ] Write `README.md`: what it is, setup, how to run in dev, how to build the `.app`.
 - [ ] Write `PROGRESS.md`: done, next, known issues. Keep it short.
 
