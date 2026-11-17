@@ -26,8 +26,8 @@ function normalize(path: string): string {
   return `/${parts.join('/')}`;
 }
 
-/** The absolute file a relative image link points at, or null for web links, data URLs and anchors. */
-export function resolveImagePath(noteDir: string, href: string): string | null {
+/** The absolute file a relative image or file link points at, or null for web links, data URLs and anchors. */
+export function resolveLocalPath(noteDir: string, href: string): string | null {
   if (href === '' || /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('#') || href.startsWith('//')) return null;
   let decoded = href.split(/[?#]/)[0] ?? '';
   try {
