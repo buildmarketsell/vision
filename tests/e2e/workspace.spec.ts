@@ -324,10 +324,10 @@ test('opens, names, lists and closes several Claude sessions', async () => {
     await sidebar.getByRole('tab', { name: 'Claude' }).click();
     const sessions = sidebar.getByRole('tabpanel', { name: 'Claude' }).getByRole('button', { name: /^Claude session/ });
     await expect(sessions).toHaveCount(1, { timeout: 15_000 });
-    // A conversation is named after its first message, in the sidebar and the tab.
+    // Claude names a conversation from its first message (like VS Code), in the sidebar and the tab.
     await sendMessage(page, 'Plan the launch');
-    await expect(sessions.first()).toHaveAccessibleName('Claude session Plan the launch');
-    await expect(page.locator('.dv-tab', { hasText: 'Plan the launch' })).toHaveCount(1);
+    await expect(sessions.first()).toHaveAccessibleName('Claude session Launch planning');
+    await expect(page.locator('.dv-tab', { hasText: 'Launch planning' })).toHaveCount(1);
 
     await page.getByRole('button', { name: 'New session' }).click();
     await expect(sessions).toHaveCount(2);
@@ -336,7 +336,7 @@ test('opens, names, lists and closes several Claude sessions', async () => {
 
     await sessions.first().hover();
     // The sidebar row's close button (the tab has one with the same name too).
-    await page.getByRole('button', { name: 'Close Plan the launch', description: 'Close session' }).click();
+    await page.getByRole('button', { name: 'Close Launch planning', description: 'Close session' }).click();
     await expect(sessions).toHaveCount(2);
     // Usage from the rate_limit_event lines, with the plan from initialize.
     const usage = sidebar.getByRole('region', { name: 'Usage' });

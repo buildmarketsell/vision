@@ -46,6 +46,10 @@ if (!process.argv.includes('-p')) {
           { name: 'compact', description: 'Clear history but keep a summary', argumentHint: '' },
         ],
       } } });
+    } else if (message.type === 'control_request' && message.request.subtype === 'generate_session_title') {
+      // Names one known first message; any other gets an empty title (VISION keeps the first words).
+      const title = message.request.description === 'Plan the launch' ? 'Launch planning' : '';
+      out({ type: 'control_response', response: { subtype: 'success', request_id: message.request_id, response: { title } } });
     } else if (message.type === 'control_request' && message.request.subtype === 'mcp_status') {
       out({ type: 'control_response', response: { subtype: 'success', request_id: message.request_id, response: { mcpServers: [
         { name: 'claude-in-chrome', status: 'connected' },

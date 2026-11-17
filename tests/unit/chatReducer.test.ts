@@ -163,6 +163,18 @@ describe('session info: models, slash commands, context', () => {
     expect(state.info.models).toEqual([{ value: 'haiku', displayName: 'Haiku', description: 'Fast', supportsEffort: false }]);
     expect(state.info.commands).toEqual([{ name: 'review', description: 'Review', argumentHint: '' }]);
   });
+  it('asks Claude to name a chat and reads the name from its reply', () => {
+    expect(toClaudeMessage({ kind: 'generateTitle', text: 'fix the usage card' })).toEqual({
+      type: 'control_request',
+      request_id: 'vision-title',
+      request: { subtype: 'generate_session_title', description: 'fix the usage card', persist: true },
+    });
+    expect(toClaudeMessage({ kind: 'generateTitle', text: '   ' })).toBeNull();
+    expect(toClaudeMessage({ kind: 'generateTitle', text: 42 })).toBeNull();
+    const reply = (title: string) => ({ type: 'control_response', response: { subtype: 'success', request_id: 'vision-title', response: { title } } });
+    expect(reduceClaudeEvent(emptyChatState(), reply(' Session naming in Vision ')).info.aiTitle).toBe('Session naming in Vision');
+    expect(reduceClaudeEvent(emptyChatState(), reply('')).info.aiTitle).toBeNull();
+  });
   it('tracks context use and the window from a real session', () => {
     const state = replay('permission-allow.jsonl');
     expect(state.info.contextUsed).toBeGreaterThan(20_000);

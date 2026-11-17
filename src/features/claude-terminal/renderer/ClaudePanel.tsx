@@ -82,15 +82,21 @@ function useChatSync(panel: DockviewPanelApi, chat: ChatSession): void {
     if (!current || current === DEFAULT_TITLE) setTitle(panel.id, firstMessage.text.replace(/\s+/g, ' ').slice(0, TITLE_FROM_MESSAGE_CHARS));
   }, [panel.id, firstMessage]);
 
-  // After each turn, use Claude's own name for the conversation once it has one.
+  // Claude's name for a new chat, asked for with the first message. The first words above stand in until it arrives.
+  const aiTitle = state.info.aiTitle;
+  useEffect(() => {
+    if (aiTitle) setTitle(panel.id, aiTitle);
+  }, [panel.id, aiTitle]);
+
+  // A resumed chat: after each turn, use the name saved with the conversation (unless Claude just named it).
   useEffect(() => {
     const sessionId = state.sessionId;
-    if (state.phase !== 'idle' || !sessionId) return;
+    if (state.phase !== 'idle' || !sessionId || aiTitle) return;
     void window.vision.chat.list().then((past) => {
       const title = past.find((item) => item.sessionId === sessionId)?.title;
       if (title && title !== 'Untitled conversation') setTitle(panel.id, title);
     });
-  }, [panel.id, state.phase, state.sessionId]);
+  }, [panel.id, state.phase, state.sessionId, aiTitle]);
 
   useEffect(() => {
     if (state.sessionId) panel.updateParameters({ ...panel.getParameters(), sessionId: state.sessionId });

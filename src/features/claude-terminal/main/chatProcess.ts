@@ -10,6 +10,8 @@ import {
   isSessionId,
   MAX_IMAGE_BYTES,
   MCP_STATUS_REQUEST_ID,
+  MAX_TITLE_SOURCE_CHARS,
+  TITLE_REQUEST_ID,
   MAX_IMAGES_PER_MESSAGE,
   PERMISSION_MODES,
   type ChatOutgoing,
@@ -169,11 +171,20 @@ export function toClaudeMessage(outgoing: unknown): object | null {
       return isModelName(message['model']) ? controlRequest({ subtype: 'set_model', model: message['model'] }) : null;
     case 'setEffort':
       return isEffortLevel(message['effort']) ? controlRequest({ subtype: 'apply_flag_settings', settings: { effortLevel: message['effort'] } }) : null;
+    case 'generateTitle':
+      return generateTitle(message['text']);
     case 'mcpStatus':
       return { type: 'control_request', request_id: MCP_STATUS_REQUEST_ID, request: { subtype: 'mcp_status' } };
     default:
       return null;
   }
+}
+
+/** Claude writes a short title and saves it with the conversation (`persist`), so the saved list shows it too. */
+function generateTitle(text: unknown): object | null {
+  if (!isShortText(text, MAX_MESSAGE_CHARS) || text.trim() === '') return null;
+  const request = { subtype: 'generate_session_title', description: text.slice(0, MAX_TITLE_SOURCE_CHARS), persist: true };
+  return { type: 'control_request', request_id: TITLE_REQUEST_ID, request };
 }
 
 function controlResponse(requestId: string, response: object): object {

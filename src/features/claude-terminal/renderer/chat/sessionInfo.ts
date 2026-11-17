@@ -1,4 +1,4 @@
-import { MCP_STATUS_REQUEST_ID } from '../../../../shared/claudeChat';
+import { MCP_STATUS_REQUEST_ID, TITLE_REQUEST_ID } from '../../../../shared/claudeChat';
 import { asArr, asObj, asStr, type Obj } from './eventParsing';
 
 /**
@@ -34,12 +34,14 @@ export interface SessionInfo {
   /** Tokens in the context after the latest reply (input, cached and output). */
   contextUsed: number;
   contextWindow: number;
+  /** Claude's own name for the chat, from the title request. */
+  aiTitle: string | null;
 }
 
 export const DEFAULT_CONTEXT_WINDOW = 200_000;
 
 export function emptySessionInfo(): SessionInfo {
-  return { models: [], commands: [], mcpServers: [], contextUsed: 0, contextWindow: DEFAULT_CONTEXT_WINDOW };
+  return { models: [], commands: [], mcpServers: [], contextUsed: 0, contextWindow: DEFAULT_CONTEXT_WINDOW, aiTitle: null };
 }
 
 const num = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
@@ -76,6 +78,10 @@ function fromControlResponse(info: SessionInfo, event: Obj): SessionInfo {
   if (response?.['request_id'] === MCP_STATUS_REQUEST_ID) {
     const mcpServers = parseMcpServers(reply?.['mcpServers']);
     return JSON.stringify(mcpServers) === JSON.stringify(info.mcpServers) ? info : { ...info, mcpServers };
+  }
+  if (response?.['request_id'] === TITLE_REQUEST_ID) {
+    const aiTitle = asStr(reply?.['title'])?.trim();
+    return aiTitle ? { ...info, aiTitle } : info;
   }
   if (!reply || (!('models' in reply) && !('commands' in reply))) return info;
   return { ...info, models: parseModels(reply['models']), commands: parseCommands(reply['commands']) };

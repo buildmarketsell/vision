@@ -24,6 +24,11 @@ export function isEffortLevel(value: unknown): value is EffortLevel {
 /** Fixed id for the MCP status request, so the window can pick out its reply. */
 export const MCP_STATUS_REQUEST_ID = 'vision-mcp-status';
 
+/** Fixed id for the chat title request (Claude names the chat from the first message, like VS Code). */
+export const TITLE_REQUEST_ID = 'vision-title';
+/** The first message is enough to name a chat; longer text is cut before it is sent. */
+export const MAX_TITLE_SOURCE_CHARS = 2000;
+
 export interface ChatStartOptions {
   /** Continue an earlier conversation. */
   resumeSessionId?: string;
@@ -69,6 +74,7 @@ export type ChatOutgoing =
   | { kind: 'setPermissionMode'; mode: PermissionMode }
   | { kind: 'setModel'; model: string }
   | { kind: 'setEffort'; effort: EffortLevel }
+  | { kind: 'generateTitle'; text: string }
   | { kind: 'mcpStatus' };
 
 /** One parsed line of Claude's stream-json output. Parsed defensively in the window. */

@@ -106,8 +106,10 @@ export function useChatSession(initialSessionId: string | null, initialMode: Per
       const trimmed = text.trim();
       if ((!trimmed && images.length === 0) || processId.current === null) return;
       const previews = images.map((image) => `data:${image.mediaType};base64,${image.data}`);
+      const isFirstMessage = !state.items.some((item) => item.kind === 'user');
       dispatch({ type: 'local/sent', text: trimmed, images: previews });
       sendRaw({ kind: 'message', text: trimmed, ...(images.length > 0 ? { images } : {}) });
+      if (isFirstMessage && trimmed) sendRaw({ kind: 'generateTitle', text: trimmed });
     },
     allow: (requestId, updatedInput) => {
       sendRaw({ kind: 'allow', requestId, updatedInput });
