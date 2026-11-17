@@ -22,6 +22,7 @@
     "node-pty": "^1.1.0"
   },
   "devDependencies": {
+    "@excalidraw/excalidraw": "^0.18.1",
     "@monaco-editor/react": "^4.7.0",
     "@playwright/test": "^1.65.1",
     "@tailwindcss/vite": "^4.3.5",

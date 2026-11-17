@@ -1,0 +1,18 @@
+/* Excalidraw restyled toward tldraw: VISION's system font and colors, softer rounded panels.
+   Uses VISION tokens only, so every theme (light and dark) follows. */
+.board-canvas .excalidraw {
+  --ui-font: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --color-primary: var(--color-accent);
+  --color-primary-darker: var(--color-accent-hover);
+  --color-primary-darkest: var(--color-accent-hover);
+  --color-primary-light: var(--color-accent-soft);
+  --color-surface-primary-container: var(--color-accent-soft);
+  --shadow-island: var(--shadow-popover);
+  --island-bg-color: var(--color-card);
+}
+
+.board-canvas .excalidraw .Island {
+  border: none;
+}
