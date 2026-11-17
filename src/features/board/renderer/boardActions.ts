@@ -66,7 +66,7 @@ export function applyStyle(api: Api, style: BoardStyle): void {
 
 /** A tldraw-style sticky note in the middle of the view, ready to type in. */
 export function addStickyNote(api: Api, container: HTMLElement | null, style: BoardStyle): void {
-  const { scrollX, scrollY, zoom, width, height } = api.getAppState();
+  const { scrollX, scrollY, zoom, width, height, currentItemStrokeColor: previousColor } = api.getAppState();
   const centerX = -scrollX + width / 2 / zoom.value;
   const centerY = -scrollY + height / 2 / zoom.value;
   const [note] = convertToExcalidrawElements([
@@ -90,6 +90,15 @@ export function addStickyNote(api: Api, container: HTMLElement | null, style: Bo
     elements: [...api.getSceneElementsIncludingDeleted(), note],
     appState: { selectedElementIds: { [note.id]: true }, currentItemStrokeColor: NOTE_TEXT },
     captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+  });
+  // The note's text is dark; once typing ends, new shapes go back to the color picked before.
+  let typing = false;
+  const stopWatching = api.onChange((_elements, appState) => {
+    if (appState.editingTextElement) typing = true;
+    else if (typing) {
+      stopWatching();
+      api.updateScene({ appState: { currentItemStrokeColor: previousColor } });
+    }
   });
   // Enter on a selected shape starts typing its label.
   requestAnimationFrame(() => pressKey(container, 'Enter'));
