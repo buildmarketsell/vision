@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { ITheme } from '@xterm/xterm';
-import { theme } from '../theme';
+import { activeTheme } from './appTheme';
 
 export type TerminalAppearance = 'dark' | 'light';
 
@@ -8,7 +8,7 @@ const STORAGE_KEY = 'vision.terminalAppearance';
 
 /** Terminal colors per appearance. The CSS variables follow through `body[data-terminal-theme]` in terminal.css. */
 export function xtermTheme(appearance: TerminalAppearance): ITheme {
-  const { colors } = theme;
+  const { colors } = activeTheme();
   const light = appearance === 'light';
   const background = light ? colors.terminalLightBackground : colors.terminalBackground;
   return {

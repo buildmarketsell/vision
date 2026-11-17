@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import type { editor as MonacoNs } from 'monaco-editor';
 import { enableImagePaste } from './imagePaste';
-import { MONACO_THEME } from './monacoSetup';
+import { monacoThemeName } from './monacoSetup';
+import { useAppTheme } from '../../../renderer/core/appTheme';
 import { theme } from '../../../renderer/theme';
 import { useEditor } from './editorStore';
 
@@ -20,13 +21,14 @@ export default function MonacoEditor({ path, value }: MonacoEditorProps) {
     if (markdown) cleanupRef.current = enableImagePaste(editor, path);
   };
   useEffect(() => () => cleanupRef.current(), []);
+  const themeId = useAppTheme((state) => state.active.id);
 
   return (
     <Editor
       onMount={onMount}
       path={path}
       value={value}
-      theme={MONACO_THEME}
+      theme={monacoThemeName(themeId)}
       onChange={(text) => useEditor.getState().edit(path, text ?? '')}
       loading={<div className="spinner" aria-label="Loading editor" />}
       options={{

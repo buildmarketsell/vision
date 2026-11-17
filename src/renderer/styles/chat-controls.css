@@ -128,7 +128,7 @@
   height: 28px;
   border-radius: 50%;
   background: var(--color-accent);
-  color: white;
+  color: var(--color-on-accent);
   transition: transform var(--duration-fast) var(--ease), opacity var(--duration-fast) var(--ease);
 }
 
@@ -148,6 +148,7 @@
 
 .send-button[data-stop='true'] {
   background: var(--color-text);
+  color: var(--color-card);
 }
 
 .live-card {

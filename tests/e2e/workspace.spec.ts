@@ -283,6 +283,36 @@ test('settings: the gear after the inbox switches the terminal appearance', asyn
   }
 });
 
+test('themes: switch to Catppuccin Mocha in Settings, and keep it after a restart', async () => {
+  const { userData } = makeFixture();
+  let { app, page } = await launch(userData);
+  try {
+    await sendMessage(page, 'hi there');
+    await expect(page.locator('.assistant-text').last()).toContainText('You said: hi there');
+    await page.locator('aside').getByRole('tab', { name: 'Settings' }).click();
+    await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'Catppuccin Mocha' }).click();
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(30, 30, 46)');
+    await expect(page.locator('aside')).toHaveCSS('background-color', 'rgb(24, 24, 37)');
+    await page.screenshot({ animations: 'disabled', path: 'test-results/theme-mocha.png' });
+    await page.getByRole('tab', { name: 'Terminal' }).click();
+    await expect(page.locator('.terminal-host .xterm-viewport')).toHaveCSS('background-color', 'rgb(24, 24, 37)');
+    await page.locator('aside').getByRole('tab', { name: 'Files' }).click();
+    await page.getByRole('treeitem', { name: /hello\.md/ }).click();
+    await page.getByRole('button', { name: 'Edit' }).click();
+    await expect(page.locator('.monaco-editor .monaco-editor-background').first()).toHaveCSS('background-color', 'rgb(30, 30, 46)', { timeout: 15_000 });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/theme-mocha-editor.png' });
+
+    await app.close();
+    ({ app, page } = await launch(userData));
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(30, 30, 46)');
+    await page.locator('aside').getByRole('tab', { name: 'Settings' }).click();
+    await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'VISION Light' }).click();
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  } finally {
+    await app.close();
+  }
+});
+
 test('inbox: message yourself, mark done, delete, and keep it after a restart', async () => {
   const { userData } = makeFixture();
   let { app, page } = await launch(userData);

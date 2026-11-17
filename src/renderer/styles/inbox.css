@@ -22,7 +22,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #dfe5e7;
+  background: var(--color-inbox-avatar);
   color: var(--color-inbox-meta);
 }
 
@@ -149,7 +149,7 @@
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--color-inbox-send);
-  color: white;
+  color: var(--color-on-accent);
   transition:
     background-color var(--duration-fast) var(--ease),
     transform var(--duration-fast) var(--ease);

@@ -5,9 +5,7 @@ import JsonWorker from 'monaco-editor/language/json/json.worker?worker';
 import CssWorker from 'monaco-editor/language/css/css.worker?worker';
 import HtmlWorker from 'monaco-editor/language/html/html.worker?worker';
 import TsWorker from 'monaco-editor/language/typescript/ts.worker?worker';
-import { theme } from '../../../renderer/theme';
-
-export const MONACO_THEME = 'vision-light';
+import { THEMES, type VisionTheme } from '../../../renderer/themes';
 
 self.MonacoEnvironment = {
   getWorker(_workerId: string, label: string) {
@@ -19,39 +17,48 @@ self.MonacoEnvironment = {
   },
 };
 
-monaco.editor.defineTheme(MONACO_THEME, {
-  base: 'vs',
-  inherit: true,
-  // A calm, warm palette next to the orange accent (Monaco's default blue clashes with it).
-  rules: [
-    { token: '', foreground: '37352F' },
-    { token: 'comment', foreground: '9A9893', fontStyle: 'italic' },
-    { token: 'keyword', foreground: 'B4532A' },
-    { token: 'keyword.md', foreground: '37352F', fontStyle: 'bold' },
-    { token: 'string', foreground: '2F7D5B' },
-    { token: 'string.link.md', foreground: 'B4532A' },
-    { token: 'number', foreground: '3B6EA8' },
-    { token: 'type', foreground: '1F7A8C' },
-    { token: 'tag', foreground: 'B4532A' },
-    { token: 'attribute.name', foreground: '8A6D1F' },
-    { token: 'attribute.value', foreground: '2F7D5B' },
-    { token: 'delimiter', foreground: '6E6D69' },
-    { token: 'strong', fontStyle: 'bold' },
-    { token: 'emphasis', fontStyle: 'italic' },
-  ],
-  colors: {
-    'editor.background': theme.colors.card,
-    'editor.lineHighlightBackground': theme.colors.sidebar,
-    'editor.lineHighlightBorder': theme.colors.sidebar,
-    'editorLineNumber.foreground': theme.colors.textFaint,
-    'editorLineNumber.activeForeground': theme.colors.textMuted,
-    'editorCursor.foreground': theme.colors.accent,
-    'editor.selectionBackground': '#F26B3A2E',
-    'editorIndentGuide.background1': '#00000010',
-    'scrollbarSlider.background': '#0000001A',
-    'scrollbarSlider.hoverBackground': '#00000026',
-  },
-});
+/** Monaco's name for a VISION theme. */
+export function monacoThemeName(themeId: string): string {
+  return `vision-${themeId}`;
+}
+
+function defineMonacoTheme(visionTheme: VisionTheme): void {
+  const { colors, syntax } = visionTheme;
+  monaco.editor.defineTheme(monacoThemeName(visionTheme.id), {
+    base: visionTheme.scheme === 'dark' ? 'vs-dark' : 'vs',
+    inherit: true,
+    rules: [
+      { token: '', foreground: syntax.text },
+      { token: 'comment', foreground: syntax.comment, fontStyle: 'italic' },
+      { token: 'keyword', foreground: syntax.keyword },
+      { token: 'keyword.md', foreground: syntax.text, fontStyle: 'bold' },
+      { token: 'string', foreground: syntax.string },
+      { token: 'string.link.md', foreground: syntax.link },
+      { token: 'number', foreground: syntax.number },
+      { token: 'type', foreground: syntax.type },
+      { token: 'tag', foreground: syntax.keyword },
+      { token: 'attribute.name', foreground: syntax.attributeName },
+      { token: 'attribute.value', foreground: syntax.string },
+      { token: 'delimiter', foreground: syntax.delimiter },
+      { token: 'strong', fontStyle: 'bold' },
+      { token: 'emphasis', fontStyle: 'italic' },
+    ],
+    colors: {
+      'editor.background': colors.card,
+      'editor.lineHighlightBackground': colors.sidebar,
+      'editor.lineHighlightBorder': colors.sidebar,
+      'editorLineNumber.foreground': colors.textFaint,
+      'editorLineNumber.activeForeground': colors.textMuted,
+      'editorCursor.foreground': colors.accent,
+      'editor.selectionBackground': syntax.selection,
+      'editorIndentGuide.background1': syntax.indentGuide,
+      'scrollbarSlider.background': syntax.scrollbar,
+      'scrollbarSlider.hoverBackground': syntax.scrollbarHover,
+    },
+  });
+}
+
+THEMES.forEach(defineMonacoTheme);
 
 // Use the bundled Monaco instead of loading it from a CDN, so the editor works offline.
 loader.config({ monaco });

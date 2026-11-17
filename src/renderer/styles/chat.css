@@ -82,7 +82,7 @@
   padding: 1px 4px;
   border-radius: 4px;
   background: var(--color-code-background);
-  color: #b4532a;
+  color: var(--color-inline-code);
 }
 
 .markdown pre,

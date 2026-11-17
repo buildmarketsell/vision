@@ -3,6 +3,7 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { theme } from '../../../renderer/theme';
 import { useTerminalTheme, xtermTheme } from '../../../renderer/core/terminalTheme';
+import { useAppTheme } from '../../../renderer/core/appTheme';
 import { setPanelTitle } from '../../../renderer/core/dockActions';
 import { cleanTitle, useClaudeSessions } from './sessionsStore';
 
@@ -130,14 +131,17 @@ export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>, pan
       if (ptyIdRef.current !== null) window.vision.pty.resize(ptyIdRef.current, terminal.cols, terminal.rows);
     });
     resizeObserver.observe(host);
-    const offTheme = useTerminalTheme.subscribe((state) => {
-      terminal.options.theme = xtermTheme(state.appearance);
-    });
+    const restyle = () => {
+      terminal.options.theme = xtermTheme(useTerminalTheme.getState().appearance);
+    };
+    const offTheme = useTerminalTheme.subscribe(restyle);
+    const offAppTheme = useAppTheme.subscribe(restyle);
     void start();
 
     return () => {
       resizeObserver.disconnect();
       offTheme();
+      offAppTheme();
       busy.stop();
       input.dispose();
       titleChange.dispose();

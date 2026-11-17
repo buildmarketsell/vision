@@ -1,4 +1,3 @@
-import { theme } from '../theme';
 
 /** Ray lengths (out of 10) for the starburst, uneven like a hand-drawn spark. */
 const RAYS = [10, 7.6, 9.2, 7.2, 9.8, 8, 9.4, 7.4, 10, 7.8, 9];
@@ -24,7 +23,7 @@ export function ClaudeLogo({ size = 16, busy = false, dim = false }: ClaudeLogoP
       aria-hidden
       style={{ opacity: dim ? 0.4 : 1 }}
     >
-      <g stroke={theme.colors.claude} strokeWidth={2.3} strokeLinecap="round">
+      <g style={{ stroke: 'var(--color-claude)' }} strokeWidth={2.3} strokeLinecap="round">
         {RAYS.map((length, index) => {
           const angle = (index / RAYS.length) * Math.PI * 2 - Math.PI / 2;
           const inner = 1.2;

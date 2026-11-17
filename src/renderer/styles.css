@@ -192,7 +192,7 @@ body {
   padding: 0 var(--space-4);
   border-radius: var(--radius-control);
   background: var(--color-accent);
-  color: white;
+  color: var(--color-on-accent);
   font-weight: 500;
   box-shadow: var(--shadow-control);
 }
@@ -230,7 +230,7 @@ body {
 }
 
 .pill-button:hover {
-  background: #fdfdfc;
+  background: var(--color-pill-hover);
 }
 
 .keycap {
@@ -297,14 +297,15 @@ body {
 }
 
 @media (prefers-contrast: more) {
-  :root {
+  /* Darker text and borders for light themes; dark themes already have strong contrast. */
+  :root[data-scheme='light'] {
     /* !important: the theme sets these inline, which would otherwise win. */
     --color-border: rgba(0, 0, 0, 0.3) !important;
     --color-text-faint: #5f5e5a !important;
     --color-text-muted: #4a4945 !important;
   }
 
-  .card {
+  :root[data-scheme='light'] .card {
     outline: 1px solid rgba(0, 0, 0, 0.35);
   }
 }
