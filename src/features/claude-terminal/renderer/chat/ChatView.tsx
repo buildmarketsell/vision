@@ -96,7 +96,7 @@ export function ChatView({ chat }: { chat: ChatSession }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col" onDragOver={draft.onDragOver} onDrop={draft.onDrop}>
-      <div ref={scroll.ref} onScroll={scroll.onScroll} className="min-h-0 flex-1 overflow-y-auto">
+      <div ref={scroll.ref} onScroll={scroll.onScroll} className="reading-surface min-h-0 flex-1 overflow-y-auto">
         {state.items.length === 0 && state.phase !== 'starting' ? (
           <EmptyState onOpen={(sessionId) => chat.open(sessionId)} />
         ) : (

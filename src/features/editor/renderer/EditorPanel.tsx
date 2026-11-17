@@ -113,7 +113,7 @@ function EditorBody({ path, buffer, view }: { path: string; buffer: Buffer | und
     <div className="flex h-full flex-col">
       <DiskBanners path={path} buffer={buffer} />
       {view === 'preview' && (
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="reading-surface min-h-0 flex-1 overflow-y-auto">
           <Markdown text={buffer.current} className="markdown-document" baseDir={parentPath(path)} />
         </div>
       )}

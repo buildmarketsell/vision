@@ -36,6 +36,8 @@ export const theme = {
     terminalLightText: '#37352F',
     terminalLightMuted: '#6E6D69',
     focusRing: 'rgba(242, 107, 58, 0.45)',
+    /** Notion's selection highlight: a soft see-through blue. */
+    selection: 'rgba(35, 131, 226, 0.28)',
     /** Inbox: WhatsApp's chat colors (beige wall, green outgoing bubbles, blue ticks). */
     inboxWall: '#EFEAE2',
     inboxBar: '#F0F2F5',

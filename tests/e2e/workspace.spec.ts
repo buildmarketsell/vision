@@ -137,6 +137,18 @@ test('asks before a file change and answers questions', async () => {
     await question.getByRole('button', { name: 'Send Answer' }).click();
     await expect(page.locator('.assistant-text').last()).toContainText('You picked Blue.');
     await page.screenshot({ animations: 'disabled', path: 'test-results/chat.png' });
+
+    // Select like in Notion: start in the empty margin left of the first reply, drag across every message.
+    const first = await page.locator('.assistant-text').first().boundingBox();
+    const last = await page.locator('.assistant-text').last().boundingBox();
+    if (!first || !last) throw new Error('chat messages not laid out');
+    await page.mouse.move(first.x - 40, first.y - 30);
+    await page.mouse.down();
+    await page.mouse.move(last.x + last.width, last.y + last.height + 20, { steps: 12 });
+    await page.mouse.up();
+    const selected = await page.evaluate(() => window.getSelection()?.toString() ?? '');
+    for (const text of ['I wrote notes.txt.', 'ask me', 'You picked Blue.']) expect(selected).toContain(text);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/selection.png' });
   } finally {
     await app.close();
   }

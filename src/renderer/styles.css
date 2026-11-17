@@ -38,6 +38,22 @@ body {
   user-select: none;
 }
 
+::selection {
+  background: var(--color-selection);
+}
+
+/*
+ * Reading surfaces (chat, Markdown preview) are selectable edge to edge, like a Notion page:
+ * a drag can start in a margin or a gap and run across messages without breaking. Buttons stay unselectable.
+ */
+.reading-surface {
+  user-select: text;
+}
+
+.reading-surface button {
+  user-select: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 1px;
