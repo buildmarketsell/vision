@@ -64,7 +64,7 @@ export function ToolRow({ tool }: { tool: ToolCall }) {
         <ChevronRight className="chevron shrink-0" size={13} strokeWidth={1.75} color="var(--color-text-faint)" style={{ transform: open ? 'rotate(90deg)' : undefined }} />
       </button>
       {open && (
-        <div className="enter pt-1 pb-2 pl-6">
+        <div className="enter pt-1 pb-2 pl-8">
           <ToolDetail tool={tool} />
         </div>
       )}
