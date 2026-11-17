@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Stands in for the `claude` CLI in tests, so they cost nothing.
-// Terminal mode (no -p): names the conversation like Claude Code does, then echoes input.
+// Terminal mode (no -p): names the conversation like Claude Code does, asks the terminal for its
+// background color (OSC 11, as Claude's "auto" theme does), then echoes input with ESC shown as ^[.
 // Chat mode (-p, stream-json): answers each message with streamed text; "edit" asks for
 // permission first, "ask" asks a question, "slow" waits until interrupted.
 import { createInterface } from 'node:readline';
@@ -11,7 +12,8 @@ const out = (event) => process.stdout.write(`${JSON.stringify({ session_id: SESS
 if (!process.argv.includes('-p')) {
   process.stdout.write('\u001b]0;✳ Test conversation\u0007');
   process.stdout.write(`Fake Claude ready in ${process.cwd()}\n`);
-  process.stdin.pipe(process.stdout);
+  process.stdout.write('\u001b]11;?\u0007');
+  process.stdin.on('data', (data) => process.stdout.write(data.toString().replace(/\u001b/g, '^[')));
 } else {
   let pending = null;
   let turn = 0;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { theme } from '../../../renderer/theme';
+import { useTerminalTheme, xtermTheme } from './terminalTheme';
 import { setPanelTitle } from '../../../renderer/core/dockActions';
 import { cleanTitle, useClaudeSessions } from './sessionsStore';
 
@@ -24,7 +25,7 @@ export function focusClaudeTerminal(panelId: string): void {
 }
 
 function createTerminal(): Terminal {
-  const { colors, font } = theme;
+  const { font } = theme;
   return new Terminal({
     fontFamily: font.mono,
     fontSize: font.sizeTerminal,
@@ -32,13 +33,7 @@ function createTerminal(): Terminal {
     cursorBlink: true,
     scrollback: 5000,
     macOptionIsMeta: true,
-    theme: {
-      background: colors.terminalBackground,
-      foreground: colors.terminalText,
-      cursor: colors.accent,
-      cursorAccent: colors.terminalBackground,
-      selectionBackground: '#F26B3A55',
-    },
+    theme: xtermTheme(useTerminalTheme.getState().appearance),
   });
 }
 
@@ -135,10 +130,14 @@ export function useClaudeTerminal(hostRef: RefObject<HTMLDivElement | null>, pan
       if (ptyIdRef.current !== null) window.vision.pty.resize(ptyIdRef.current, terminal.cols, terminal.rows);
     });
     resizeObserver.observe(host);
+    const offTheme = useTerminalTheme.subscribe((state) => {
+      terminal.options.theme = xtermTheme(state.appearance);
+    });
     void start();
 
     return () => {
       resizeObserver.disconnect();
+      offTheme();
       busy.stop();
       input.dispose();
       titleChange.dispose();

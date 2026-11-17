@@ -31,6 +31,10 @@ export const theme = {
     terminalBackground: '#1C1A19',
     terminalText: '#ECE9E4',
     terminalMuted: '#8F8A84',
+    /** Light terminal: the app's own warm off-white and text colors. */
+    terminalLightBackground: '#F7F6F3',
+    terminalLightText: '#37352F',
+    terminalLightMuted: '#6E6D69',
     focusRing: 'rgba(242, 107, 58, 0.45)',
     /** Inbox: WhatsApp's chat colors (beige wall, green outgoing bubbles, blue ticks). */
     inboxWall: '#EFEAE2',

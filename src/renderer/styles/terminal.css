@@ -9,6 +9,13 @@
   background-color: var(--color-terminal-background) !important;
 }
 
+/* Light terminal: overrides the variables on body so the terminal pane and the chat's working card follow. */
+body[data-terminal-theme='light'] {
+  --color-terminal-background: var(--color-terminal-light-background);
+  --color-terminal-text: var(--color-terminal-light-text);
+  --color-terminal-muted: var(--color-terminal-light-muted);
+}
+
 .live-dot {
   width: 6px;
   height: 6px;

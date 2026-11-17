@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { DockviewPanelApi, IDockviewPanelProps } from 'dockview-react';
-import { MessageSquare, RotateCw, SquareTerminal } from 'lucide-react';
+import { MessageSquare, Moon, RotateCw, SquareTerminal, Sun } from 'lucide-react';
 import { DEFAULT_PERMISSION_MODE, isSessionId, PERMISSION_MODES, type PermissionMode } from '../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
 import { setPanelTitle } from '../../../renderer/core/dockActions';
@@ -9,6 +9,7 @@ import { ChatView } from './chat/ChatView';
 import { useChatSession, type ChatSession } from './chat/useChatSession';
 import { DEFAULT_TITLE, useClaudeSessions, type ClaudeSession } from './sessionsStore';
 import { useClaudeTerminal, type ClaudeStatus } from './useClaudeTerminal';
+import { useTerminalTheme } from './terminalTheme';
 
 type ViewMode = 'chat' | 'terminal';
 const TITLE_FROM_MESSAGE_CHARS = 48;
@@ -45,6 +46,17 @@ function ModeSwitch({ mode, onChange }: { mode: ViewMode; onChange: (mode: ViewM
         <SquareTerminal size={13} strokeWidth={1.75} /> Terminal
       </button>
     </div>
+  );
+}
+
+/** Sun in dark mode (tap for light), moon in light mode (tap for dark). */
+function AppearanceButton() {
+  const { appearance, toggle } = useTerminalTheme();
+  const label = appearance === 'dark' ? 'Light terminal' : 'Dark terminal';
+  return (
+    <button className="icon-button" title={label} aria-label={label} onClick={toggle}>
+      {appearance === 'dark' ? <Sun size={15} strokeWidth={1.5} /> : <Moon size={15} strokeWidth={1.5} />}
+    </button>
   );
 }
 
@@ -153,6 +165,7 @@ export function ClaudePanel({ api, params }: IDockviewPanelProps<TabParams>) {
         <StatusPill session={session} />
         <span className="flex-1" />
         <ModeSwitch mode={view} onChange={switchView} />
+        {view === 'terminal' && <AppearanceButton />}
         {view === 'terminal' && (
           <button className="icon-button" title="Restart Claude" aria-label="Restart Claude" onClick={() => restartTerminal.current()}>
             <RotateCw size={15} strokeWidth={1.5} />

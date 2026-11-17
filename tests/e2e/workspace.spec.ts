@@ -149,6 +149,15 @@ test('switches a conversation between chat and terminal', async () => {
     await expect(messageBox(page)).toBeEnabled({ timeout: 15_000 });
     await page.getByRole('tab', { name: 'Terminal' }).click();
     await expect(page.locator('.xterm-rows')).toContainText('Fake Claude ready', { timeout: 15_000 });
+    await expect(page.locator('.xterm-rows')).toContainText('rgb:1c1c/1a1a/1919');
+
+    await page.getByRole('button', { name: 'Light terminal' }).click();
+    await expect(page.locator('.terminal-host .xterm-viewport')).toHaveCSS('background-color', 'rgb(247, 246, 243)');
+    await page.getByRole('button', { name: 'Restart Claude' }).click();
+    await expect(page.locator('.xterm-rows')).toContainText('rgb:f7f7/f6f6/f3f3', { timeout: 15_000 });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/terminal-light.png' });
+    await page.getByRole('button', { name: 'Dark terminal' }).click();
+    await expect(page.locator('.terminal-host .xterm-viewport')).toHaveCSS('background-color', 'rgb(28, 26, 25)');
     await page.getByRole('tab', { name: 'Chat' }).click();
     await expect(messageBox(page)).toBeEnabled({ timeout: 15_000 });
   } finally {
