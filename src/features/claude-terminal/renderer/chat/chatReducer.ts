@@ -52,7 +52,7 @@ function reduceStream(state: ChatState, event: Obj): ChatState {
     if (block?.['type'] === 'text') {
       const next = withItem(state, { kind: 'text', text: '', streaming: true });
       const key = next.items[next.items.length - 1]?.key ?? '';
-      return { ...next, phase: 'working', streamingKeys: { ...next.streamingKeys, [streamKey]: key } };
+      return { ...next, phase: 'working', activity: 'Writing…', streamingKeys: { ...next.streamingKeys, [streamKey]: key } };
     }
     if (block?.['type'] === 'tool_use') return { ...state, activity: `Using ${asStr(block['name']) ?? 'a tool'}…` };
     return state;
@@ -64,7 +64,7 @@ function reduceStream(state: ChatState, event: Obj): ChatState {
     if (!key || delta?.['type'] !== 'text_delta' || text === null) return state;
     const item = state.items.find((candidate) => candidate.key === key);
     const current = item?.kind === 'text' ? item.text : '';
-    return { ...updateItem(state, key, { text: current + text }), activity: (current + text).slice(-160) };
+    return updateItem(state, key, { text: current + text });
   }
   return state;
 }

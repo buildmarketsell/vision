@@ -63,6 +63,14 @@ describe('chat reducer on a real recorded session', () => {
     expect(state.questions).toHaveLength(0);
   });
 
+  it('says Writing while text streams, not the raw text (it already shows in the chat)', () => {
+    const stream = (event: Record<string, unknown>) => ({ type: 'stream_event', api_message_id: 'm1', event: { index: 0, ...event } });
+    let state = reduceClaudeEvent(emptyChatState(), stream({ type: 'content_block_start', content_block: { type: 'text', text: '' } }));
+    state = reduceClaudeEvent(state, stream({ type: 'content_block_delta', delta: { type: 'text_delta', text: '- **Bold** item' } }));
+    expect(state.activity).toBe('Writing…');
+    expect(state.items.some((item) => item.kind === 'text' && item.text === '- **Bold** item')).toBe(true);
+  });
+
   it('never throws on junk', () => {
     let state = emptyChatState();
     for (const junk of [null, 42, 'text', {}, { type: 'mystery' }, { type: 'assistant', message: 7 }, { type: 'user', message: { content: [1, null] } }]) {
