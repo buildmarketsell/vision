@@ -21,6 +21,7 @@ export type ReadFileResult =
 export interface FolderLayout {
   dock: unknown;
   sidebarWidth: number;
+  sidebarCollapsed: boolean;
   showHidden: boolean;
 }
 

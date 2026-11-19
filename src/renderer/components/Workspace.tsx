@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { FolderLayout } from '../../shared/ipc';
 import { Dock } from '../core/Dock';
 import { useWorkspace } from '../core/workspaceStore';
-import { Sidebar } from './Sidebar';
+import { Sidebar, SidebarToggle } from './Sidebar';
 
 const SAVE_LAYOUT_DELAY_MS = 500;
 
@@ -28,14 +28,18 @@ function useLayoutSaver(initialDock: unknown) {
   const scheduleSave = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      const { sidebarWidth, showHidden } = useWorkspace.getState();
-      window.vision.app.saveLayout({ dock: dockRef.current, sidebarWidth, showHidden });
+      const { sidebarWidth, sidebarCollapsed, showHidden } = useWorkspace.getState();
+      window.vision.app.saveLayout({ dock: dockRef.current, sidebarWidth, sidebarCollapsed, showHidden });
     }, SAVE_LAYOUT_DELAY_MS);
   };
 
   useEffect(() => {
     const unsubscribe = useWorkspace.subscribe((state, previous) => {
-      if (state.sidebarWidth !== previous.sidebarWidth || state.showHidden !== previous.showHidden) scheduleSave();
+      const changed =
+        state.sidebarWidth !== previous.sidebarWidth ||
+        state.sidebarCollapsed !== previous.sidebarCollapsed ||
+        state.showHidden !== previous.showHidden;
+      if (changed) scheduleSave();
     });
     return () => {
       unsubscribe();
@@ -52,11 +56,13 @@ function useLayoutSaver(initialDock: unknown) {
 export function Workspace({ layout }: { layout: FolderLayout | null }) {
   useWatchSync();
   const onLayoutChange = useLayoutSaver(layout?.dock ?? null);
+  const collapsed = useWorkspace((state) => state.sidebarCollapsed);
 
   return (
-    <div className="flex h-full">
+    <div className="relative flex h-full">
       <Sidebar />
-      <main className="min-w-0 flex-1">
+      <SidebarToggle />
+      <main className={`min-w-0 flex-1 ${collapsed ? 'sidebar-collapsed' : ''}`}>
         <Dock savedLayout={layout?.dock ?? null} onLayoutChange={onLayoutChange} />
       </main>
     </div>

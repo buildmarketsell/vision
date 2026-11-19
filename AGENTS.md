@@ -41,6 +41,10 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Nested corners are concentric: inner radius = outer radius minus the inset.
 - Menus and popovers grow from where they were opened (`transform-origin`).
 
+## Top bar and sidebar button
+- Top row is 36px like Notion's tab bar (Dan, 2026-11-19: "la barra de arriba más pequeñita como en notion"); `titleBarHeight` in `theme.ts`, traffic lights at y 12 in `windows.ts`. Change both together.
+- Sidebar button (`SidebarToggle` in `Sidebar.tsx`) sits right of the traffic lights and never moves; ⌘\\ does the same. Hidden state is saved per folder (`sidebarCollapsed` in the layout). When hidden, the top-left pane's tab strip (`.dock-corner`, measured in `Dock.tsx`) leaves `--title-bar-inset` (112px) free for the lights and the button.
+
 ## Claude sidebar view
 - Usage card on top, then Past chats: the folder's saved conversations, newest first (Dan, 2026-11-19: "usage box at the top and instead of open sessions i want past chats"). Open tabs are no longer listed there; the tab strip shows them. Clicking a past chat goes to its tab if open, else opens it in a new tab (`newClaudeSession(sessionId, title)`). `SessionsView.tsx`.
 

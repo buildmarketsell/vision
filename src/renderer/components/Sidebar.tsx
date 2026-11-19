@@ -1,5 +1,5 @@
 import { useState, type PointerEvent } from 'react';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, PanelLeft } from 'lucide-react';
 import { ClaudeLogo } from './ClaudeLogo';
 import { runCommand } from '../core/commands';
 import { allSidebarViews } from '../core/featureIndex';
@@ -7,8 +7,6 @@ import { baseName, useWorkspace } from '../core/workspaceStore';
 import { theme } from '../theme';
 import { useActiveView, ViewPanels, ViewSwitcher } from './SidebarViews';
 
-/** Room for the macOS traffic lights at the start of the top row. */
-const TRAFFIC_LIGHTS_WIDTH = 84;
 const RUBBER_BAND = 0.55;
 
 /** Past a limit the sidebar keeps following the pointer, but with growing resistance. */
@@ -79,10 +77,28 @@ function BottomBar() {
   );
 }
 
+/** Notion's sidebar button: sits right of the traffic lights and stays put whether the sidebar is open or hidden (⌘\\). */
+export function SidebarToggle() {
+  const collapsed = useWorkspace((state) => state.sidebarCollapsed);
+  const label = collapsed ? 'Show sidebar' : 'Hide sidebar';
+  return (
+    <button
+      className="icon-button sidebar-toggle no-drag"
+      title={`${label} (⌘\\)`}
+      aria-label={label}
+      aria-expanded={!collapsed}
+      onClick={() => useWorkspace.getState().toggleSidebar()}
+    >
+      <PanelLeft size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
+    </button>
+  );
+}
+
 /** Notion-style sidebar, flush left: traffic lights and folder name on top, view icons, the active view, a Claude button at the bottom. */
 export function Sidebar() {
   const folder = useWorkspace((state) => state.folder);
   const storedWidth = useWorkspace((state) => state.sidebarWidth);
+  const collapsed = useWorkspace((state) => state.sidebarCollapsed);
   const [preview, setPreview] = useState<number | null>(null);
   const views = allSidebarViews();
   const [activeView, selectView] = useActiveView(views);
@@ -90,13 +106,15 @@ export function Sidebar() {
 
   return (
     <aside
-      className="sidebar relative flex shrink-0 flex-col"
+      className="sidebar relative flex shrink-0 flex-col overflow-hidden"
+      inert={collapsed}
+      aria-hidden={collapsed}
       style={{
-        width: preview ?? storedWidth,
+        width: collapsed ? 0 : (preview ?? storedWidth),
         transition: settling ? 'width var(--duration-base) var(--ease)' : 'none',
       }}
     >
-      <div className="drag-region flex h-(--title-bar-height) shrink-0 items-center gap-2 pr-3" style={{ paddingLeft: TRAFFIC_LIGHTS_WIDTH }}>
+      <div className="drag-region flex h-(--title-bar-height) shrink-0 items-center gap-2 pr-3 pl-(--title-bar-inset)">
         <span className="title truncate" title={folder}>{baseName(folder)}</span>
       </div>
       <ViewSwitcher views={views} active={activeView} onSelect={selectView} />
@@ -104,7 +122,7 @@ export function Sidebar() {
         <ViewPanels views={views} active={activeView} />
       </div>
       <BottomBar />
-      <ResizeHandle onPreview={setPreview} />
+      {!collapsed && <ResizeHandle onPreview={setPreview} />}
     </aside>
   );
 }
