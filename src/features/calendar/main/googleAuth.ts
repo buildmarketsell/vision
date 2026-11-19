@@ -14,7 +14,7 @@ export class GoogleError extends Error {}
 export class SignInExpiredError extends Error {}
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', 'https://www.googleapis.com/auth/calendar.events'];
-const SIGN_IN_TIMEOUT_MS = 5 * 60_000;
+const SIGN_IN_TIMEOUT_MS = 3 * 60_000;
 const REQUEST_TIMEOUT_MS = 20_000;
 
 /**
@@ -60,12 +60,23 @@ async function tokenRequest(params: Record<string, string>): Promise<TokenReply>
   throw new GoogleError(`Google refused the sign-in (${reply.error ?? response.status}).`);
 }
 
+/** Stops the sign-in that is waiting for Google, if any (the Cancel button). */
+let cancelWaiting: (() => void) | null = null;
+
+export function cancelSignIn(): void {
+  cancelWaiting?.();
+}
+
 /** Waits for Google to send the browser back to VISION with a one-time code. */
 function waitForCode(state: string) {
   const server = createServer();
   let timer: NodeJS.Timeout | undefined;
   const code = new Promise<string>((resolve, reject) => {
-    timer = setTimeout(() => reject(new GoogleError('Sign-in took too long. Try again.')), SIGN_IN_TIMEOUT_MS);
+    timer = setTimeout(
+      () => reject(new GoogleError('Google never came back to VISION. If Google showed "Access blocked", add your email as a test user in Google Cloud, then try again.')),
+      SIGN_IN_TIMEOUT_MS,
+    );
+    cancelWaiting = () => reject(new GoogleError('Sign-in cancelled.'));
     server.on('request', (request, response) => {
       const url = new URL(request.url ?? '/', 'http://127.0.0.1');
       if (url.pathname !== '/') {
@@ -84,6 +95,7 @@ function waitForCode(state: string) {
   const listening = new Promise<number>((resolve) => server.listen(0, '127.0.0.1', () => resolve((server.address() as AddressInfo).port)));
   const close = () => {
     clearTimeout(timer);
+    cancelWaiting = null;
     server.close();
   };
   return { code, listening, close };

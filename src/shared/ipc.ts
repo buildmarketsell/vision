@@ -118,6 +118,8 @@ export interface VisionApi {
     setClient(id: string, secret: string): Promise<CalendarState>;
     /** Opens Google's sign-in in the browser; adds the account (or signs it in again). */
     signIn(): Promise<CalendarState>;
+    /** Stops waiting for Google (the sign-in then answers with "Sign-in cancelled."). */
+    cancelSignIn(): void;
     signOut(email: string): Promise<CalendarState>;
     setVisible(calendarKey: string, visible: boolean): Promise<CalendarState>;
     createEvent(input: NewEventInput): Promise<Result<CalendarState>>;
@@ -182,6 +184,7 @@ export const IPC = {
   calendarState: 'calendar:state',
   calendarSetClient: 'calendar:setClient',
   calendarSignIn: 'calendar:signIn',
+  calendarCancelSignIn: 'calendar:cancelSignIn',
   calendarSignOut: 'calendar:signOut',
   calendarSetVisible: 'calendar:setVisible',
   calendarCreateEvent: 'calendar:createEvent',

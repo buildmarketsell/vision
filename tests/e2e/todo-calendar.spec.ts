@@ -80,3 +80,26 @@ test('calendar: set up Google, sign in, see events in their colors, hide a calen
     google.close();
   }
 });
+
+test('calendar: a sign-in Google never finishes shows Waiting for Google, and Cancel gets out of it', async () => {
+  const google = await startFakeGoogle({ blockSignIn: true });
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData, undefined, { VISION_GOOGLE_TEST_BASE: google.base });
+  try {
+    const sidebar = page.locator('aside');
+    await sidebar.getByRole('tab', { name: 'Calendar' }).click();
+    await sidebar.getByRole('textbox', { name: 'Client ID' }).fill('123-test.apps.googleusercontent.com');
+    await sidebar.getByRole('textbox', { name: 'Client secret' }).fill('test-secret');
+    await sidebar.getByRole('button', { name: 'Save' }).click();
+    await sidebar.getByRole('button', { name: 'Sign in with Google' }).click();
+    await expect(sidebar.getByText('Waiting for Google…')).toBeVisible();
+    await expect(sidebar.getByRole('button', { name: 'Sign in with Google' })).toBeDisabled();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-waiting.png' });
+    await sidebar.getByRole('button', { name: 'Cancel' }).click();
+    await expect(sidebar.getByRole('alert')).toHaveText('Sign-in cancelled.');
+    await expect(sidebar.getByRole('button', { name: 'Sign in with Google' })).toBeEnabled();
+  } finally {
+    await app.close();
+    google.close();
+  }
+});

@@ -36,7 +36,7 @@ export function CalendarSetup({ hasClient, busy, error, onSaveClient, onSignIn }
           <p className="caption">Step 2 of 2. Sign in in your browser, then come back here.</p>
           {error && <div className="calendar-error" role="alert">{error}</div>}
           <button className="button-primary" disabled={busy} onClick={onSignIn}>
-            {busy ? 'Waiting for Google…' : 'Sign in with Google'}
+            Sign in with Google
           </button>
           <button className="calendar-link" onClick={() => setEditing(true)}>
             Change Client ID

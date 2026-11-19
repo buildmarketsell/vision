@@ -62,6 +62,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Secrets: client secret and refresh tokens are encrypted with `safeStorage` (Keychain) in `userData/calendar.json` (mode 600), never sent to the page or logged (`calendarConfig.ts`).
 - Main fetches 14 days (`singleEvents=true`, Google expands repeats), cached 3 minutes; the view refreshes every 5. New events: `toGoogleEvent` in `src/shared/calendar.ts` validates the form; timed events use the Mac's time zone, all-day ends the next day (Google's rule).
 - If Google drops a sign-in (`invalid_grant`), that account shows "sign in again". Keep the Google Cloud app "In production": in Testing, Google expires sign-ins after 7 days.
+- While the browser sign-in is open, the view shows "Waiting for Google…" with Cancel (3-minute limit). Before this, a sign-in Google blocked left every button silently disabled and Dan thought Save was broken (2026-11-19). Disabled buttons now look disabled (styles.css).
 - Tests: `VISION_GOOGLE_TEST_BASE` points sign-in and the API at `tests/e2e/fixtures/fake-google.ts`, which also stands in for the browser.
 
 ## Claude sidebar view
