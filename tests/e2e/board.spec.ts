@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { launch, makeFixture } from './helpers';
+import { launch, makeFixture, menu } from './helpers';
 
 interface SavedElement {
   type: string;
@@ -61,6 +61,18 @@ test('boards: tldraw-style tools, styles, sticky notes and undo, all saved to th
     await page.getByRole('button', { name: 'Undo' }).click();
     await expect.poll(() => savedElements(file).filter((element) => element.customData?.boardNote).length).toBe(0);
     await page.screenshot({ animations: 'disabled', path: 'test-results/board.png' });
+
+    // Freeform's dot grid behind a see-through canvas, in the theme's colors (white page in light, near-black in dark).
+    const stage = page.locator('.board-stage');
+    await expect(stage).toHaveCSS('background-image', /radial-gradient/);
+    await expect(stage).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await menu(page).getByRole('tab', { name: 'Settings' }).click();
+    await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'Catppuccin Mocha' }).click();
+    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
+    await expect(stage).toHaveCSS('background-color', 'rgb(17, 17, 27)');
+    await expect(page.getByRole('button', { name: 'Rectangle' })).toBeVisible();
+    await page.waitForTimeout(500);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/board-dark.png' });
   } finally {
     await app.close();
   }
