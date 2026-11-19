@@ -16,6 +16,13 @@ export function nextBoardName(existingNames: string[]): string {
   }
 }
 
+/** A board's name in the Boards list: its path inside the folder, without `.excalidraw`. */
+export function boardLabel(folder: string, path: string): string {
+  const prefix = folder.endsWith('/') ? folder : `${folder}/`;
+  const relative = path.startsWith(prefix) ? path.slice(prefix.length) : path;
+  return isBoardFile(relative) ? relative.slice(0, -BOARD_EXTENSION.length) : relative;
+}
+
 export interface BoardScene {
   elements: unknown[];
   appState?: Record<string, unknown>;

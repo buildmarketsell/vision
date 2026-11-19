@@ -50,9 +50,14 @@ export async function launch(
   return { app, page };
 }
 
+/** The feature menu on the left. */
+export function menu(page: Page): Locator {
+  return page.getByRole('complementary', { name: 'Menu' });
+}
+
 /** Calendar view → Client ID and secret → Sign in (against tests/e2e/fixtures/fake-google.ts). */
 export async function connectFakeGoogle(sidebar: Locator): Promise<void> {
-  await sidebar.getByRole('tab', { name: 'Calendar' }).click();
+  await menu(sidebar.page()).getByRole('tab', { name: 'Calendar' }).click();
   await sidebar.getByRole('textbox', { name: 'Client ID' }).fill('123-test.apps.googleusercontent.com');
   await sidebar.getByRole('textbox', { name: 'Client secret' }).fill('test-secret');
   await sidebar.getByRole('button', { name: 'Save' }).click();

@@ -4,6 +4,7 @@ import { isInsideFolder } from '../paths';
 import { onWindowClosed, windowContextFor, type WindowContext } from '../windows';
 import { IMAGE_EXTENSIONS, MAX_IMAGE_BYTES, MAX_PASTED_VIDEO_BYTES, videoExtension } from '../../shared/markdownImages';
 import { createEntry, listDirectory, moveToTrash, readTextFile, renameEntry, saveImageNextTo, saveVideoNextTo, writeTextFile } from './fileSystem';
+import { findFiles, isFileExtension } from './findFiles';
 import { FolderWatcher } from './watcher';
 
 const watchers = new Map<WindowContext, FolderWatcher>();
@@ -44,6 +45,9 @@ function watcherFor(context: WindowContext): FolderWatcher {
 function registerReadHandlers(): void {
   ipcMain.handle(IPC.listDir, (event, path: unknown) =>
     guardPaths(event, [path]) ? listDirectory(path as string) : OUTSIDE,
+  );
+  ipcMain.handle(IPC.findFiles, (event, root: unknown, extension: unknown) =>
+    guardPaths(event, [root]) && isFileExtension(extension) ? findFiles(root as string, extension) : OUTSIDE,
   );
   ipcMain.handle(IPC.readFile, (event, path: unknown) =>
     guardPaths(event, [path]) ? readTextFile(path as string) : { kind: 'error', message: OUTSIDE.error },

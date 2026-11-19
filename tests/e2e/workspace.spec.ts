@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { mkdtempSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { launch, makeFixture } from './helpers';
+import { launch, makeFixture, menu } from './helpers';
 
 const messageBox = (page: Page) => page.getByRole('textbox', { name: 'Message Claude' });
 
@@ -227,11 +227,11 @@ test('slash commands, model picker, context meter and message queue', async () =
   }
 });
 
-test('settings: the gear after the inbox switches the terminal appearance', async () => {
+test('settings: the last item in the menu switches the terminal appearance', async () => {
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
-    const tabs = page.locator('aside').getByRole('tab');
+    const tabs = menu(page).getByRole('tab');
     await expect(tabs.last()).toHaveAccessibleName('Settings');
     await tabs.last().click();
     await page.getByRole('radiogroup', { name: 'Terminal appearance' }).getByRole('radio', { name: 'Light' }).click();
@@ -249,14 +249,14 @@ test('themes: switch to Catppuccin Mocha in Settings, and keep it after a restar
   try {
     await sendMessage(page, 'hi there');
     await expect(page.locator('.assistant-text').last()).toContainText('You said: hi there');
-    await page.locator('aside').getByRole('tab', { name: 'Settings' }).click();
+    await menu(page).getByRole('tab', { name: 'Settings' }).click();
     await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'Catppuccin Mocha' }).click();
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(30, 30, 46)');
-    await expect(page.locator('aside')).toHaveCSS('background-color', 'rgb(24, 24, 37)');
+    await expect(page.getByRole('complementary', { name: 'Sidebar' })).toHaveCSS('background-color', 'rgb(24, 24, 37)');
     await page.screenshot({ animations: 'disabled', path: 'test-results/theme-mocha.png' });
     await page.getByRole('tab', { name: 'Terminal' }).click();
     await expect(page.locator('.terminal-host .xterm-viewport')).toHaveCSS('background-color', 'rgb(24, 24, 37)');
-    await page.locator('aside').getByRole('tab', { name: 'Files' }).click();
+    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
     await page.getByRole('treeitem', { name: /hello\.md/ }).click();
     await page.getByRole('button', { name: 'Edit' }).click();
     await expect(page.locator('.monaco-editor .monaco-editor-background').first()).toHaveCSS('background-color', 'rgb(30, 30, 46)', { timeout: 15_000 });
@@ -265,7 +265,7 @@ test('themes: switch to Catppuccin Mocha in Settings, and keep it after a restar
     await app.close();
     ({ app, page } = await launch(userData));
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(30, 30, 46)');
-    await page.locator('aside').getByRole('tab', { name: 'Settings' }).click();
+    await menu(page).getByRole('tab', { name: 'Settings' }).click();
     await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'VISION Light' }).click();
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   } finally {
@@ -277,7 +277,7 @@ test('inbox: message yourself, mark done, delete, and keep it after a restart', 
   const { userData } = makeFixture();
   let { app, page } = await launch(userData);
   try {
-    await page.locator('aside').getByRole('tab', { name: 'Inbox' }).click();
+    await menu(page).getByRole('tab', { name: 'Inbox' }).click();
     const box = page.getByRole('textbox', { name: 'Message yourself' });
     await box.fill('Call the bank');
     await box.press('Enter');
@@ -297,7 +297,7 @@ test('inbox: message yourself, mark done, delete, and keep it after a restart', 
 
     await app.close();
     ({ app, page } = await launch(userData));
-    await page.locator('aside').getByRole('tab', { name: 'Inbox' }).click();
+    await menu(page).getByRole('tab', { name: 'Inbox' }).click();
     await expect(page.getByRole('log', { name: 'Inbox messages' }).locator('.inbox-bubble[data-done="true"]')).toHaveText(/Call the bank/);
   } finally {
     await app.close();
@@ -317,8 +317,8 @@ test('the Claude view shows usage on top and reopens past chats', async () => {
   writeFileSync(join(transcripts, 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.jsonl'), lines.map((line) => JSON.stringify(line)).join('\n') + '\n');
   const { app, page } = await launch(userData, projectsDir);
   try {
-    const sidebar = page.locator('aside');
-    await sidebar.getByRole('tab', { name: 'Claude' }).click();
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+    await menu(page).getByRole('tab', { name: 'Claude' }).click();
     const view = sidebar.getByRole('tabpanel', { name: 'Claude' });
     const usage = view.getByRole('region', { name: 'Usage' });
     const pastChat = view.getByRole('button', { name: /Old launch plan/ });

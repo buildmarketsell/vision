@@ -41,13 +41,14 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Nested corners are concentric: inner radius = outer radius minus the inset.
 - Menus and popovers grow from where they were opened (`transform-origin`).
 
-## Top bar and sidebar button
-- Top row is 36px like Notion's tab bar (Dan, 2026-11-19: "la barra de arriba más pequeñita como en notion"); `titleBarHeight` in `theme.ts`, traffic lights at y 12 in `windows.ts`. Change both together.
-- Sidebar button (`SidebarToggle` in `Sidebar.tsx`) sits right of the traffic lights and never moves; ⌘\\ does the same. Hidden state is saved per folder (`sidebarCollapsed` in the layout). When hidden, the top-left pane's tab strip (`.dock-corner`, measured in `Dock.tsx`) leaves `--title-bar-inset` (112px) free for the lights and the button.
+## Menu (left) and sidebar (right) (Dan, 2026-11-19)
+- Left: the feature menu (`FeatureMenu.tsx`), Notion-style rows in registry order: Workspace, To-do, Boards, Database, Calendar, Claude, Inbox, and Settings pinned at the bottom (`pinBottom`). New features show up here; Dan has many planned. Its button sits right of the traffic lights (76px) and never moves; ⌘\\ does the same. Saved per folder as `menuCollapsed`.
+- Right: the sidebar (`Sidebar.tsx`) shows the picked feature's panel (files for Workspace), folder name on top, Claude button at the bottom, resized from its left edge. Button top right; ⌘⇧\\ and View menu. Saved per folder as `sidebarCollapsed`, width as `sidebarWidth`.
+- Hidden panels peek like Notion: hovering the window edge (`.edge-zone`) or the panel button slides the panel out floating over the page; leaving closes it after 250 ms (`usePeek`).
+- Top row is 36px like Notion's tab bar (`titleBarHeight` in `theme.ts`, traffic lights at y 12 in `windows.ts`; change both together). With the menu hidden, the top-left pane's strip (`.dock-corner`) leaves `--title-bar-inset` (112px); with the sidebar hidden, the top-right one (`.dock-corner-right`) leaves `--title-bar-inset-right` (44px). Both measured in `Dock.tsx`.
 
 ## Look (Dan, 2026-11-19: "look at how beautiful notion is... i want our app to be that beautiful")
 - Notion is the reference for every screen: flat gray sidebar, plain icons, soft gray hover and selection, colored tags (`--color-tag-*`), big bold page titles. Compare with a Notion screenshot before calling a screen done.
-- Sidebar view switcher: a row of plain icons, the open view on a soft gray square (`.view-row`), icons only so more views still fit. Replaced the orange gradient tray.
 - Claude header shows no "Ready": the pill appears only for Working, Needs you, Starting, Stopped (Dan: "that ready has absolutely no point").
 - No bars about connectors (needs sign-in, failed to connect): Claude says so when it needs one (Dan asked twice on 2026-11-19; the unit test in `banners.test.ts` guards it). Only "Browser connected" and usage limits get bars (`chatBanners.ts`).
 - While Claude works, the chat shows Claude Code's line, not a card: a twinkling orange ✻, a playful verb and the seconds (`WorkingLine` in `LiveCards.tsx`). Dan: "i like it more the way its in claude code".
@@ -106,6 +107,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 
 ## Boards (Excalidraw)
 - `src/features/board/`: any `.excalidraw` file opens as a board tab; "New Board" in the Files header creates `Untitled board.excalidraw` at the folder's top level. Chosen 2026-11-17 over tldraw, whose SDK needs a licence key outside development; Excalidraw is MIT.
+- Boards view in the menu (`BoardsView.tsx`): every `.excalidraw` file in the folder via `fs.findFiles` (main `findFiles.ts`: skips hidden folders and node_modules, max 500 files / 5000 folders), refreshed when opened or a board changes; New board button.
 - Boards save on their own 300 ms after a change (no ⌘S, no unsaved dot). A file that isn't Excalidraw JSON is shown as an error and never saved over. When the file changes on disk (Claude, git), the board reloads unless an edit is waiting to save.
 - Looks like tldraw (Dan, 2026-11-17: "as similar to tldraw as you can"): Excalidraw's own controls are hidden in `board.css` and VISION draws tldraw's layout around the canvas: menu + undo/redo/delete/duplicate top left (`BoardCorners.tsx`), style panel top right (`StylePanel.tsx`), zoom bottom left, tools along the bottom (`BoardToolbar.tsx`). Excalidraw's shortcuts, right-click menu and text editing still work. Below 900 px wide the style panel shows only while drawing or with a selection.
 - tldraw's style model (12 colors, fill, dash, size S–XL, font) maps onto Excalidraw fields in `boardStyle.ts` (pure, unit tested). Drawing colors there are fixed values, not theme tokens: they are saved in the files and Excalidraw inverts the canvas in dark mode. Same for the selection blue in `board.css`.

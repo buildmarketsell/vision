@@ -9,29 +9,6 @@ export function useActiveView(views: SidebarView[]): [string, (id: string) => vo
   return [active ?? '', select];
 }
 
-/** Notion-style row of plain icons; the open view sits on a soft gray square. Icons only, so more views still fit. */
-export function ViewSwitcher({ views, active, onSelect }: { views: SidebarView[]; active: string; onSelect: (id: string) => void }) {
-  return (
-    <div role="tablist" aria-label="Sidebar views" className="view-row">
-      {views.map((view) => (
-        <button
-          key={view.id}
-          role="tab"
-          id={`view-tab-${view.id}`}
-          aria-controls={`view-${view.id}`}
-          aria-selected={view.id === active}
-          aria-label={view.title}
-          title={view.title}
-          className="view-tab"
-          onClick={() => onSelect(view.id)}
-        >
-          {view.icon}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 /** Every view stays mounted (the tree keeps its folders open, Claude keeps tracking usage); only the active one shows. */
 export function ViewPanels({ views, active }: { views: SidebarView[]; active: string }) {
   return (

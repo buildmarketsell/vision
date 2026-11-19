@@ -53,11 +53,12 @@ function toWindows(value: unknown): SessionWindow[] {
 
 function toLayout(value: unknown): FolderLayout | null {
   if (!isRecord(value)) return null;
-  const { sidebarWidth, sidebarCollapsed, showHidden } = value;
+  const { sidebarWidth, sidebarCollapsed, menuCollapsed, showHidden } = value;
   return {
     dock: value['dock'] ?? null,
     sidebarWidth: typeof sidebarWidth === 'number' ? sidebarWidth : 260,
     sidebarCollapsed: sidebarCollapsed === true,
+    menuCollapsed: menuCollapsed === true,
     showHidden: typeof showHidden === 'boolean' ? showHidden : true,
   };
 }

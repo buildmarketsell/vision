@@ -4,7 +4,7 @@ import type { IDockviewPanelProps } from 'dockview-react';
 /** Parameters stored with a tab (saved in the layout, so keep them plain JSON). */
 export type TabParams = Record<string, string>;
 
-/** A view of the sidebar, picked with its icon at the top. One shows at a time, in registry order. */
+/** A feature in the menu on the left; picking it shows its panel in the sidebar on the right. One at a time, in registry order. */
 export interface SidebarView {
   id: string;
   title: string;
@@ -14,6 +14,8 @@ export interface SidebarView {
   main?: ComponentType;
   /** Hides the sidebar's Claude button row while this view is open (the view draws its own). */
   ownBottomBar?: boolean;
+  /** Sits at the bottom of the menu, like Notion's Settings. */
+  pinBottom?: boolean;
 }
 
 export interface TabType {

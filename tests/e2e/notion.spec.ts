@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { launch, makeFixture } from './helpers';
+import { launch, makeFixture, menu } from './helpers';
 
 test('notion view: takes over the window, writes a page with shortcuts and "/", sub-pages, favorites, and keeps it all', async () => {
   const { userData } = makeFixture();
   let { app, page } = await launch(userData);
   try {
-    const sidebar = page.locator('aside');
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
     await expect(page.getByRole('tab', { name: /Claude/ }).first()).toBeVisible();
-    await sidebar.getByRole('tab', { name: 'Notion' }).click();
+    await menu(page).getByRole('tab', { name: 'Database' }).click();
     await expect(page.getByText('Pick a page on the left, or start a new one.')).toBeVisible();
     await expect(sidebar.getByRole('button', { name: 'Open a new Claude terminal' })).toHaveCount(0);
 
@@ -62,9 +62,9 @@ test('notion view: takes over the window, writes a page with shortcuts and "/", 
     await page.mouse.move(0, 0);
     await page.screenshot({ animations: 'disabled', path: 'test-results/notion-page.png' });
 
-    await sidebar.getByRole('tab', { name: 'Files' }).click();
+    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
     await expect(page.getByRole('tab', { name: /Claude/ }).first()).toBeVisible();
-    await sidebar.getByRole('tab', { name: 'Notion' }).click();
+    await menu(page).getByRole('tab', { name: 'Database' }).click();
     await expect(page.getByRole('textbox', { name: 'Page title' })).toHaveValue('LIFE OS');
 
     await page.waitForTimeout(600);

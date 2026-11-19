@@ -165,8 +165,12 @@ button.notion-row-icon:hover {
   padding: 0 var(--space-3) 0 var(--space-2);
 }
 
-.sidebar-collapsed .notion-topbar {
+.menu-collapsed .notion-topbar {
   padding-left: var(--title-bar-inset);
+}
+
+.sidebar-collapsed .notion-topbar {
+  padding-right: var(--title-bar-inset-right);
 }
 
 .notion-topbar-left,

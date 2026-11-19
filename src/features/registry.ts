@@ -12,7 +12,7 @@ import { notionFeature } from './notion';
 /**
  * Renderer parts of every feature. Adding a feature = a new folder in src/features/
  * and one line here (plus src/main/registry.ts if it has a main-process part).
- * Order matters: sidebar view icons follow this order (Files first), and the first file handler
+ * Order matters: the menu follows this order (Workspace first, Dan's order 2026-11-19), and the first file handler
  * that matches a file wins, so the editor (matches everything) stays last.
  */
-export const features: Feature[] = [explorerFeature, claudeTerminalFeature, inboxFeature, todoFeature, notionFeature, calendarFeature, settingsFeature, boardFeature, editorFeature];
+export const features: Feature[] = [explorerFeature, todoFeature, boardFeature, notionFeature, calendarFeature, claudeTerminalFeature, inboxFeature, settingsFeature, editorFeature];

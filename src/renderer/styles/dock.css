@@ -35,13 +35,13 @@
   box-shadow: inset 0 -1px 0 var(--color-border);
 }
 
-/* With the sidebar hidden, the strip leaves room for the traffic lights and the sidebar button. */
-.vision-dock .dv-tabs-and-actions-container {
-  transition: padding-left var(--duration-base) var(--ease);
+/* With the menu hidden, the top-left strip leaves room for the traffic lights and the menu button; with the sidebar hidden, the top-right one for the sidebar button. */
+.menu-collapsed .vision-dock .dock-corner .dv-tabs-and-actions-container {
+  padding-left: var(--title-bar-inset);
 }
 
-.sidebar-collapsed .vision-dock .dock-corner .dv-tabs-and-actions-container {
-  padding-left: var(--title-bar-inset);
+.sidebar-collapsed .vision-dock .dock-corner-right .dv-tabs-and-actions-container {
+  padding-right: var(--title-bar-inset-right);
 }
 
 .vision-dock .dv-tab {

@@ -45,20 +45,19 @@ function restoreLayout(api: DockviewApi, saved: unknown): void {
 }
 
 /**
- * Marks the top-left pane: when the sidebar is hidden, its tab strip leaves room for the
- * traffic lights and the sidebar button. Dockview has no "position" class, so it is measured.
+ * Marks the top-left and top-right panes: when the menu or the sidebar is hidden, their tab strips
+ * leave room for the traffic lights and the panel buttons. Dockview has no "position" class, so it is measured.
  */
-function markCornerGroup(api: DockviewApi): void {
-  let corner: HTMLElement | null = null;
-  let best = { top: Infinity, left: Infinity };
-  for (const group of api.groups) {
-    const { top, left } = group.element.getBoundingClientRect();
-    if (top < best.top - 1 || (Math.abs(top - best.top) <= 1 && left < best.left)) {
-      best = { top, left };
-      corner = group.element;
-    }
+function markCornerGroups(api: DockviewApi): void {
+  const boxes = api.groups.map((group) => ({ element: group.element, box: group.element.getBoundingClientRect() }));
+  const top = Math.min(...boxes.map(({ box }) => box.top));
+  const topRow = boxes.filter(({ box }) => Math.abs(box.top - top) <= 1);
+  const left = topRow.reduce<(typeof topRow)[number] | undefined>((best, item) => (!best || item.box.left < best.box.left ? item : best), undefined);
+  const right = topRow.reduce<(typeof topRow)[number] | undefined>((best, item) => (!best || item.box.right > best.box.right ? item : best), undefined);
+  for (const { element } of boxes) {
+    element.classList.toggle('dock-corner', element === left?.element);
+    element.classList.toggle('dock-corner-right', element === right?.element);
   }
-  for (const group of api.groups) group.element.classList.toggle('dock-corner', group.element === corner);
 }
 
 interface DockProps {
@@ -77,11 +76,11 @@ export function Dock({ savedLayout, onLayoutChange }: DockProps) {
     setDockApi(api);
     restoreLayout(api, savedLayout);
     if (api.panels.length === 0) openDefaultPanels();
-    markCornerGroup(api);
+    markCornerGroups(api);
     // A tab opened while a view covers the panes (⌘T in Notion mode) must not open out of sight.
     api.onDidAddPanel(showPanes);
     api.onDidLayoutChange(() => {
-      markCornerGroup(api);
+      markCornerGroups(api);
       onLayoutChange(api.toJSON());
     });
   };
