@@ -1,5 +1,5 @@
 import type { ChatItem, ChatState, LocalAction, ToolCall } from './chatTypes';
-import { asArr, asObj, asStr, describeTool, parseQuestions, parseTodos, toolResultText, type Obj } from './eventParsing';
+import { asArr, asObj, asStr, parseQuestions, parseTodos, toolResultText, type Obj } from './eventParsing';
 import { reduceSessionInfo } from './sessionInfo';
 
 /**
@@ -31,9 +31,7 @@ function reduceSystem(state: ChatState, event: Obj): ChatState {
     case 'init':
       return { ...state, sessionId: asStr(event['session_id']) ?? state.sessionId, model: asStr(event['model']) ?? state.model };
     case 'status':
-      return event['status'] === 'requesting' ? { ...state, phase: 'working', activity: 'Thinking…' } : state;
-    case 'thinking_tokens':
-      return { ...state, activity: 'Thinking…' };
+      return event['status'] === 'requesting' ? { ...state, phase: 'working' } : state;
     case 'permission_denied':
       return withItem(state, { kind: 'notice', text: asStr(event['message']) ?? 'Permission denied.', tone: 'warning' });
     default:
@@ -52,9 +50,8 @@ function reduceStream(state: ChatState, event: Obj): ChatState {
     if (block?.['type'] === 'text') {
       const next = withItem(state, { kind: 'text', text: '', streaming: true });
       const key = next.items[next.items.length - 1]?.key ?? '';
-      return { ...next, phase: 'working', activity: 'Writing…', streamingKeys: { ...next.streamingKeys, [streamKey]: key } };
+      return { ...next, phase: 'working', streamingKeys: { ...next.streamingKeys, [streamKey]: key } };
     }
-    if (block?.['type'] === 'tool_use') return { ...state, activity: `Using ${asStr(block['name']) ?? 'a tool'}…` };
     return state;
   }
   if (inner?.['type'] === 'content_block_delta') {
@@ -79,7 +76,7 @@ function reduceToolUse(state: ChatState, block: Obj, fromHistory: boolean): Chat
   if (!existing) next = withItem(next, { kind: 'tool', toolId: id });
   const todos = parseTodos(input);
   if (todos) next = { ...next, todos };
-  return fromHistory ? next : { ...next, activity: describeTool(name, input) };
+  return next;
 }
 
 /** A finished assistant message: final text replaces the streamed text; tool calls become rows. */
@@ -137,12 +134,11 @@ function reduceControlRequest(state: ChatState, event: Obj): ChatState {
   if (!requestId || request?.['subtype'] !== 'can_use_tool') return state;
   const toolName = asStr(request['tool_name']) ?? 'Tool';
   const input = asObj(request['input']) ?? {};
-  const waiting = { ...state, activity: 'Waiting for you' };
   if (toolName === 'AskUserQuestion') {
-    return { ...waiting, questions: [...state.questions, { requestId, input, questions: parseQuestions(input) }] };
+    return { ...state, questions: [...state.questions, { requestId, input, questions: parseQuestions(input) }] };
   }
   const permission = { requestId, toolName, input, toolUseId: asStr(request['tool_use_id']), description: asStr(request['description']) };
-  return { ...waiting, permissions: [...state.permissions, permission] };
+  return { ...state, permissions: [...state.permissions, permission] };
 }
 
 /** End of a turn: stop spinners, total the cost, surface errors. */
@@ -152,7 +148,7 @@ function reduceResult(state: ChatState, event: Obj): ChatState {
     Object.entries(state.tools).map(([id, tool]) => [id, tool.status === 'running' ? { ...tool, status: 'stopped' as const } : tool]),
   );
   const items = state.items.map((item) => (item.kind === 'text' && item.streaming ? { ...item, streaming: false } : item));
-  let next: ChatState = { ...state, items, tools, phase: 'idle', activity: '', costUsd: state.costUsd + cost, streamingKeys: {}, permissions: [], questions: [] };
+  let next: ChatState = { ...state, items, tools, phase: 'idle', costUsd: state.costUsd + cost, streamingKeys: {}, permissions: [], questions: [] };
   if (event['is_error'] === true) {
     const text = asStr(event['result']) ?? 'Claude stopped with an error.';
     next = withItem(next, { kind: 'notice', text, tone: 'error' });
@@ -187,14 +183,13 @@ export function reduceClaudeEvent(previous: ChatState, raw: unknown): ChatState 
 export function reduceLocal(state: ChatState, action: LocalAction): ChatState {
   switch (action.type) {
     case 'local/sent':
-      return { ...withItem(state, { kind: 'user', text: action.text, ...(action.images?.length ? { images: action.images } : {}) }), phase: 'working', activity: 'Thinking…' };
+      return { ...withItem(state, { kind: 'user', text: action.text, ...(action.images?.length ? { images: action.images } : {}) }), phase: 'working' };
     case 'local/resolved': {
       const permission = state.permissions.find((item) => item.requestId === action.requestId);
       let next: ChatState = {
         ...state,
         permissions: state.permissions.filter((item) => item.requestId !== action.requestId),
         questions: state.questions.filter((item) => item.requestId !== action.requestId),
-        activity: action.denied ? '' : 'Working…',
       };
       const tool = permission?.toolUseId ? next.tools[permission.toolUseId] : undefined;
       if (tool && action.denied) next = setTool(next, { ...tool, status: 'denied' });
@@ -204,7 +199,7 @@ export function reduceLocal(state: ChatState, action: LocalAction): ChatState {
       return { ...state, phase: 'idle' };
     case 'local/exited':
       return withItem(
-        { ...state, phase: 'stopped', permissions: [], questions: [], activity: '' },
+        { ...state, phase: 'stopped', permissions: [], questions: [] },
         { kind: 'notice', text: action.exitCode === 0 ? 'Claude stopped.' : `Claude stopped unexpectedly. ${action.errorTail.trim().split('\n').slice(-3).join(' ')}`.trim(), tone: action.exitCode === 0 ? 'info' : 'error' },
       );
     case 'local/failed':

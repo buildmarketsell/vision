@@ -27,7 +27,11 @@ function cleanEnv(): Record<string, string> {
 }
 
 /** `projectsDir` stands in for ~/.claude/projects; a fresh empty one when not given. */
-export async function launch(userData: string, projectsDir = mkdtempSync(join(tmpdir(), 'vision-transcripts-'))): Promise<{ app: ElectronApplication; page: Page }> {
+export async function launch(
+  userData: string,
+  projectsDir = mkdtempSync(join(tmpdir(), 'vision-transcripts-')),
+  extraEnv: Record<string, string> = {},
+): Promise<{ app: ElectronApplication; page: Page }> {
   // Set VISION_E2E_APP to the built VISION.app binary to test the packaged app instead of the dev build.
   const packaged = process.env['VISION_E2E_APP'];
   const app = await electron.launch({
@@ -39,6 +43,7 @@ export async function launch(userData: string, projectsDir = mkdtempSync(join(tm
       VISION_CLAUDE_PROJECTS_DIR: projectsDir,
       // Background mode: nothing shows on screen.
       VISION_HEADLESS: '1',
+      ...extraEnv,
     },
   });
   const page = await app.firstWindow();

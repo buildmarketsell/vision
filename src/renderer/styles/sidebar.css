@@ -5,108 +5,41 @@
   box-shadow: inset -1px 0 0 var(--color-border);
 }
 
-/*
- * View switcher (after cult-ui's gradient button group): a recessed tray holding a raised white bar.
- * The active view sits in a sunken well ringed by a slowly turning orange gradient.
- * Radii are concentric: 16 tray, 13 bar, 10 well, 8 ring, 6 gap, 4 face (3px or 2px insets).
- */
-.view-tray {
-  --view-button: 36px;
-  --view-gap: 4px;
-  display: inline-flex;
-  padding: 3px;
-  border-radius: 16px;
-  background: var(--color-tray-gradient);
-  box-shadow:
-    inset 0 1px 3px rgba(0, 0, 0, 0.1),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-    0 1px 0 var(--color-bevel);
-}
-
-.view-bar {
-  position: relative;
+/* View switcher, like Notion's top row: plain icons, the open view on a soft gray square. */
+.view-row {
   display: flex;
-  gap: var(--view-gap);
-  padding: 3px;
-  border-radius: 13px;
-  background: var(--color-view-bar);
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.06),
-    0 1px 2px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--space-2) var(--space-2);
 }
 
 .view-tab {
-  position: relative;
-  z-index: 1;
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: var(--view-button);
-  height: var(--view-button);
-  border-radius: 10px;
-  color: var(--color-text-faint);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--color-text-muted);
   transition:
-    color var(--duration-fast) var(--ease),
+    background-color var(--duration-fast) var(--ease),
     transform var(--duration-fast) var(--ease);
 }
 
-.view-tab:hover,
+.view-tab:hover {
+  background: var(--color-row-hover);
+}
+
 .view-tab[aria-selected='true'] {
+  background: var(--color-row-selected);
   color: var(--color-text);
 }
 
 .view-tab:active {
-  transform: scale(0.94);
+  transform: scale(0.96);
   transition-duration: 0ms;
-}
-
-/* One indicator slides between buttons (transform only). */
-.view-indicator {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: var(--view-button);
-  height: var(--view-button);
-  border-radius: 10px;
-  background: var(--color-view-indicator);
-  box-shadow:
-    inset 0 2px 6px rgba(0, 0, 0, 0.12),
-    inset 0 0 4px rgba(0, 0, 0, 0.06),
-    0 1px 0 var(--color-bevel-strong);
-  transition: transform var(--duration-base) var(--ease);
-  pointer-events: none;
-}
-
-.view-indicator > span {
-  position: absolute;
-}
-
-.view-ring {
-  inset: 2px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.view-ring::before {
-  content: '';
-  position: absolute;
-  inset: -60%;
-  background: var(--color-ring-gradient);
-  animation: spin 6s linear infinite;
-}
-
-.view-gap {
-  inset: 4px;
-  border-radius: 6px;
-  background: var(--color-view-gap);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.18);
-}
-
-.view-face {
-  inset: 6px;
-  border-radius: 4px;
-  background: var(--color-view-face);
-  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .text-input {

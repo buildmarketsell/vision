@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { useNow } from '../usage/UsagePanel';
+import { useNow } from '../../../../renderer/core/useNow';
 import { useUsage } from '../usage/usageStore';
 import { chatBanners } from './chatBanners';
 import type { McpServer } from './sessionInfo';

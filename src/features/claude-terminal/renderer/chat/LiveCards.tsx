@@ -1,21 +1,24 @@
 import { useState } from 'react';
+import { useNow } from '../../../../renderer/core/useNow';
 import { Check, ChevronRight, Circle } from 'lucide-react';
 import type { Todo } from './chatTypes';
-import { WaveText } from './WaveText';
 
-/** The dark "working" card from the clonk reference: what Claude is doing right now. */
-export function LiveCard({ activity }: { activity: string }) {
+/** Playful verbs for the working line, one picked per turn, the way Claude Code does it. */
+const WORKING_VERBS = [
+  'Thinking', 'Pondering', 'Brewing', 'Cooking', 'Tinkering', 'Mulling', 'Noodling', 'Percolating',
+  'Discombobulating', 'Conjuring', 'Untangling', 'Simmering', 'Puzzling', 'Crafting', 'Wrangling', 'Musing',
+];
+
+/** Claude Code's working line: a twinkling orange star, a verb and how long it has been going. */
+export function WorkingLine() {
+  const [verb] = useState(() => WORKING_VERBS[Math.floor(Math.random() * WORKING_VERBS.length)] ?? 'Thinking');
+  const [startedAt] = useState(Date.now);
+  const seconds = Math.floor((useNow(1000) - startedAt) / 1000);
   return (
-    <div className="live-card enter" role="status" aria-live="polite">
-      <div className="flex items-center gap-2">
-        <span className="live-dot" data-busy="true" />
-        <span className="live-label">WORKING</span>
-        <span className="flex-1" />
-        <span className="live-label" style={{ color: 'var(--color-accent)' }}>LIVE</span>
-      </div>
-      <div className="live-text">
-        <WaveText text={activity || 'Working…'} />
-      </div>
+    <div className="working-line enter" role="status" aria-live="polite">
+      <span className="working-star" aria-hidden />
+      <span className="working-verb">{verb}…</span>
+      {seconds > 0 && <span className="working-time">{seconds}s</span>}
     </div>
   );
 }

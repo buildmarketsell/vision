@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useNow } from '../../../../renderer/core/useNow';
 import { useUsage, windowLabel, type UsageWindow } from './usageStore';
 
 const MINUTE_MS = 60_000;
@@ -30,14 +30,6 @@ function updatedLabel(updatedAt: number, now: number): string {
 }
 
 /** Re-renders every minute so "resets in" counts down. */
-export function useNow(): number {
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), MINUTE_MS);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
 
 function Meter({ limit, now }: { limit: UsageWindow; now: number }) {
   const share = limit.resetsAt > now ? limit.utilization : 0;

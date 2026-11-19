@@ -7,7 +7,7 @@ import { Banners } from './Banners';
 import { Composer } from './Composer';
 import { useDraft } from './useDraft';
 import { QueuedMessages, useMessageQueue } from './QueuedMessages';
-import { LiveCard, TasksCard } from './LiveCards';
+import { WorkingLine, TasksCard } from './LiveCards';
 import { Markdown } from './Markdown';
 import { PermissionCard, QuestionCard } from './RequestCards';
 import { ToolRow } from './ToolRow';
@@ -115,7 +115,7 @@ export function ChatView({ chat }: { chat: ChatSession }) {
             onDeny={() => chat.deny(request.requestId)}
           />
         ))}
-        {working && !waiting && <LiveCard activity={state.activity} />}
+        {working && !waiting && <WorkingLine />}
         {state.todos.length > 0 && <TasksCard todos={state.todos} />}
         <QueuedMessages queue={queue.queue} onRemove={queue.remove} />
         <Banners servers={state.info.mcpServers} />

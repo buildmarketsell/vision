@@ -27,38 +27,25 @@ export function useActiveView(views: SidebarView[]): [string, (id: string) => vo
   return [active ?? '', select];
 }
 
+/** Notion-style row of plain icons; the open view sits on a soft gray square. Icons only, so more views still fit. */
 export function ViewSwitcher({ views, active, onSelect }: { views: SidebarView[]; active: string; onSelect: (id: string) => void }) {
-  const activeIndex = Math.max(0, views.findIndex((view) => view.id === active));
   return (
-    <div className="shrink-0 px-3 pb-2">
-      <div className="view-tray">
-        <div role="tablist" aria-label="Sidebar views" className="view-bar">
-          <span
-            className="view-indicator"
-            aria-hidden
-            style={{ transform: `translateX(calc(${activeIndex} * (var(--view-button) + var(--view-gap))))` }}
-          >
-            <span className="view-ring" />
-            <span className="view-gap" />
-            <span className="view-face" />
-          </span>
-          {views.map((view) => (
-            <button
-              key={view.id}
-              role="tab"
-              id={`view-tab-${view.id}`}
-              aria-controls={`view-${view.id}`}
-              aria-selected={view.id === active}
-              aria-label={view.title}
-              title={view.title}
-              className="view-tab"
-              onClick={() => onSelect(view.id)}
-            >
-              {view.icon}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div role="tablist" aria-label="Sidebar views" className="view-row">
+      {views.map((view) => (
+        <button
+          key={view.id}
+          role="tab"
+          id={`view-tab-${view.id}`}
+          aria-controls={`view-${view.id}`}
+          aria-selected={view.id === active}
+          aria-label={view.title}
+          title={view.title}
+          className="view-tab"
+          onClick={() => onSelect(view.id)}
+        >
+          {view.icon}
+        </button>
+      ))}
     </div>
   );
 }

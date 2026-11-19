@@ -49,16 +49,16 @@ export const visionLightColors = {
   inboxSend: '#00A884',
   inboxSendHover: '#008F72',
   inboxAvatar: '#DFE5E7',
-  /** Sidebar view switcher: recessed tray, raised bar, sunken well and the spinning ring around the active view. */
-  trayGradient: 'linear-gradient(180deg, #DCDCDF 0%, #D3D3D7 50%, #CCCCD1 100%)',
-  ringGradient: 'conic-gradient(from 220deg, #F26B3A 0%, #F7A072 18%, #FFD8B8 36%, #F7A072 54%, #D97757 72%, #E35A28 86%, #F26B3A 100%)',
-  viewBar: 'linear-gradient(180deg, #FFFFFF 0%, #FCFCFE 100%)',
-  viewIndicator: '#ECECEF',
-  viewGap: '#E4E4E7',
-  viewFace: '#F9F9FA',
-  /** The light edge under raised and sunken parts. */
-  bevel: 'rgba(255, 255, 255, 0.6)',
-  bevelStrong: 'rgba(255, 255, 255, 0.9)',
+  /** To-do status tags and board columns: Notion's gray, blue and green. */
+  tagGray: 'rgba(227, 226, 224, 0.6)',
+  tagGrayText: '#32302C',
+  tagBlue: '#D3E5EF',
+  tagBlueText: '#183347',
+  tagGreen: '#DBEDDB',
+  tagGreenText: '#1C3829',
+  columnGray: 'rgba(227, 226, 224, 0.22)',
+  columnBlue: 'rgba(211, 229, 239, 0.32)',
+  columnGreen: 'rgba(219, 237, 219, 0.32)',
 };
 
 export const visionLight: VisionTheme = {

@@ -1,48 +1,13 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { ipcMain } from 'electron';
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { rename, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { IPC } from '../../../shared/ipc';
 import { cleanInboxText, MAX_INBOX_MESSAGES, normalizeInbox, type InboxMessage } from '../../../shared/inbox';
-import { logError } from '../../../main/log';
+import { createJsonListStore } from '../../../main/jsonListStore';
 
-let messages: InboxMessage[] | null = null;
-let writing: Promise<void> = Promise.resolve();
-
-function inboxPath(): string {
-  return join(app.getPath('userData'), 'inbox.json');
-}
-
-function load(): InboxMessage[] {
-  if (messages) return messages;
-  try {
-    messages = normalizeInbox(JSON.parse(readFileSync(inboxPath(), 'utf8')));
-  } catch {
-    messages = [];
-  }
-  return messages;
-}
-
-/** Saves through a temp file (a crash never leaves half a file), one write at a time, and tells every window. */
-function commit(next: InboxMessage[]): InboxMessage[] {
-  messages = next;
-  const snapshot = JSON.stringify(next, null, 2);
-  writing = writing.then(async () => {
-    try {
-      await writeFile(`${inboxPath()}.tmp`, snapshot, 'utf8');
-      await rename(`${inboxPath()}.tmp`, inboxPath());
-    } catch (error) {
-      logError('Could not save the inbox', error);
-    }
-  });
-  for (const window of BrowserWindow.getAllWindows()) {
-    if (!window.webContents.isDestroyed()) window.webContents.send(IPC.inboxChanged, next);
-  }
-  return next;
-}
+const store = createJsonListStore<InboxMessage>('inbox.json', normalizeInbox, IPC.inboxChanged);
 
 export function registerInbox(): void {
+  const { load, commit } = store;
   ipcMain.handle(IPC.inboxList, () => load());
 
   ipcMain.handle(IPC.inboxAdd, (_event, text: unknown) => {
