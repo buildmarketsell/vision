@@ -304,35 +304,48 @@ test('inbox: message yourself, mark done, delete, and keep it after a restart', 
   }
 });
 
-test('opens, names, lists and closes several Claude sessions', async () => {
-  const { userData } = makeFixture();
-  const { app, page } = await launch(userData);
+test('the Claude view shows usage on top and reopens past chats', async () => {
+  const { folder, userData } = makeFixture();
+  const projectsDir = mkdtempSync(join(tmpdir(), 'vision-transcripts-'));
+  const transcripts = join(projectsDir, folder.replace(/[^a-zA-Z0-9]/g, '-'));
+  mkdirSync(transcripts);
+  const lines = [
+    { type: 'user', message: { role: 'user', content: 'Plan the old launch' } },
+    { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Here is the old plan.' }] } },
+    { type: 'ai-title', aiTitle: 'Old launch plan' },
+  ];
+  writeFileSync(join(transcripts, 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.jsonl'), lines.map((line) => JSON.stringify(line)).join('\n') + '\n');
+  const { app, page } = await launch(userData, projectsDir);
   try {
-    // Sessions live in the sidebar's Claude view; Files shows first.
     const sidebar = page.locator('aside');
-    await expect(sidebar.getByRole('tabpanel', { name: 'Files' })).toBeVisible();
     await sidebar.getByRole('tab', { name: 'Claude' }).click();
-    const sessions = sidebar.getByRole('tabpanel', { name: 'Claude' }).getByRole('button', { name: /^Claude session/ });
-    await expect(sessions).toHaveCount(1, { timeout: 15_000 });
-    // Claude names a conversation from its first message (like VS Code), in the sidebar and the tab.
-    await sendMessage(page, 'Plan the launch');
-    await expect(sessions.first()).toHaveAccessibleName('Claude session Launch planning');
-    await expect(page.locator('.dv-tab', { hasText: 'Launch planning' })).toHaveCount(1);
+    const view = sidebar.getByRole('tabpanel', { name: 'Claude' });
+    const usage = view.getByRole('region', { name: 'Usage' });
+    const pastChat = view.getByRole('button', { name: /Old launch plan/ });
+    await expect(pastChat).toBeVisible({ timeout: 15_000 });
+    const usageBox = await usage.boundingBox();
+    const listBox = await view.getByText('Past chats').boundingBox();
+    expect(usageBox && listBox && usageBox.y < listBox.y).toBe(true);
 
-    await page.getByRole('button', { name: 'New session' }).click();
-    await expect(sessions).toHaveCount(2);
-    await page.getByRole('button', { name: 'Open a new Claude terminal' }).click();
-    await expect(sessions).toHaveCount(3);
+    // A past chat opens in a new tab with its messages; clicking it again goes back to that tab.
+    const tabsBefore = await page.locator('.dv-tab').count();
+    await pastChat.click();
+    await expect(page.locator('.dv-tab', { hasText: 'Old launch plan' })).toHaveCount(1);
+    await expect(page.getByText('Here is the old plan.')).toBeVisible();
+    await expect(pastChat).toHaveAttribute('data-selected', 'true');
+    await pastChat.click();
+    await expect(page.locator('.dv-tab')).toHaveCount(tabsBefore + 1);
 
-    await sessions.first().hover();
-    // The sidebar row's close button (the tab has one with the same name too).
-    await page.getByRole('button', { name: 'Close Launch planning', description: 'Close session' }).click();
-    await expect(sessions).toHaveCount(2);
+    await view.getByRole('button', { name: /New chat/ }).click();
+    await expect(page.locator('.dv-tab')).toHaveCount(tabsBefore + 2);
+
     // Usage from the rate_limit_event lines, with the plan from initialize.
-    const usage = sidebar.getByRole('region', { name: 'Usage' });
+    await sendMessage(page, 'Plan the launch');
     await expect(usage.getByRole('meter', { name: 'Session (5 hr)' })).toHaveAttribute('aria-valuenow', '29');
     await expect(usage.getByRole('meter', { name: 'Weekly (7 day)' })).toHaveAttribute('aria-valuenow', '40');
     await expect(usage.getByText('Claude Pro')).toBeVisible();
+    // Another chat is showing now, so the old one is no longer highlighted.
+    await expect(pastChat).toHaveAttribute('data-selected', 'false');
     await page.screenshot({ animations: 'disabled', path: 'test-results/sessions.png' });
   } finally {
     await app.close();

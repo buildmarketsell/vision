@@ -12,16 +12,9 @@ import { Markdown } from './Markdown';
 import { PermissionCard, QuestionCard } from './RequestCards';
 import { ToolRow } from './ToolRow';
 import type { ChatSession } from './useChatSession';
+import { timeAgo } from '../timeAgo';
 
 const STICK_TO_BOTTOM_PX = 80;
-
-function timeAgo(timestamp: number): string {
-  const minutes = Math.round((Date.now() - timestamp) / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes} min ago`;
-  const hours = Math.round(minutes / 60);
-  return hours < 24 ? `${hours} h ago` : `${Math.round(hours / 24)} d ago`;
-}
 
 /** Empty tab: what you can do, and the folder's recent conversations to pick up again. */
 function EmptyState({ onOpen }: { onOpen: (sessionId: string) => void }) {

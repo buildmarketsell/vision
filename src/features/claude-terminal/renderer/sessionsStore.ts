@@ -64,10 +64,19 @@ export function cleanTitle(raw: string): string {
 
 let counter = 0;
 
-export function newClaudeSession(): void {
+/** Opens a new Claude tab; with a session id it continues that saved conversation. */
+export function newClaudeSession(sessionId?: string, title = DEFAULT_TITLE): void {
   counter += 1;
   const id = `claude:${Date.now().toString(36)}-${counter}`;
-  openOwnGroupPanel(CLAUDE_TAB, id, DEFAULT_TITLE);
+  openOwnGroupPanel(CLAUDE_TAB, id, title, sessionId ? { sessionId } : {});
+}
+
+/** The tab showing this saved conversation, if one is open. */
+export function panelForConversation(sessionId: string): string | null {
+  const panel = getDockApi()?.panels.find(
+    (item) => item.view.contentComponent === CLAUDE_TAB && (item.params as { sessionId?: unknown } | undefined)?.sessionId === sessionId,
+  );
+  return panel?.id ?? null;
 }
 
 /** Jumps to the Claude session used last, or starts one when none is open. */

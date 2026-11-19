@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import type { PastConversation } from '../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
-import { closePanelById, focusPanel, onDockReady } from '../../../renderer/core/dockActions';
-import { CLAUDE_TAB, newClaudeSession, useClaudeSessions, type ClaudeSession } from './sessionsStore';
-import { focusClaudeTerminal } from './useClaudeTerminal';
+import { focusPanel, getDockApi, onDockReady } from '../../../renderer/core/dockActions';
+import { CLAUDE_TAB, newClaudeSession, panelForConversation, useClaudeSessions } from './sessionsStore';
+import { timeAgo } from './timeAgo';
 import { UsagePanel } from './usage/UsagePanel';
 
 const ICON = { size: 14, strokeWidth: 1.75 };
 
-/** Which Claude tab is showing, so its row can be highlighted. */
+/** Which Claude tab is showing. */
 function useActiveClaudeTab(): string | null {
   const [activeId, setActiveId] = useState<string | null>(null);
   useEffect(() => {
@@ -29,74 +30,70 @@ function useActiveClaudeTab(): string | null {
   return activeId;
 }
 
-function SessionRow({ session, active }: { session: ClaudeSession; active: boolean }) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      className="group row"
-      data-selected={active}
-      aria-label={`Claude session ${session.title}`}
-      onClick={() => {
-        focusPanel(session.id);
-        focusClaudeTerminal(session.id);
-      }}
-      onKeyDown={(event) => event.key === 'Enter' && focusPanel(session.id)}
-    >
-      <span className="flex w-4 justify-center">
-        <ClaudeLogo size={15} busy={session.busy} dim={session.status !== 'running'} />
-      </span>
-      <span className="flex-1 truncate">{session.title}</span>
-      <button
-        className="icon-button opacity-0 group-hover:opacity-100 focus:opacity-100"
-        style={{ width: 20, height: 20 }}
-        aria-label={`Close ${session.title}`}
-        title="Close session"
-        onClick={(event) => {
-          event.stopPropagation();
-          closePanelById(session.id);
-        }}
-      >
-        <X size={12} strokeWidth={2} />
-      </button>
-    </div>
-  );
+/** The saved conversation in a tab. A new chat gets its id after the first reply, which also reloads the list. */
+function conversationIn(panelId: string | null): string | null {
+  const id = panelId ? (getDockApi()?.getPanel(panelId)?.params as { sessionId?: unknown } | undefined)?.sessionId : null;
+  return typeof id === 'string' ? id : null;
 }
 
-/** Sidebar section listing open Claude sessions, like the session list in Claude Code for VS Code. */
+/**
+ * The folder's past conversations, newest first. Reloaded whenever a Claude tab
+ * finishes a turn or is opened or closed, so new chats and new names show up.
+ */
+function usePastConversations(): PastConversation[] | null {
+  const [past, setPast] = useState<PastConversation[] | null>(null);
+  const activity = useClaudeSessions((state) => state.order.map((id) => `${id}:${state.sessions[id]?.busy ? 1 : 0}:${state.sessions[id]?.title}`).join('|'));
+  useEffect(() => {
+    let cancelled = false;
+    void window.vision.chat.list().then((list) => !cancelled && setPast(list));
+    return () => {
+      cancelled = true;
+    };
+  }, [activity]);
+  return past;
+}
+
+function openConversation(item: PastConversation): void {
+  const openId = panelForConversation(item.sessionId);
+  if (openId) focusPanel(openId);
+  else newClaudeSession(item.sessionId, item.title);
+}
+
+/** Sidebar view for Claude: usage on top, then past chats to pick up again. */
 export function SessionsView() {
-  const order = useClaudeSessions((state) => state.order);
-  const sessions = useClaudeSessions((state) => state.sessions);
-  const activeId = useActiveClaudeTab();
+  const past = usePastConversations();
+  const activeSessionId = conversationIn(useActiveClaudeTab());
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="group flex items-center justify-between pr-2">
-        <div className="section-label">Claude</div>
-        <button
-          className="icon-button opacity-0 group-hover:opacity-100 focus:opacity-100"
-          style={{ width: 22, height: 22 }}
-          title="New Claude session (⌘T)"
-          aria-label="New Claude session"
-          onClick={newClaudeSession}
-        >
-          <Plus {...ICON} />
-        </button>
-      </div>
+      <UsagePanel />
+      <div className="section-label">Past chats</div>
       <div className="min-h-0 flex-1 overflow-y-auto px-1">
-        {order.map((id) => {
-          const session = sessions[id];
-          return session ? <SessionRow key={id} session={session} active={id === activeId} /> : null;
-        })}
-        <button className="row w-full text-(--color-text-muted)" onClick={newClaudeSession}>
+        <button className="row w-full text-(--color-text-muted)" onClick={() => newClaudeSession()}>
           <span className="flex w-4 justify-center">
             <Plus {...ICON} />
           </span>
-          New session
+          New chat
           <span className="keycap ml-auto">⌘T</span>
         </button>
+        {past === null && <div className="spinner" aria-label="Loading past chats" />}
+        {past?.length === 0 && <div className="caption px-2 py-1">No past chats in this folder yet.</div>}
+        {past?.map((item) => (
+          <button
+            key={item.sessionId}
+            className="row w-full text-left"
+            data-selected={item.sessionId === activeSessionId}
+            title={item.title}
+            onClick={() => openConversation(item)}
+          >
+            <span className="flex w-4 justify-center">
+              <ClaudeLogo size={14} dim />
+            </span>
+            <span className="min-w-0 flex-1 truncate">{item.title}</span>
+            <span className="caption shrink-0">{timeAgo(item.updatedAt)}</span>
+          </button>
+        ))}
       </div>
-      <UsagePanel />
     </div>
   );
 }

@@ -25,6 +25,8 @@
 - App icon and install (2026-11-19): eye-and-arc icon (`build/icon.icns`, drawn by `scripts/make_icon.py`); VISION lives in `/Applications` so it opens from Launchpad, Spotlight and the Dock.
 
 
+- Claude sidebar (2026-11-19): Usage card at the top, Past chats list below it (click to reopen).
+
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).
 - In dev mode the menu bar says "Electron"; the built `.app` says "VISION".
