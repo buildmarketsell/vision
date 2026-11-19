@@ -56,3 +56,13 @@ export function SettingsView() {
     </div>
   );
 }
+
+/** Settings as a page: a centered column with a big title, like Notion's pages. */
+export function SettingsPage() {
+  return (
+    <div className="page-column">
+      <h1 className="page-title">Settings</h1>
+      <SettingsView />
+    </div>
+  );
+}

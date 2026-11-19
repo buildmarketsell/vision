@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Plus, RotateCw } from 'lucide-react';
 import type { CalendarState, NewEventInput } from '../../../shared/calendar';
+import { useLatest } from '../../../renderer/core/useLatest';
+import { useCalendarVersion } from './calendarSync';
 import { NewEventForm } from './NewEventForm';
 import { WeekGrid, type SlotPick, type TimeSlot } from './WeekGrid';
 import { addDays, clockTime, DAYS_IN_WEEK, startOfWeek, weekDays, weekTitle } from './weekLayout';
@@ -32,6 +34,12 @@ function useWeek(weekStart: number) {
     const timer = setInterval(() => load(weekStart, false), REFRESH_MS);
     return () => clearInterval(timer);
   }, [weekStart]);
+  // Signing in or changing calendars in the panel shows up here at once, not at the next 5-minute refresh.
+  const version = useCalendarVersion((store) => store.version);
+  const latestWeek = useLatest(weekStart);
+  useEffect(() => {
+    if (version > 0) load(latestWeek.current, true);
+  }, [version, latestWeek]);
   return {
     state: result?.state ?? null,
     loading: result?.weekStart !== weekStart,

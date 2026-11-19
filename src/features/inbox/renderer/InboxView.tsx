@@ -95,3 +95,12 @@ export function InboxView() {
     </div>
   );
 }
+
+/** The Inbox filling the window: the same chat, in a centered column so lines stay readable. */
+export function InboxPage() {
+  return (
+    <div className="page-column flex h-full min-h-0 flex-col">
+      <InboxView />
+    </div>
+  );
+}

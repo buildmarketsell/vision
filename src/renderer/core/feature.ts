@@ -9,11 +9,14 @@ export interface SidebarView {
   id: string;
   title: string;
   icon: ReactNode;
-  component: ComponentType;
+  /** The panel in the sidebar on the right. Without one, the sidebar steps aside while this view is open. */
+  component?: ComponentType;
   /** Shown instead of the panes while this view is open (Notion mode). The panes stay alive underneath. */
   main?: ComponentType;
   /** Hides the sidebar's Claude button row while this view is open (the view draws its own). */
   ownBottomBar?: boolean;
+  /** The `main` page draws its own top row; otherwise it gets an empty one for the traffic lights and panel buttons. */
+  ownTopBar?: boolean;
   /** Sits at the bottom of the menu, like Notion's Settings. */
   pinBottom?: boolean;
 }

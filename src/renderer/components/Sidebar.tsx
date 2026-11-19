@@ -88,16 +88,19 @@ export function Sidebar() {
   const [activeView] = useActiveView(views);
   const peek = usePeek(collapsed);
   const label = collapsed ? 'Show sidebar' : 'Hide sidebar';
+  // Pages like To-do and Settings fill the window alone; the panels stay mounted so the file tree keeps its open folders.
+  const hasPanel = Boolean(views.find((view) => view.id === activeView)?.component);
 
   return (
     <>
-      {collapsed && <div className="edge-zone" data-side="right" aria-hidden onPointerEnter={peek.show} onPointerLeave={peek.hideSoon} />}
+      {collapsed && hasPanel && <div className="edge-zone" data-side="right" aria-hidden onPointerEnter={peek.show} onPointerLeave={peek.hideSoon} />}
       <aside
         className="sidebar side-panel"
         data-side="right"
         data-collapsed={collapsed}
         data-peeking={peek.peeking}
         aria-label="Sidebar"
+        hidden={!hasPanel}
         inert={collapsed && !peek.peeking}
         style={{ width: preview ?? storedWidth, transition: preview === null ? undefined : 'none' }}
         onPointerEnter={peek.show}
@@ -113,6 +116,7 @@ export function Sidebar() {
         {!collapsed && <ResizeHandle onPreview={setPreview} />}
       </aside>
       <button
+        hidden={!hasPanel}
         className="icon-button panel-toggle no-drag"
         data-side="right"
         title={`${label} (⌘⇧\\)`}

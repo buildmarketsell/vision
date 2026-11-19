@@ -269,3 +269,10 @@
     animation-name: fade;
   }
 }
+
+/* Filling the window from the menu: below the empty top row instead of a tab strip. */
+main > .calendar-page {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}

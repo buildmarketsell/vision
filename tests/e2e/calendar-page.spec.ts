@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { startFakeGoogle } from './fixtures/fake-google';
 import { connectFakeGoogle, launch, makeFixture } from './helpers';
 
-test('calendar page: open the week from the sidebar, see events, click an empty slot to add one', async () => {
+test('calendar page: Calendar in the menu fills the window with the week, see events, click an empty slot to add one', async () => {
   const google = await startFakeGoogle();
   const { userData } = makeFixture();
   const { app, page } = await launch(userData, undefined, { VISION_GOOGLE_TEST_BASE: google.base });
@@ -10,7 +10,8 @@ test('calendar page: open the week from the sidebar, see events, click an empty 
     await page.setViewportSize({ width: 1440, height: 900 });
     const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
     await connectFakeGoogle(sidebar);
-    await sidebar.getByRole('button', { name: 'Open calendar' }).click();
+    // Picking Calendar in the menu (connectFakeGoogle does) fills the window with the week.
+    await expect(page.locator('main .calendar-page')).toBeVisible();
 
     const calendar = page.locator('.calendar-page');
     await expect(calendar.locator('.week-event', { hasText: 'Call with the garage' })).toBeVisible();

@@ -10,6 +10,6 @@ const icon = () => createElement(CalendarDays, { size: 15, strokeWidth: 1.5 });
 export const calendarFeature: Feature = {
   id: 'calendar',
   name: 'Calendar',
-  sidebarViews: [{ id: 'calendar', title: 'Calendar', icon: icon(), component: CalendarView }],
+  sidebarViews: [{ id: 'calendar', title: 'Calendar', icon: icon(), component: CalendarView, main: CalendarPage }],
   tabTypes: [{ id: CALENDAR_TAB, component: CalendarPage, closable: true, icon }],
 };

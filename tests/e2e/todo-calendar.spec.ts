@@ -2,12 +2,13 @@ import { expect, test } from '@playwright/test';
 import { startFakeGoogle } from './fixtures/fake-google';
 import { launch, makeFixture, menu } from './helpers';
 
-test('to-do: add, tick off, open as a board, drag between columns, and keep it after a restart', async () => {
+test('to-do: fills the window from the menu; add, tick off, switch to board, drag between columns, and keep it after a restart', async () => {
   const { userData } = makeFixture();
   let { app, page } = await launch(userData);
   try {
-    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+    const sidebar = page.locator('main .todo-page');
     await menu(page).getByRole('tab', { name: 'To-do' }).click();
+    await expect(page.getByRole('complementary', { name: 'Sidebar' })).toBeHidden();
     const add = sidebar.getByRole('textbox', { name: 'Add a to-do' });
     for (const text of ['Send the email to Adrian', 'Fit the new spiral', 'Ship the old part']) {
       await add.fill(text);
@@ -16,9 +17,9 @@ test('to-do: add, tick off, open as a board, drag between columns, and keep it a
     await expect(sidebar.getByRole('list', { name: 'To-dos' }).getByRole('listitem')).toHaveCount(3);
     await sidebar.getByRole('checkbox', { name: 'Mark "Send the email to Adrian" as done' }).click();
     await expect(sidebar.getByRole('list', { name: 'To-dos' }).getByRole('listitem')).toHaveCount(2);
-    await page.screenshot({ animations: 'disabled', path: 'test-results/todo-sidebar.png' });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/todo-page.png' });
 
-    await sidebar.getByRole('button', { name: 'Open as a board' }).click();
+    await page.getByRole('radio', { name: 'Board' }).click();
     const board = page.locator('.todo-board');
     await expect(board.getByRole('region', { name: 'Done' }).getByRole('listitem')).toHaveCount(1);
     await board.getByRole('listitem', { name: 'Fit the new spiral' }).dragTo(board.getByRole('region', { name: 'In progress' }));
@@ -32,7 +33,7 @@ test('to-do: add, tick off, open as a board, drag between columns, and keep it a
     await app.close();
     ({ app, page } = await launch(userData));
     await menu(page).getByRole('tab', { name: 'To-do' }).click();
-    await expect(page.getByRole('complementary', { name: 'Sidebar' }).getByRole('list', { name: 'To-dos' }).getByRole('listitem')).toHaveCount(2);
+    await expect(page.locator('main .todo-page').getByRole('list', { name: 'To-dos' }).getByRole('listitem')).toHaveCount(2);
   } finally {
     await app.close();
   }

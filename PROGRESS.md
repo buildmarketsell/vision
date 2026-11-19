@@ -34,6 +34,7 @@
 - Board media (2026-11-19): paste any website, YouTube/Vimeo, X or Reddit link on a board and it shows live; drop or paste video files and they play on the board (saved in `videos/` next to it). Images were already supported.
 - Notion view (2026-11-19): the table icon turns the window into Notion: sidebar with Search, Favorites, a page tree and Databases; pages with cover, icon, title and blocks (text, headings, to-dos, lists, toggles, quote, callout, divider, sub-pages, inline databases), "/" menu and markdown shortcuts, back/forward and breadcrumbs.
 - Menu and sidebar (2026-11-19): feature menu on the left (Workspace, To-do, Boards, Database, Calendar, Claude, Inbox, Settings), the picked feature's panel on the right; each hides with its own button and peeks out when you hover the window edge. Boards is its own view listing every board in the folder.
+- Menu pages (2026-11-19): each menu item opens its own page: To-do, Boards (picked board full window), Calendar (week), Inbox and Settings fill the window; the week page updates right after signing in.
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).

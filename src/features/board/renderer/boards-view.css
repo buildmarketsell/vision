@@ -30,6 +30,10 @@
   background: var(--color-row-hover);
 }
 
+.boards-row[aria-current='true'] {
+  background: var(--color-row-selected);
+}
+
 .boards-row:active {
   transform: scale(0.98);
   transition-duration: 0ms;
