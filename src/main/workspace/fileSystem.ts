@@ -1,8 +1,9 @@
 import { shell } from 'electron';
-import { open, readdir, readFile, mkdir, rename, stat, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { copyFile, open, readdir, readFile, mkdir, rename, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { BINARY_SNIFF_BYTES, MAX_EDITABLE_FILE_BYTES } from '../../shared/app';
-import { IMAGES_FOLDER, pastedImageName } from '../../shared/markdownImages';
+import { IMAGES_FOLDER, pastedImageName, VIDEOS_FOLDER } from '../../shared/markdownImages';
 import type { DirEntry, ReadFileResult, Result } from '../../shared/ipc';
 import { looksBinary, validateEntryName } from '../paths';
 
@@ -94,15 +95,27 @@ export async function writeTextFile(path: string, content: string): Promise<Resu
 }
 
 /** Saves a pasted image in the `images/` folder next to the note and returns its path. Never overwrites. */
-export async function saveImageNextTo(notePath: string, bytes: Uint8Array, ext: string): Promise<Result<string>> {
+export function saveImageNextTo(notePath: string, bytes: Uint8Array, ext: string): Promise<Result<string>> {
+  return saveNextTo(notePath, IMAGES_FOLDER, ext, (target) => writeFile(target, bytes, { flag: 'wx' }));
+}
+
+/** Copies a video file (or writes pasted bytes) into the `videos/` folder next to a board. Never overwrites. */
+export function saveVideoNextTo(boardPath: string, source: string | Uint8Array, ext: string): Promise<Result<string>> {
+  return saveNextTo(boardPath, VIDEOS_FOLDER, ext, (target) =>
+    typeof source === 'string' ? copyFile(source, target, constants.COPYFILE_EXCL) : writeFile(target, source, { flag: 'wx' }),
+  );
+}
+
+/** `write` must fail with EEXIST rather than overwrite; the next free name is tried then. */
+async function saveNextTo(notePath: string, folderName: string, ext: string, write: (target: string) => Promise<void>): Promise<Result<string>> {
   try {
-    const dir = join(dirname(notePath), IMAGES_FOLDER);
+    const dir = join(dirname(notePath), folderName);
     await mkdir(dir, { recursive: true });
     const name = pastedImageName(basename(notePath), new Date(), ext);
     for (let attempt = 1; attempt < 100; attempt += 1) {
       const target = join(dir, attempt === 1 ? name : name.replace(`.${ext}`, `-${attempt}.${ext}`));
       try {
-        await writeFile(target, bytes, { flag: 'wx' });
+        await write(target);
         return { ok: true, value: target };
       } catch (error) {
         if (!(error && typeof error === 'object' && 'code' in error && error.code === 'EEXIST')) throw error;

@@ -23,6 +23,7 @@ const api: VisionApi = {
     readFile: (path) => ipcRenderer.invoke(IPC.readFile, path),
     writeFile: (path, content) => ipcRenderer.invoke(IPC.writeFile, path, content),
     saveImage: (notePath, bytes, ext) => ipcRenderer.invoke(IPC.saveImage, notePath, bytes, ext),
+    saveVideo: (boardPath, source, ext) => ipcRenderer.invoke(IPC.saveVideo, boardPath, source, ext),
     createFile: (parentDir, name) => ipcRenderer.invoke(IPC.createFile, parentDir, name),
     createDir: (parentDir, name) => ipcRenderer.invoke(IPC.createDir, parentDir, name),
     rename: (path, newName) => ipcRenderer.invoke(IPC.rename, path, newName),

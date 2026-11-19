@@ -76,6 +76,8 @@ export interface VisionApi {
     writeFile(path: string, content: string): Promise<Result<void>>;
     /** Saves image bytes in the `images/` folder next to a note; returns the new file's path. */
     saveImage(notePath: string, bytes: Uint8Array, ext: string): Promise<Result<string>>;
+    /** Copies a video file (by path) or pasted video bytes into `videos/` next to a board; returns the new file's path. */
+    saveVideo(boardPath: string, source: string | Uint8Array, ext: string): Promise<Result<string>>;
     createFile(parentDir: string, name: string): Promise<Result<string>>;
     createDir(parentDir: string, name: string): Promise<Result<string>>;
     rename(path: string, newName: string): Promise<Result<string>>;
@@ -161,6 +163,7 @@ export const IPC = {
   readFile: 'fs:readFile',
   writeFile: 'fs:writeFile',
   saveImage: 'fs:saveImage',
+  saveVideo: 'fs:saveVideo',
   createFile: 'fs:createFile',
   createDir: 'fs:createDir',
   rename: 'fs:rename',
