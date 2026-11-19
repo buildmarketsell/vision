@@ -55,9 +55,12 @@ const api: VisionApi = {
     onChange: (callback) => subscribe(IPC.todosChanged, callback),
   },
   calendar: {
-    upcoming: (force) => ipcRenderer.invoke(IPC.calendarUpcoming, force === true),
-    connect: (url) => ipcRenderer.invoke(IPC.calendarConnect, url),
-    disconnect: () => ipcRenderer.invoke(IPC.calendarDisconnect),
+    state: (force) => ipcRenderer.invoke(IPC.calendarState, force === true),
+    setClient: (id, secret) => ipcRenderer.invoke(IPC.calendarSetClient, id, secret),
+    signIn: () => ipcRenderer.invoke(IPC.calendarSignIn),
+    signOut: (email) => ipcRenderer.invoke(IPC.calendarSignOut, email),
+    setVisible: (calendarKey, visible) => ipcRenderer.invoke(IPC.calendarSetVisible, calendarKey, visible),
+    createEvent: (input) => ipcRenderer.invoke(IPC.calendarCreateEvent, input),
   },
   chat: {
     start: (options) => ipcRenderer.invoke(IPC.chatStart, options),

@@ -28,6 +28,7 @@
 - Claude sidebar (2026-11-19): Usage card at the top, Past chats list below it (click to reopen).
 - Notion top bar (2026-11-19): 36px top row, sidebar button next to the traffic lights (also ⌘\\) that hides and shows the sidebar, remembered per folder.
 - To-do, Calendar and Notion look (2026-11-19): To-do in the sidebar (checklist) and as a page with List / Board (kanban, drag between columns); Calendar agenda from Google's private iCal link; plain Notion-style icon row; no Ready pill; no sign-in bars; Claude Code's working line instead of the Working card.
+- Google Calendar (2026-11-19): sign in with Google (several accounts), all calendars in their colors with show/hide, add events from VISION.
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).
