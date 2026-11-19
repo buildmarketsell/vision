@@ -3,7 +3,7 @@ import { CALENDAR_DAYS_AHEAD, toGoogleEvent, toNewEventInput, type CalendarAccou
 import { IPC, type Result } from '../../../shared/ipc';
 import { logError } from '../../../main/log';
 import { loadConfig, saveConfig } from './calendarConfig';
-import { accessToken, forgetAccessToken, GoogleError, signIn, SignInExpiredError } from './googleAuth';
+import { accessToken, cancelSignIn, forgetAccessToken, GoogleError, signIn, SignInExpiredError } from './googleAuth';
 import { accountEmail, insertEvent, listCalendars, listEvents, toCalendarEvent, toCalendarInfo } from './googleApi';
 
 const DAY_MS = 24 * 60 * 60_000;
@@ -116,6 +116,8 @@ export function registerCalendar(): void {
       return config.accounts.length > 0 ? { ...(await currentState(true)), error: message } : currentState(false, message);
     }
   });
+
+  ipcMain.on(IPC.calendarCancelSignIn, () => cancelSignIn());
 
   ipcMain.handle(IPC.calendarSignOut, async (_event, email: unknown) => {
     const config = loadConfig();

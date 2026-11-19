@@ -225,3 +225,18 @@
   background: var(--color-row-hover);
   color: var(--color-text-muted);
 }
+
+.calendar-waiting {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0 var(--space-3) var(--space-3);
+  padding: var(--space-3);
+  border-radius: 12px;
+  background: var(--color-accent-soft);
+}
+
+.calendar-waiting .spinner {
+  flex-shrink: 0;
+  margin-top: 2px;
+}

@@ -11,17 +11,21 @@ import './calendar.css';
 const REFRESH_MS = 5 * 60_000;
 type Ready = Extract<CalendarState, { kind: 'ready' }>;
 
+/** What the view is waiting for: Google's sign-in in the browser (can be cancelled), or anything else. */
+type Waiting = 'signIn' | 'other' | null;
+
 function useCalendar() {
   const [state, setState] = useState<CalendarState | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [waiting, setWaiting] = useState<Waiting>(null);
+  const busy = waiting !== null;
   const load = (action: Promise<CalendarState>) => {
     action
       .then(setState, () => setState((current) => (current?.kind === 'ready' ? { ...current, error: 'The calendar could not be read. Try again.' } : { kind: 'setup', hasClient: false, error: 'The calendar could not be read. Try again.' })))
-      .finally(() => setBusy(false));
+      .finally(() => setWaiting(null));
   };
   /** For clicks: shows the button as busy until the answer comes. */
-  const run = (action: Promise<CalendarState>) => {
-    setBusy(true);
+  const run = (action: Promise<CalendarState>, kind: Waiting = 'other') => {
+    setWaiting(kind);
     load(action);
   };
   useEffect(() => {
@@ -29,7 +33,21 @@ function useCalendar() {
     const timer = setInterval(() => load(window.vision.calendar.state()), REFRESH_MS);
     return () => clearInterval(timer);
   }, []);
-  return { state, setState, busy, run };
+  return { state, setState, busy, waiting, run };
+}
+
+/** Shown while Google's sign-in is open in the browser; without it a stuck sign-in looked like broken buttons. */
+function WaitingForGoogle() {
+  return (
+    <div className="calendar-waiting enter" role="status">
+      <div className="spinner" aria-hidden />
+      <div className="min-w-0 flex-1">
+        <div className="font-medium">Waiting for Google…</div>
+        <div className="caption">Finish signing in in your browser. If Google says "Access blocked", add your email as a test user in Google Cloud.</div>
+        <button className="button-secondary mt-2" onClick={() => window.vision.calendar.cancelSignIn()}>Cancel</button>
+      </div>
+    </div>
+  );
 }
 
 function Agenda({ state, now }: { state: Ready; now: number }) {
@@ -71,11 +89,11 @@ function Agenda({ state, now }: { state: Ready; now: number }) {
 
 /** Sidebar view: what's coming up in Dan's Google calendars, day by day, and a quick way to add an event. */
 export function CalendarView() {
-  const { state, setState, busy, run } = useCalendar();
+  const { state, setState, busy, waiting, run } = useCalendar();
   const now = useNow();
   const [panel, setPanel] = useState<'none' | 'new' | 'calendars'>('none');
   const toggle = (next: 'new' | 'calendars') => setPanel(panel === next ? 'none' : next);
-  const signIn = () => run(window.vision.calendar.signIn());
+  const signIn = () => run(window.vision.calendar.signIn(), 'signIn');
   /** The tick shows at once; the agenda follows when main answers (no network, it filters what it has). */
   const toggleCalendar = (key: string, visible: boolean) => {
     setState((current) => (current?.kind === 'ready' ? { ...current, calendars: current.calendars.map((item) => (item.key === key ? { ...item, visible } : item)) } : current));
@@ -100,6 +118,7 @@ export function CalendarView() {
         )}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
+        {waiting === 'signIn' && <WaitingForGoogle />}
         {state === null && <div className="spinner mx-auto mt-6" aria-label="Loading calendar" />}
         {state?.kind === 'setup' && (
           <CalendarSetup

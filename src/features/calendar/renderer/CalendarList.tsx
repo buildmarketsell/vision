@@ -37,7 +37,7 @@ export function CalendarList({ state, busy, onChange, onToggle, onSignIn }: {
         </section>
       ))}
       <button className="calendar-add-account" disabled={busy} onClick={onSignIn}>
-        <Plus size={14} strokeWidth={1.75} /> {busy ? 'Waiting for Google…' : 'Add Google account'}
+        <Plus size={14} strokeWidth={1.75} /> Add Google account
       </button>
     </div>
   );

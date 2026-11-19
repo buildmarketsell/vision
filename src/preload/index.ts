@@ -58,6 +58,7 @@ const api: VisionApi = {
     state: (force) => ipcRenderer.invoke(IPC.calendarState, force === true),
     setClient: (id, secret) => ipcRenderer.invoke(IPC.calendarSetClient, id, secret),
     signIn: () => ipcRenderer.invoke(IPC.calendarSignIn),
+    cancelSignIn: () => ipcRenderer.send(IPC.calendarCancelSignIn),
     signOut: (email) => ipcRenderer.invoke(IPC.calendarSignOut, email),
     setVisible: (calendarKey, visible) => ipcRenderer.invoke(IPC.calendarSetVisible, calendarKey, visible),
     createEvent: (input) => ipcRenderer.invoke(IPC.calendarCreateEvent, input),

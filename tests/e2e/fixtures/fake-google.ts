@@ -18,7 +18,8 @@ function body(request: IncomingMessage): Promise<string> {
   });
 }
 
-export async function startFakeGoogle(): Promise<FakeGoogle> {
+/** `blockSignIn` acts like Google's "Access blocked" page: it never sends the browser back. */
+export async function startFakeGoogle({ blockSignIn = false } = {}): Promise<FakeGoogle> {
   const created: Array<Record<string, unknown>> = [];
   const at = (hours: number) => {
     const date = new Date(Date.now() + hours * HOUR);
@@ -35,7 +36,9 @@ export async function startFakeGoogle(): Promise<FakeGoogle> {
   const server: Server = createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1');
     const json = (value: unknown) => response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(value));
-    if (url.pathname === '/auth') {
+    if (url.pathname === '/auth' && blockSignIn) {
+      response.writeHead(200, { 'Content-Type': 'text/html' }).end('Access blocked');
+    } else if (url.pathname === '/auth') {
       const back = new URL(url.searchParams.get('redirect_uri') ?? '');
       back.searchParams.set('code', 'fake-code');
       back.searchParams.set('state', url.searchParams.get('state') ?? '');

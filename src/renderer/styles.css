@@ -131,6 +131,16 @@ body {
     transform var(--duration-fast) var(--ease);
 }
 
+/* Disabled buttons look it, so a click that does nothing never looks broken. */
+.button-primary:disabled,
+.button-secondary:disabled,
+.pill-button:disabled,
+.icon-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+
 .row:active,
 .icon-button:active,
 .button-primary:active,
