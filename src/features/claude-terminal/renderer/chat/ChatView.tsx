@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ClipboardEvent } from 'react';
 import type { PastConversation } from '../../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../../renderer/components/ClaudeLogo';
 import { baseName, useWorkspace } from '../../../../renderer/core/workspaceStore';
@@ -78,6 +78,14 @@ function useStickToBottom(dependency: unknown) {
   return { ref, onScroll };
 }
 
+/** Copies chat text without its styling, so pasting into Google Docs or Word takes on the document's own font and sizes. */
+function copyAsPlainText(event: ClipboardEvent) {
+  const text = window.getSelection()?.toString();
+  if (!text) return;
+  event.preventDefault();
+  event.clipboardData.setData('text/plain', text);
+}
+
 /** A Claude conversation as a chat, like Claude Code in VS Code. */
 export function ChatView({ chat }: { chat: ChatSession }) {
   const { state } = chat;
@@ -90,7 +98,7 @@ export function ChatView({ chat }: { chat: ChatSession }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col" onDragOver={draft.onDragOver} onDrop={draft.onDrop}>
-      <div ref={scrollRef} onScroll={onScroll} className="reading-surface min-h-0 flex-1 overflow-y-auto">
+      <div ref={scrollRef} onScroll={onScroll} onCopy={copyAsPlainText} className="reading-surface min-h-0 flex-1 overflow-y-auto">
         {state.items.length === 0 && state.phase !== 'starting' ? (
           <EmptyState onOpen={(sessionId) => chat.open(sessionId)} />
         ) : (

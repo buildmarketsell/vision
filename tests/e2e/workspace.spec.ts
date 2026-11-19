@@ -20,6 +20,16 @@ test('opens a folder, edits and saves a file, and chats with Claude', async () =
     await expect(page.locator('.user-bubble')).toHaveText('hi there');
     await expect(page.locator('.assistant-text').last()).toContainText('Hello from fake Claude. You said: hi there');
 
+    // Copying from the chat gives plain text only, so Google Docs pastes it in the doc's own style.
+    const copied = await page.locator('.assistant-text').last().evaluate((reply) => {
+      window.getSelection()?.selectAllChildren(reply);
+      const data = new DataTransfer();
+      reply.dispatchEvent(new ClipboardEvent('copy', { clipboardData: data, bubbles: true, cancelable: true }));
+      return { types: [...data.types], text: data.getData('text/plain') };
+    });
+    expect(copied.types).toEqual(['text/plain']);
+    expect(copied.text).toContain('Hello from fake Claude. You said: hi there');
+
     await page.getByRole('treeitem', { name: /hello\.md/ }).click();
     await expect(page.locator('.markdown-document h1')).toHaveText('Hello', { timeout: 15_000 });
     await page.screenshot({ animations: 'disabled', path: 'test-results/markdown-preview.png' });
