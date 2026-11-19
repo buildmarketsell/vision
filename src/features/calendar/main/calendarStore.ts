@@ -42,10 +42,8 @@ async function fetchAccount(account: { email: string; refreshToken: string }, fr
   return { calendars, events: perCalendar.flat() };
 }
 
-async function fetchAll(): Promise<Fetched> {
+async function fetchAll(from: number, to: number): Promise<Fetched> {
   const now = Date.now();
-  const from = now - DAY_MS;
-  const to = now + CALENDAR_DAYS_AHEAD * DAY_MS;
   const results = await Promise.allSettled(loadConfig().accounts.map((account) => fetchAccount(account, from, to)));
   const fetched: Fetched = { accounts: [], calendars: [], events: [], at: now };
   results.forEach((result, index) => {
@@ -61,13 +59,15 @@ async function fetchAll(): Promise<Fetched> {
   return fetched;
 }
 
-/** Only the calendars Dan chose to see contribute events. */
+/** Only the calendars Dan chose to see contribute events (his latest choice wins over what was cached). */
 function toState(fetched: Fetched): CalendarState {
-  const visible = new Set(fetched.calendars.filter((calendar) => calendar.visible).map((calendar) => calendar.key));
+  const { visibility } = loadConfig();
+  const calendars = fetched.calendars.map((calendar) => ({ ...calendar, visible: visibility[calendar.key] ?? calendar.visible }));
+  const visible = new Set(calendars.filter((calendar) => calendar.visible).map((calendar) => calendar.key));
   return {
     kind: 'ready',
     accounts: fetched.accounts,
-    calendars: fetched.calendars,
+    calendars,
     events: fetched.events.filter((event) => visible.has(event.calendarKey)),
     fetchedAt: fetched.at,
     ...(fetched.error ? { error: fetched.error } : {}),
@@ -77,14 +77,34 @@ function toState(fetched: Fetched): CalendarState {
 async function currentState(force: boolean, setupError?: string): Promise<CalendarState> {
   const { client, accounts } = loadConfig();
   if (!client || accounts.length === 0) return { kind: 'setup', hasClient: client !== null, ...(setupError ? { error: setupError } : {}) };
-  if (force || !cache || Date.now() - cache.at > CACHE_MS) cache = await fetchAll();
+  if (force || !cache || Date.now() - cache.at > CACHE_MS) cache = await fetchAll(Date.now() - DAY_MS, Date.now() + CALENDAR_DAYS_AHEAD * DAY_MS);
   return toState(cache);
+}
+
+/** The calendar page asks for one week at a time; recent weeks are kept a few minutes so paging back and forth is instant. */
+const MAX_RANGE_MS = 62 * DAY_MS;
+const rangeCache = new Map<string, Fetched>();
+
+async function rangeState(from: unknown, to: unknown, force: boolean): Promise<CalendarState> {
+  if (typeof from !== 'number' || typeof to !== 'number' || !Number.isFinite(from) || to <= from || to - from > MAX_RANGE_MS) {
+    return currentState(false);
+  }
+  const { client, accounts } = loadConfig();
+  if (!client || accounts.length === 0) return { kind: 'setup', hasClient: client !== null };
+  const key = `${from}-${to}`;
+  const cached = rangeCache.get(key);
+  if (!force && cached && Date.now() - cached.at < CACHE_MS) return toState(cached);
+  const fetched = await fetchAll(from, to);
+  if (rangeCache.size > 20) rangeCache.clear();
+  rangeCache.set(key, fetched);
+  return toState(fetched);
 }
 
 const asText = (value: unknown, max = 500) => (typeof value === 'string' && value.trim().length > 0 && value.length <= max ? value.trim() : null);
 
 export function registerCalendar(): void {
   ipcMain.handle(IPC.calendarState, (_event, force: unknown) => currentState(force === true));
+  ipcMain.handle(IPC.calendarRange, (_event, from: unknown, to: unknown, force: unknown) => rangeState(from, to, force === true));
 
   ipcMain.handle(IPC.calendarSetClient, async (_event, id: unknown, secret: unknown) => {
     const clientId = asText(id);
@@ -110,6 +130,7 @@ export function registerCalendar(): void {
       if (!email) throw new GoogleError('Google did not say which account this is. Try again.');
       const others = config.accounts.filter((account) => account.email !== email);
       await saveConfig({ ...config, accounts: [...others, { email, refreshToken }] });
+      rangeCache.clear();
       return currentState(true);
     } catch (error) {
       const message = messageFor(error);
@@ -123,6 +144,7 @@ export function registerCalendar(): void {
     const config = loadConfig();
     const leaving = config.accounts.find((account) => account.email === email);
     if (leaving) forgetAccessToken(leaving.refreshToken);
+    rangeCache.clear();
     await saveConfig({ ...config, accounts: config.accounts.filter((account) => account !== leaving) }).catch((error: unknown) => logError('Could not save calendar settings', error));
     return currentState(true);
   });
@@ -139,13 +161,14 @@ export function registerCalendar(): void {
     const form = toNewEventInput(input);
     if (!form) return { ok: false, error: 'Fill in the event again.' };
     const config = loadConfig();
-    const calendar = cache?.calendars.find((item) => item.key === form.calendarKey);
+    const calendar = [cache, ...rangeCache.values()].flatMap((fetched) => fetched?.calendars ?? []).find((item) => item.key === form.calendarKey);
     const account = config.accounts.find((item) => item.email === calendar?.account);
     if (!config.client || !calendar || !account || !calendar.writable) return { ok: false, error: 'Pick a calendar you can add events to.' };
     const built = toGoogleEvent(form, Intl.DateTimeFormat().resolvedOptions().timeZone);
     if ('error' in built) return { ok: false, error: built.error };
     try {
       await insertEvent(await accessToken(config.client, account.refreshToken), calendar.key.slice(account.email.length + 1), built.body);
+      rangeCache.clear();
       return { ok: true, value: await currentState(true) };
     } catch (error) {
       return { ok: false, error: messageFor(error) };

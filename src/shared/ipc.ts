@@ -114,6 +114,8 @@ export interface VisionApi {
   calendar: {
     /** Upcoming events from every signed-in account; `force` skips the few-minute cache (refresh button). */
     state(force?: boolean): Promise<CalendarState>;
+    /** Events between two times (the calendar page's week), at most two months. */
+    range(from: number, to: number, force?: boolean): Promise<CalendarState>;
     /** Saves the Google Cloud client (Client ID and secret) VISION signs in with. */
     setClient(id: string, secret: string): Promise<CalendarState>;
     /** Opens Google's sign-in in the browser; adds the account (or signs it in again). */
@@ -182,6 +184,7 @@ export const IPC = {
   todosRemove: 'todos:remove',
   todosChanged: 'todos:changed',
   calendarState: 'calendar:state',
+  calendarRange: 'calendar:range',
   calendarSetClient: 'calendar:setClient',
   calendarSignIn: 'calendar:signIn',
   calendarCancelSignIn: 'calendar:cancelSignIn',

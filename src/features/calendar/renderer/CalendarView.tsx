@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ListFilter, MapPin, Plus, RotateCw } from 'lucide-react';
+import { CalendarRange, ListFilter, MapPin, Plus, RotateCw } from 'lucide-react';
 import type { CalendarState } from '../../../shared/calendar';
 import { useNow } from '../../../renderer/core/useNow';
 import { groupAgenda, soonLabel, timeRange } from './agenda';
 import { CalendarList } from './CalendarList';
+import { openCalendarPage } from './calendarTab';
 import { CalendarSetup } from './CalendarSetup';
 import { NewEventForm } from './NewEventForm';
 import './calendar.css';
@@ -105,6 +106,9 @@ export function CalendarView() {
         <div className="section-label">Calendar</div>
         {state?.kind === 'ready' && (
           <div className="flex items-center">
+            <button className="icon-button" title="Open calendar" aria-label="Open calendar" onClick={openCalendarPage}>
+              <CalendarRange size={15} strokeWidth={1.5} />
+            </button>
             <button className="icon-button" title="New event" aria-label="New event" aria-pressed={panel === 'new'} onClick={() => toggle('new')}>
               <Plus size={16} strokeWidth={1.5} />
             </button>
