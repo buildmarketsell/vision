@@ -14,9 +14,15 @@ function defaults(calendars: CalendarInfo[]): NewEventInput {
   return { calendarKey: primary?.key ?? '', title: '', location: '', date: localDate(start), allDay: false, startTime: localTime(start), endTime: end.getDate() === start.getDate() ? localTime(end) : '23:59' };
 }
 
-export function NewEventForm({ calendars, onSaved, onCancel }: { calendars: CalendarInfo[]; onSaved: (state: CalendarState) => void; onCancel: () => void }) {
+export function NewEventForm({ calendars, initial, onSaved, onCancel }: {
+  calendars: CalendarInfo[];
+  /** Date and times picked on the calendar page (a click on an empty slot). */
+  initial?: Partial<NewEventInput>;
+  onSaved: (state: CalendarState) => void;
+  onCancel: () => void;
+}) {
   const writable = calendars.filter((calendar) => calendar.writable);
-  const [form, setForm] = useState(() => defaults(writable));
+  const [form, setForm] = useState(() => ({ ...defaults(writable), ...initial }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const set = (change: Partial<NewEventInput>) => setForm({ ...form, ...change });

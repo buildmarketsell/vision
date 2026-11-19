@@ -1,4 +1,4 @@
-import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
+import { _electron as electron, type ElectronApplication, type Locator, type Page } from '@playwright/test';
 import { mkdtempSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -48,4 +48,14 @@ export async function launch(
   });
   const page = await app.firstWindow();
   return { app, page };
+}
+
+/** Calendar view → Client ID and secret → Sign in (against tests/e2e/fixtures/fake-google.ts). */
+export async function connectFakeGoogle(sidebar: Locator): Promise<void> {
+  await sidebar.getByRole('tab', { name: 'Calendar' }).click();
+  await sidebar.getByRole('textbox', { name: 'Client ID' }).fill('123-test.apps.googleusercontent.com');
+  await sidebar.getByRole('textbox', { name: 'Client secret' }).fill('test-secret');
+  await sidebar.getByRole('button', { name: 'Save' }).click();
+  await sidebar.getByRole('button', { name: 'Sign in with Google' }).click();
+  await sidebar.getByLabel('Upcoming events').waitFor();
 }
