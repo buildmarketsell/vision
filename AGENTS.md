@@ -49,7 +49,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Notion is the reference for every screen: flat gray sidebar, plain icons, soft gray hover and selection, colored tags (`--color-tag-*`), big bold page titles. Compare with a Notion screenshot before calling a screen done.
 - Sidebar view switcher: a row of plain icons, the open view on a soft gray square (`.view-row`), icons only so more views still fit. Replaced the orange gradient tray.
 - Claude header shows no "Ready": the pill appears only for Working, Needs you, Starting, Stopped (Dan: "that ready has absolutely no point").
-- No bar for connectors that need sign-in; Claude says so when one is needed (Dan, 2026-11-19). Browser, failed servers and usage limits still get bars (`chatBanners.ts`).
+- No bars about connectors (needs sign-in, failed to connect): Claude says so when it needs one (Dan asked twice on 2026-11-19; the unit test in `banners.test.ts` guards it). Only "Browser connected" and usage limits get bars (`chatBanners.ts`).
 - While Claude works, the chat shows Claude Code's line, not a card: a twinkling orange ✻, a playful verb and the seconds (`WorkingLine` in `LiveCards.tsx`). Dan: "i like it more the way its in claude code".
 
 ## To-do (`src/features/todo/`)
