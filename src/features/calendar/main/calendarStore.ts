@@ -1,105 +1,152 @@
-import { app, ipcMain } from 'electron';
-import { readFileSync } from 'node:fs';
-import { readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { CALENDAR_DAYS_AHEAD, cleanCalendarUrl, isCalendarUrl, type CalendarState } from '../../../shared/calendar';
-import { IPC } from '../../../shared/ipc';
+import { ipcMain } from 'electron';
+import { CALENDAR_DAYS_AHEAD, toGoogleEvent, toNewEventInput, type CalendarAccount, type CalendarEvent, type CalendarInfo, type CalendarState } from '../../../shared/calendar';
+import { IPC, type Result } from '../../../shared/ipc';
 import { logError } from '../../../main/log';
-import { eventsBetween } from './ics';
+import { loadConfig, saveConfig } from './calendarConfig';
+import { accessToken, forgetAccessToken, GoogleError, signIn, SignInExpiredError } from './googleAuth';
+import { accountEmail, insertEvent, listCalendars, listEvents, toCalendarEvent, toCalendarInfo } from './googleApi';
 
 const DAY_MS = 24 * 60 * 60_000;
 /** Fetched again at most this often; the view also asks every few minutes. */
-const CACHE_MS = 5 * 60_000;
-const FETCH_TIMEOUT_MS = 15_000;
-const MAX_ICS_BYTES = 10 * 1024 * 1024;
+const CACHE_MS = 3 * 60_000;
 
-/** The private link stays in the main process: it is a password to the calendar, so it never goes to the page or the logs. */
-let calendarUrl: string | null | undefined;
-let cache: { state: CalendarState; at: number } | null = null;
-
-function settingsPath(): string {
-  return join(app.getPath('userData'), 'calendar.json');
+interface Fetched {
+  accounts: CalendarAccount[];
+  calendars: CalendarInfo[];
+  events: CalendarEvent[];
+  error?: string;
+  at: number;
 }
 
-function savedUrl(): string | null {
-  if (calendarUrl !== undefined) return calendarUrl;
-  try {
-    const raw: unknown = JSON.parse(readFileSync(settingsPath(), 'utf8'));
-    const url = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>)['url'] : null;
-    calendarUrl = isCalendarUrl(url) ? url : null;
-  } catch {
-    calendarUrl = null;
-  }
-  return calendarUrl;
+let cache: Fetched | null = null;
+
+/** The message to show Dan; anything unexpected is logged (without tokens) and gets a general message. */
+function messageFor(error: unknown): string {
+  if (error instanceof GoogleError || error instanceof SignInExpiredError) return error.message;
+  if (error instanceof Error && error.name === 'TimeoutError') return 'Google took too long to answer. Check your internet.';
+  logError('Calendar request failed', error instanceof Error ? error.message : 'unknown');
+  return 'The calendar could not be read. Check your internet and try again.';
 }
 
-/** A problem Dan can act on; its message is shown as is. */
-class CalendarError extends Error {}
-
-async function download(url: string): Promise<string> {
-  // End-to-end tests read a fixture file instead of the internet (like VISION_CLAUDE_COMMAND fakes Claude).
-  const fixture = process.env['VISION_CALENDAR_FIXTURE'];
-  if (fixture) return readFile(fixture, 'utf8');
-  const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), redirect: 'follow' });
-  if (!response.ok) {
-    throw new CalendarError(response.status === 404 ? 'Google did not find that calendar. Copy the secret address again.' : `The calendar did not load (error ${response.status}).`);
-  }
-  const text = await response.text();
-  if (text.length > MAX_ICS_BYTES) throw new CalendarError('That calendar is too big to show.');
-  if (!text.includes('BEGIN:VCALENDAR')) throw new CalendarError('That link is not a calendar. Use the "Secret address in iCal format".');
-  return text;
+async function fetchAccount(account: { email: string; refreshToken: string }, from: number, to: number) {
+  const { client, visibility } = loadConfig();
+  if (!client) throw new GoogleError('Set up the Google client first.');
+  const token = await accessToken(client, account.refreshToken);
+  const calendars = (await listCalendars(token)).flatMap((entry) => toCalendarInfo(account.email, entry, visibility) ?? []);
+  const perCalendar = await Promise.all(
+    calendars.map(async (calendar) => {
+      const id = calendar.key.slice(account.email.length + 1);
+      return (await listEvents(token, id, from, to)).flatMap((entry) => toCalendarEvent(entry, calendar) ?? []);
+    }),
+  );
+  return { calendars, events: perCalendar.flat() };
 }
 
-async function readCalendar(url: string): Promise<CalendarState> {
-  try {
-    const now = Date.now();
-    const events = eventsBetween(await download(url), now - DAY_MS, now + CALENDAR_DAYS_AHEAD * DAY_MS);
-    return { kind: 'ready', events, fetchedAt: now };
-  } catch (error) {
-    if (error instanceof CalendarError) return { kind: 'error', message: error.message };
-    if (error instanceof Error && error.name === 'TimeoutError') return { kind: 'error', message: 'The calendar took too long to answer. Check your internet.' };
-    logError('Calendar read failed', error);
-    const message = 'The calendar could not be read. Check your internet, or copy the link again.';
-    return { kind: 'error', message };
-  }
+async function fetchAll(): Promise<Fetched> {
+  const now = Date.now();
+  const from = now - DAY_MS;
+  const to = now + CALENDAR_DAYS_AHEAD * DAY_MS;
+  const results = await Promise.allSettled(loadConfig().accounts.map((account) => fetchAccount(account, from, to)));
+  const fetched: Fetched = { accounts: [], calendars: [], events: [], at: now };
+  results.forEach((result, index) => {
+    const email = loadConfig().accounts[index]?.email ?? '';
+    const expired = result.status === 'rejected' && result.reason instanceof SignInExpiredError;
+    fetched.accounts.push({ email, needsSignIn: expired });
+    if (result.status === 'fulfilled') {
+      fetched.calendars.push(...result.value.calendars);
+      fetched.events.push(...result.value.events);
+    } else if (!expired) fetched.error = messageFor(result.reason);
+  });
+  fetched.events.sort((a, b) => a.start - b.start || Number(b.allDay) - Number(a.allDay));
+  return fetched;
 }
 
-async function upcoming(force: boolean): Promise<CalendarState> {
-  const url = savedUrl();
-  if (!url) return { kind: 'notConnected' };
-  if (!force && cache && Date.now() - cache.at < CACHE_MS) return cache.state;
-  const state = await readCalendar(url);
-  cache = { state, at: Date.now() };
-  return state;
+/** Only the calendars Dan chose to see contribute events. */
+function toState(fetched: Fetched): CalendarState {
+  const visible = new Set(fetched.calendars.filter((calendar) => calendar.visible).map((calendar) => calendar.key));
+  return {
+    kind: 'ready',
+    accounts: fetched.accounts,
+    calendars: fetched.calendars,
+    events: fetched.events.filter((event) => visible.has(event.calendarKey)),
+    fetchedAt: fetched.at,
+    ...(fetched.error ? { error: fetched.error } : {}),
+  };
 }
+
+async function currentState(force: boolean, setupError?: string): Promise<CalendarState> {
+  const { client, accounts } = loadConfig();
+  if (!client || accounts.length === 0) return { kind: 'setup', hasClient: client !== null, ...(setupError ? { error: setupError } : {}) };
+  if (force || !cache || Date.now() - cache.at > CACHE_MS) cache = await fetchAll();
+  return toState(cache);
+}
+
+const asText = (value: unknown, max = 500) => (typeof value === 'string' && value.trim().length > 0 && value.length <= max ? value.trim() : null);
 
 export function registerCalendar(): void {
-  ipcMain.handle(IPC.calendarUpcoming, (_event, force: unknown) => upcoming(force === true));
+  ipcMain.handle(IPC.calendarState, (_event, force: unknown) => currentState(force === true));
 
-  /** Checks the link works before saving it, so a wrong link shows an error instead of an empty calendar. */
-  ipcMain.handle(IPC.calendarConnect, async (_event, value: unknown): Promise<CalendarState> => {
-    if (typeof value !== 'string' || !isCalendarUrl(cleanCalendarUrl(value))) {
-      return { kind: 'error', message: 'Paste the full link, starting with https://' };
+  ipcMain.handle(IPC.calendarSetClient, async (_event, id: unknown, secret: unknown) => {
+    const clientId = asText(id);
+    const clientSecret = asText(secret);
+    if (!clientId?.endsWith('.apps.googleusercontent.com') || !clientSecret) {
+      return currentState(false, 'Paste the Client ID (it ends in .apps.googleusercontent.com) and the Client secret.');
     }
-    const url = cleanCalendarUrl(value);
-    const state = await readCalendar(url);
-    if (state.kind !== 'ready') return state;
     try {
-      await writeFile(`${settingsPath()}.tmp`, JSON.stringify({ url }), { encoding: 'utf8', mode: 0o600 });
-      await rename(`${settingsPath()}.tmp`, settingsPath());
+      await saveConfig({ ...loadConfig(), client: { id: clientId, secret: clientSecret } });
     } catch (error) {
-      logError('Could not save the calendar link', error);
-      return { kind: 'error', message: 'The calendar loaded but the link could not be saved. Try again.' };
+      return currentState(false, messageFor(error));
     }
-    calendarUrl = url;
-    cache = { state, at: Date.now() };
-    return state;
+    return currentState(false);
   });
 
-  ipcMain.handle(IPC.calendarDisconnect, async (): Promise<CalendarState> => {
-    calendarUrl = null;
-    cache = null;
-    await rm(settingsPath(), { force: true }).catch((error: unknown) => logError('Could not remove the calendar link', error));
-    return { kind: 'notConnected' };
+  /** Signs in an account (new, or again after Google dropped it) and remembers it. */
+  ipcMain.handle(IPC.calendarSignIn, async () => {
+    const config = loadConfig();
+    if (!config.client) return currentState(false, 'Set up the Google client first.');
+    try {
+      const refreshToken = await signIn(config.client);
+      const email = accountEmail(await listCalendars(await accessToken(config.client, refreshToken)));
+      if (!email) throw new GoogleError('Google did not say which account this is. Try again.');
+      const others = config.accounts.filter((account) => account.email !== email);
+      await saveConfig({ ...config, accounts: [...others, { email, refreshToken }] });
+      return currentState(true);
+    } catch (error) {
+      const message = messageFor(error);
+      return config.accounts.length > 0 ? { ...(await currentState(true)), error: message } : currentState(false, message);
+    }
+  });
+
+  ipcMain.handle(IPC.calendarSignOut, async (_event, email: unknown) => {
+    const config = loadConfig();
+    const leaving = config.accounts.find((account) => account.email === email);
+    if (leaving) forgetAccessToken(leaving.refreshToken);
+    await saveConfig({ ...config, accounts: config.accounts.filter((account) => account !== leaving) }).catch((error: unknown) => logError('Could not save calendar settings', error));
+    return currentState(true);
+  });
+
+  ipcMain.handle(IPC.calendarSetVisible, async (_event, key: unknown, visible: unknown) => {
+    if (typeof key !== 'string' || typeof visible !== 'boolean') return currentState(false);
+    const config = loadConfig();
+    await saveConfig({ ...config, visibility: { ...config.visibility, [key]: visible } }).catch((error: unknown) => logError('Could not save calendar settings', error));
+    if (cache) cache = { ...cache, calendars: cache.calendars.map((calendar) => (calendar.key === key ? { ...calendar, visible } : calendar)) };
+    return currentState(false);
+  });
+
+  ipcMain.handle(IPC.calendarCreateEvent, async (_event, input: unknown): Promise<Result<CalendarState>> => {
+    const form = toNewEventInput(input);
+    if (!form) return { ok: false, error: 'Fill in the event again.' };
+    const config = loadConfig();
+    const calendar = cache?.calendars.find((item) => item.key === form.calendarKey);
+    const account = config.accounts.find((item) => item.email === calendar?.account);
+    if (!config.client || !calendar || !account || !calendar.writable) return { ok: false, error: 'Pick a calendar you can add events to.' };
+    const built = toGoogleEvent(form, Intl.DateTimeFormat().resolvedOptions().timeZone);
+    if ('error' in built) return { ok: false, error: built.error };
+    try {
+      await insertEvent(await accessToken(config.client, account.refreshToken), calendar.key.slice(account.email.length + 1), built.body);
+      return { ok: true, value: await currentState(true) };
+    } catch (error) {
+      return { ok: false, error: messageFor(error) };
+    }
   });
 }

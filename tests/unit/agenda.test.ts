@@ -4,7 +4,7 @@ import type { CalendarEvent } from '../../src/shared/calendar';
 
 const HOUR = 60 * 60_000;
 const local = (day: number, hour: number) => new Date(2026, 10, day, hour).getTime();
-const event = (id: string, start: number, end: number, allDay = false): CalendarEvent => ({ id, title: id, location: null, allDay, start, end });
+const event = (id: string, start: number, end: number, allDay = false): CalendarEvent => ({ id, calendarKey: 'me|primary', title: id, location: null, allDay, start, end, color: '#7986cb' });
 
 describe('agenda', () => {
   const now = local(19, 11);

@@ -1,19 +1,22 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { CalendarDays, MapPin, MoreHorizontal, RotateCw, Unlink } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ListFilter, MapPin, Plus, RotateCw } from 'lucide-react';
 import type { CalendarState } from '../../../shared/calendar';
-import { ContextMenu } from '../../../renderer/components/ContextMenu';
 import { useNow } from '../../../renderer/core/useNow';
 import { groupAgenda, soonLabel, timeRange } from './agenda';
+import { CalendarList } from './CalendarList';
+import { CalendarSetup } from './CalendarSetup';
+import { NewEventForm } from './NewEventForm';
 import './calendar.css';
 
 const REFRESH_MS = 5 * 60_000;
+type Ready = Extract<CalendarState, { kind: 'ready' }>;
 
 function useCalendar() {
   const [state, setState] = useState<CalendarState | null>(null);
   const [busy, setBusy] = useState(false);
   const load = (action: Promise<CalendarState>) => {
     action
-      .then(setState, () => setState({ kind: 'error', message: 'The calendar could not be read. Try again.' }))
+      .then(setState, () => setState((current) => (current?.kind === 'ready' ? { ...current, error: 'The calendar could not be read. Try again.' } : { kind: 'setup', hasClient: false, error: 'The calendar could not be read. Try again.' })))
       .finally(() => setBusy(false));
   };
   /** For clicks: shows the button as busy until the answer comes. */
@@ -22,46 +25,14 @@ function useCalendar() {
     load(action);
   };
   useEffect(() => {
-    load(window.vision.calendar.upcoming());
-    const timer = setInterval(() => load(window.vision.calendar.upcoming()), REFRESH_MS);
+    load(window.vision.calendar.state());
+    const timer = setInterval(() => load(window.vision.calendar.state()), REFRESH_MS);
     return () => clearInterval(timer);
   }, []);
-  return { state, busy, run };
+  return { state, setState, busy, run };
 }
 
-function ConnectForm({ busy, error, onConnect }: { busy: boolean; error: string | null; onConnect: (url: string) => void }) {
-  const [url, setUrl] = useState('');
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (url.trim()) onConnect(url);
-  };
-  return (
-    <form className="calendar-connect" onSubmit={submit}>
-      <CalendarDays size={22} strokeWidth={1.5} className="text-(--color-text-muted)" aria-hidden />
-      <div className="font-medium">Connect your Google Calendar</div>
-      <ol className="calendar-steps">
-        <li>Open Google Calendar on the web, then Settings.</li>
-        <li>Click your calendar on the left, under "Settings for my calendars".</li>
-        <li>Copy "Secret address in iCal format" and paste it here.</li>
-      </ol>
-      <input
-        className="calendar-input"
-        type="url"
-        value={url}
-        placeholder="https://calendar.google.com/calendar/ical/…"
-        aria-label="Secret address in iCal format"
-        onChange={(event) => setUrl(event.target.value)}
-      />
-      {error && <div className="calendar-error" role="alert">{error}</div>}
-      <button type="submit" className="button-primary" disabled={busy || !url.trim()}>
-        {busy ? 'Checking…' : 'Connect'}
-      </button>
-      <p className="caption">The link stays on this Mac. VISION only reads it.</p>
-    </form>
-  );
-}
-
-function Agenda({ state, now }: { state: Extract<CalendarState, { kind: 'ready' }>; now: number }) {
+function Agenda({ state, now }: { state: Ready; now: number }) {
   const days = groupAgenda(state.events, now);
   if (days.length === 0) return <p className="calendar-empty">Nothing in the next two weeks.</p>;
   return (
@@ -76,7 +47,7 @@ function Agenda({ state, now }: { state: Extract<CalendarState, { kind: 'ready' 
             {day.events.map((event) => {
               const soon = soonLabel(event, now);
               return (
-                <li key={event.id} className="calendar-event" data-all-day={event.allDay} data-now={soon === 'Now'}>
+                <li key={event.id} className="calendar-event" data-all-day={event.allDay} data-now={soon === 'Now'} style={{ ['--event-color' as string]: event.color }}>
                   <div className="flex items-start gap-2">
                     <span className="min-w-0 flex-1 font-medium">{event.title}</span>
                     {soon && <span className="calendar-soon">{soon}</span>}
@@ -98,41 +69,66 @@ function Agenda({ state, now }: { state: Extract<CalendarState, { kind: 'ready' 
   );
 }
 
-/** Sidebar view: what's coming up in Dan's Google Calendar, day by day. */
+/** Sidebar view: what's coming up in Dan's Google calendars, day by day, and a quick way to add an event. */
 export function CalendarView() {
-  const { state, busy, run } = useCalendar();
+  const { state, setState, busy, run } = useCalendar();
   const now = useNow();
-  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
-  const connected = state !== null && state.kind !== 'notConnected';
+  const [panel, setPanel] = useState<'none' | 'new' | 'calendars'>('none');
+  const toggle = (next: 'new' | 'calendars') => setPanel(panel === next ? 'none' : next);
+  const signIn = () => run(window.vision.calendar.signIn());
+  /** The tick shows at once; the agenda follows when main answers (no network, it filters what it has). */
+  const toggleCalendar = (key: string, visible: boolean) => {
+    setState((current) => (current?.kind === 'ready' ? { ...current, calendars: current.calendars.map((item) => (item.key === key ? { ...item, visible } : item)) } : current));
+    void window.vision.calendar.setVisible(key, visible).then(setState, () => undefined);
+  };
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between pr-2">
         <div className="section-label">Calendar</div>
-        {connected && (
+        {state?.kind === 'ready' && (
           <div className="flex items-center">
-            <button className="icon-button" title="Refresh" aria-label="Refresh calendar" disabled={busy} onClick={() => run(window.vision.calendar.upcoming(true))}>
-              <RotateCw size={14} strokeWidth={1.5} className={busy ? 'calendar-spinning' : undefined} />
+            <button className="icon-button" title="New event" aria-label="New event" aria-pressed={panel === 'new'} onClick={() => toggle('new')}>
+              <Plus size={16} strokeWidth={1.5} />
             </button>
-            <button className="icon-button" title="More" aria-label="Calendar options" onClick={(event) => setMenu({ x: event.clientX, y: event.clientY })}>
-              <MoreHorizontal size={15} strokeWidth={1.5} />
+            <button className="icon-button" title="Calendars and accounts" aria-label="Calendars and accounts" aria-pressed={panel === 'calendars'} onClick={() => toggle('calendars')}>
+              <ListFilter size={15} strokeWidth={1.5} />
+            </button>
+            <button className="icon-button" title="Refresh" aria-label="Refresh calendar" disabled={busy} onClick={() => run(window.vision.calendar.state(true))}>
+              <RotateCw size={14} strokeWidth={1.5} className={busy ? 'calendar-spinning' : undefined} />
             </button>
           </div>
         )}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {state === null && <div className="spinner mx-auto mt-6" aria-label="Loading calendar" />}
-        {state?.kind === 'notConnected' && <ConnectForm busy={busy} error={null} onConnect={(url) => run(window.vision.calendar.connect(url))} />}
-        {state?.kind === 'error' && <ConnectForm busy={busy} error={state.message} onConnect={(url) => run(window.vision.calendar.connect(url))} />}
-        {state?.kind === 'ready' && <Agenda state={state} now={now} />}
+        {state?.kind === 'setup' && (
+          <CalendarSetup
+            key={String(state.hasClient)}
+            hasClient={state.hasClient}
+            busy={busy}
+            error={state.error}
+            onSaveClient={(id, secret) => run(window.vision.calendar.setClient(id, secret))}
+            onSignIn={signIn}
+          />
+        )}
+        {state?.kind === 'ready' && (
+          <>
+            {state.error && <div className="calendar-error mx-4 mb-2" role="alert">{state.error}</div>}
+            {panel === 'new' && (
+              <NewEventForm
+                calendars={state.calendars}
+                onCancel={() => setPanel('none')}
+                onSaved={(next) => {
+                  setState(next);
+                  setPanel('none');
+                }}
+              />
+            )}
+            {panel === 'calendars' && <CalendarList state={state} busy={busy} onChange={run} onToggle={toggleCalendar} onSignIn={signIn} />}
+            <Agenda state={state} now={now} />
+          </>
+        )}
       </div>
-      {menu && (
-        <ContextMenu
-          x={menu.x}
-          y={menu.y}
-          items={[{ label: 'Disconnect calendar', icon: <Unlink size={15} strokeWidth={1.5} />, danger: true, onSelect: () => run(window.vision.calendar.disconnect()) }]}
-          onClose={() => setMenu(null)}
-        />
-      )}
     </div>
   );
 }

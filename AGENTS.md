@@ -57,9 +57,12 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Sidebar view = checklist with two buttons that open the To-do page as a list or a board. The page has a List / Board switch, remembered in localStorage. Board: drag cards between columns; right-click a row or card to rename, move or delete; double-click to rename.
 
 ## Calendar (`src/features/calendar/`)
-- Read-only Google Calendar through its "Secret address in iCal format" (Dan chose this over a Google login, 2026-11-19). The link is a password: it stays in main (`userData/calendar.json`, mode 600), is never sent to the page or the logs, https only.
-- Main downloads and parses it with `ical.js` (repeats, moved occurrences, time zones), next 14 days, cached 5 minutes; the sidebar view shows an agenda by day with "in 25 min" / "Now". `VISION_CALENDAR_FIXTURE` makes the e2e test read a file instead of the internet.
-- One calendar link for now. More calendars = a list of links in `calendar.json`.
+- Google Calendar API with Google sign-in (Dan, 2026-11-19: "i want to be able to add events and also connect more calendars"; replaced the read-only iCal link). Dan's own Google Cloud project gives the Client ID/secret (Desktop app type), pasted once in the Calendar view.
+- Sign-in: browser + loopback redirect on 127.0.0.1 with PKCE (`googleAuth.ts`), scopes `calendar.readonly` + `calendar.events`. Any number of accounts; all their calendars appear, each in Google's color, show/hide per calendar (default follows Google's `selected`; missing means hidden).
+- Secrets: client secret and refresh tokens are encrypted with `safeStorage` (Keychain) in `userData/calendar.json` (mode 600), never sent to the page or logged (`calendarConfig.ts`).
+- Main fetches 14 days (`singleEvents=true`, Google expands repeats), cached 3 minutes; the view refreshes every 5. New events: `toGoogleEvent` in `src/shared/calendar.ts` validates the form; timed events use the Mac's time zone, all-day ends the next day (Google's rule).
+- If Google drops a sign-in (`invalid_grant`), that account shows "sign in again". Keep the Google Cloud app "In production": in Testing, Google expires sign-ins after 7 days.
+- Tests: `VISION_GOOGLE_TEST_BASE` points sign-in and the API at `tests/e2e/fixtures/fake-google.ts`, which also stands in for the browser.
 
 ## Claude sidebar view
 - Usage card on top, then Past chats: the folder's saved conversations, newest first (Dan, 2026-11-19: "usage box at the top and instead of open sessions i want past chats"). Open tabs are no longer listed there; the tab strip shows them. Clicking a past chat goes to its tab if open, else opens it in a new tab (`newClaudeSession(sessionId, title)`). `SessionsView.tsx`.

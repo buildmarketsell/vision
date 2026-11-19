@@ -1,7 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { startFakeGoogle } from './fixtures/fake-google';
 import { launch, makeFixture } from './helpers';
 
 test('to-do: add, tick off, open as a board, drag between columns, and keep it after a restart', async () => {
@@ -40,45 +38,45 @@ test('to-do: add, tick off, open as a board, drag between columns, and keep it a
   }
 });
 
-/** A calendar file with events relative to now, so the agenda always has a Today and a Tomorrow. */
-function calendarFixture(): string {
-  const stamp = (offsetHours: number) => {
-    const date = new Date(Date.now() + offsetHours * 60 * 60_000);
-    date.setMinutes(0, 0, 0);
-    return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  };
-  const ics = [
-    'BEGIN:VCALENDAR', 'VERSION:2.0',
-    'BEGIN:VEVENT', 'UID:a@test', `DTSTART:${stamp(2)}`, `DTEND:${stamp(3)}`, 'SUMMARY:Call with the garage', 'LOCATION:Technowagen', 'END:VEVENT',
-    'BEGIN:VEVENT', 'UID:b@test', `DTSTART:${stamp(26)}`, `DTEND:${stamp(27)}`, 'SUMMARY:Weekly Plan', 'RRULE:FREQ=WEEKLY;COUNT=3', 'END:VEVENT',
-    'END:VCALENDAR',
-  ].join('\r\n');
-  const path = join(mkdtempSync(join(tmpdir(), 'vision-calendar-')), 'basic.ics');
-  writeFileSync(path, ics);
-  return path;
-}
-
-test('calendar: asks for the private link, rejects a bad one, then shows what is coming up', async () => {
+test('calendar: set up Google, sign in, see events in their colors, hide a calendar, and add an event', async () => {
+  const google = await startFakeGoogle();
   const { userData } = makeFixture();
-  const { app, page } = await launch(userData, undefined, { VISION_CALENDAR_FIXTURE: calendarFixture() });
+  const { app, page } = await launch(userData, undefined, { VISION_GOOGLE_TEST_BASE: google.base });
   try {
     const sidebar = page.locator('aside');
     await sidebar.getByRole('tab', { name: 'Calendar' }).click();
-    const link = sidebar.getByRole('textbox', { name: 'Secret address in iCal format' });
-    await expect(link).toBeVisible();
-    await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-connect.png' });
+    await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-setup.png' });
+    await sidebar.getByRole('textbox', { name: 'Client ID' }).fill('not-a-client-id');
+    await sidebar.getByRole('textbox', { name: 'Client secret' }).fill('secret');
+    await sidebar.getByRole('button', { name: 'Save' }).click();
+    await expect(sidebar.getByRole('alert')).toContainText('ends in .apps.googleusercontent.com');
 
-    await link.fill('http://not-secure.example.com/basic.ics');
-    await sidebar.getByRole('button', { name: 'Connect' }).click();
-    await expect(sidebar.getByRole('alert')).toHaveText('Paste the full link, starting with https://');
-
-    await link.fill('https://calendar.google.com/calendar/ical/test/private-abc/basic.ics');
-    await sidebar.getByRole('button', { name: 'Connect' }).click();
+    await sidebar.getByRole('textbox', { name: 'Client ID' }).fill('123-test.apps.googleusercontent.com');
+    await sidebar.getByRole('textbox', { name: 'Client secret' }).fill('test-secret');
+    await sidebar.getByRole('button', { name: 'Save' }).click();
+    await sidebar.getByRole('button', { name: 'Sign in with Google' }).click();
     const agenda = sidebar.getByLabel('Upcoming events');
     await expect(agenda.getByText('Call with the garage')).toBeVisible();
-    await expect(agenda.getByText('Weekly Plan')).toHaveCount(2);
+    await expect(agenda.getByText("Mum's birthday")).toHaveCount(0);
+
+    await sidebar.getByRole('button', { name: 'Calendars and accounts' }).click();
+    await sidebar.getByRole('checkbox', { name: 'Family' }).check();
+    await expect(agenda.getByText("Mum's birthday")).toBeVisible();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-list.png' });
+    await sidebar.getByRole('button', { name: 'Calendars and accounts' }).click();
+
+    await sidebar.getByRole('button', { name: 'New event' }).click();
+    const form = sidebar.getByRole('form', { name: 'New event' });
+    await form.getByRole('textbox', { name: 'Event name' }).fill('Fit the new spiral');
+    await form.getByRole('checkbox', { name: 'All day' }).check();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-new-event.png' });
+    await form.getByRole('button', { name: 'Add event' }).click();
+    await expect(agenda.getByText('Fit the new spiral')).toBeVisible();
+    expect(google.created).toHaveLength(1);
+    expect(google.created[0]).toMatchObject({ summary: 'Fit the new spiral' });
     await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-agenda.png' });
   } finally {
     await app.close();
+    google.close();
   }
 });

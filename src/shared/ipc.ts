@@ -1,5 +1,5 @@
 /** Types shared by the main process, the preload bridge and the renderer. */
-import type { CalendarState } from './calendar';
+import type { CalendarState, NewEventInput } from './calendar';
 import type { InboxMessage } from './inbox';
 import type { TodoChange, TodoItem, TodoStatus } from './todos';
 import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions, ChatStartResult, PastConversation } from './claudeChat';
@@ -112,11 +112,15 @@ export interface VisionApi {
     onChange(callback: (todos: TodoItem[]) => void): Unsubscribe;
   };
   calendar: {
-    /** Upcoming events; `force` skips the few-minute cache (the refresh button). */
-    upcoming(force?: boolean): Promise<CalendarState>;
-    /** Checks the private iCal link, then saves it. */
-    connect(url: string): Promise<CalendarState>;
-    disconnect(): Promise<CalendarState>;
+    /** Upcoming events from every signed-in account; `force` skips the few-minute cache (refresh button). */
+    state(force?: boolean): Promise<CalendarState>;
+    /** Saves the Google Cloud client (Client ID and secret) VISION signs in with. */
+    setClient(id: string, secret: string): Promise<CalendarState>;
+    /** Opens Google's sign-in in the browser; adds the account (or signs it in again). */
+    signIn(): Promise<CalendarState>;
+    signOut(email: string): Promise<CalendarState>;
+    setVisible(calendarKey: string, visible: boolean): Promise<CalendarState>;
+    createEvent(input: NewEventInput): Promise<Result<CalendarState>>;
   };
   chat: {
     start(options: ChatStartOptions): Promise<ChatStartResult>;
@@ -175,7 +179,10 @@ export const IPC = {
   todosUpdate: 'todos:update',
   todosRemove: 'todos:remove',
   todosChanged: 'todos:changed',
-  calendarUpcoming: 'calendar:upcoming',
-  calendarConnect: 'calendar:connect',
-  calendarDisconnect: 'calendar:disconnect',
+  calendarState: 'calendar:state',
+  calendarSetClient: 'calendar:setClient',
+  calendarSignIn: 'calendar:signIn',
+  calendarSignOut: 'calendar:signOut',
+  calendarSetVisible: 'calendar:setVisible',
+  calendarCreateEvent: 'calendar:createEvent',
 } as const;
