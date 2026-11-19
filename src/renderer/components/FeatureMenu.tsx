@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { PanelLeft } from 'lucide-react';
 import type { SidebarView } from '../core/feature';
 import { allSidebarViews } from '../core/featureIndex';
@@ -55,21 +56,28 @@ export function FeatureMenu() {
           {views.filter((view) => view.pinBottom).map(row)}
         </div>
       </aside>
-      <button
-        className="icon-button panel-toggle no-drag"
-        data-side="left"
-        title={`${label} (⌘\\)`}
-        aria-label={label}
-        aria-expanded={!collapsed}
-        onClick={() => {
-          peek.hide();
-          useWorkspace.getState().toggleMenu();
-        }}
-        onPointerEnter={peek.show}
-        onPointerLeave={peek.hideSoon}
-      >
-        <PanelLeft size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
-      </button>
+      {/*
+        Last in the page: the window's drag areas are applied in page order, so a draggable top row that
+        comes later (a page's top bar) would swallow clicks on a button placed before it.
+      */}
+      {createPortal(
+        <button
+          className="icon-button panel-toggle no-drag"
+          data-side="left"
+          title={`${label} (⌘\\)`}
+          aria-label={label}
+          aria-expanded={!collapsed}
+          onClick={() => {
+            peek.hide();
+            useWorkspace.getState().toggleMenu();
+          }}
+          onPointerEnter={peek.show}
+          onPointerLeave={peek.hideSoon}
+        >
+          <PanelLeft size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
+        </button>,
+        document.body,
+      )}
     </>
   );
 }

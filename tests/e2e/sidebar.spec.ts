@@ -65,6 +65,30 @@ test('the menu sits left and the open feature on the right; each hides with its 
   }
 });
 
+test('the panel buttons come after every draggable area on every page, so the window never swallows their clicks', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    // Electron applies drag areas in page order: one placed after a button covers it in the real window (tests can't see that).
+    const buttonsLast = () =>
+      page.evaluate(() => {
+        const buttons = [...document.querySelectorAll('.panel-toggle')];
+        const draggable = [...document.querySelectorAll('*')].filter((element) => getComputedStyle(element).getPropertyValue('-webkit-app-region') === 'drag');
+        return buttons.length === 2 && draggable.every((area) => buttons.every((button) => area.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING));
+      });
+    for (const name of ['Workspace', 'To-do', 'Boards', 'Database', 'Calendar', 'Claude', 'Inbox', 'Settings']) {
+      await menu(page).getByRole('tab', { name }).click();
+      expect(await buttonsLast(), name).toBe(true);
+    }
+    await page.getByRole('button', { name: 'Hide menu' }).click();
+    expect(await buttonsLast()).toBe(true);
+    await page.getByRole('button', { name: 'Show menu' }).click();
+    await expect(menu(page).getByRole('tab', { name: 'Inbox' })).toBeVisible();
+  } finally {
+    await app.close();
+  }
+});
+
 test('Boards lists every board in the folder; the picked one fills the window; + makes a new one', async () => {
   const { folder, userData } = makeFixture();
   mkdirSync(join(folder, 'plans'));
