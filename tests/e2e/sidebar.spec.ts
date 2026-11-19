@@ -89,6 +89,23 @@ test('the panel buttons come after every draggable area on every page, so the wi
   }
 });
 
+test("Claude's message box still has room to type after VISION starts on a menu page", async () => {
+  const { userData } = makeFixture();
+  let { app, page } = await launch(userData);
+  try {
+    await menu(page).getByRole('tab', { name: 'Inbox' }).click();
+    await app.close();
+    ({ app, page } = await launch(userData));
+    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
+    const box = page.getByRole('textbox', { name: 'Message Claude' });
+    await expect.poll(async () => (await box.boundingBox())?.height ?? 0).toBeGreaterThan(12);
+    await box.fill('still works');
+    await expect(box).toHaveValue('still works');
+  } finally {
+    await app.close();
+  }
+});
+
 test('Boards lists every board in the folder; the picked one fills the window; + makes a new one', async () => {
   const { folder, userData } = makeFixture();
   mkdirSync(join(folder, 'plans'));

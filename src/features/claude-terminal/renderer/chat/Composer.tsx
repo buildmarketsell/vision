@@ -61,7 +61,8 @@ export function Composer({ draft, working, disabled, mode, info, model, effort, 
     const area = ref.current;
     if (!area) return;
     area.style.height = 'auto';
-    area.style.height = `${Math.min(area.scrollHeight, MAX_HEIGHT_PX)}px`;
+    // Hidden behind a menu page it measures 0; keep the natural one-line height instead of shrinking to nothing.
+    if (area.scrollHeight > 0) area.style.height = `${Math.min(area.scrollHeight, MAX_HEIGHT_PX)}px`;
   }, [draft.text]);
 
   const send = () => {
