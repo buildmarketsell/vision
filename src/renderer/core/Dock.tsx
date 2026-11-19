@@ -2,7 +2,8 @@ import { useMemo, type FunctionComponent } from 'react';
 import { DockviewReact, themeLight, type DockviewApi, type DockviewReadyEvent, type DockviewTheme, type IDockviewPanelProps } from 'dockview-react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import type { TabParams } from './feature';
-import { allTabTypes } from './featureIndex';
+import { allSidebarViews, allTabTypes } from './featureIndex';
+import { useActiveViewStore } from './activeView';
 import { openDefaultPanels, setDockApi } from './dockActions';
 import { PanelTab } from './PanelTab';
 
@@ -23,6 +24,14 @@ function withBoundary(name: string, Inner: PanelComponent): PanelComponent {
   );
   Wrapped.displayName = `Panel(${name})`;
   return Wrapped;
+}
+
+function showPanes(): void {
+  const views = allSidebarViews();
+  const { stored, select } = useActiveViewStore.getState();
+  if (!views.find((view) => view.id === stored)?.main) return;
+  const panesView = views.find((view) => !view.main);
+  if (panesView) select(panesView.id);
 }
 
 function restoreLayout(api: DockviewApi, saved: unknown): void {
@@ -69,6 +78,8 @@ export function Dock({ savedLayout, onLayoutChange }: DockProps) {
     restoreLayout(api, savedLayout);
     if (api.panels.length === 0) openDefaultPanels();
     markCornerGroup(api);
+    // A tab opened while a view covers the panes (⌘T in Notion mode) must not open out of sight.
+    api.onDidAddPanel(showPanes);
     api.onDidLayoutChange(() => {
       markCornerGroup(api);
       onLayoutChange(api.toJSON());

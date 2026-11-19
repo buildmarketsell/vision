@@ -69,6 +69,7 @@ export const catppuccinMocha: VisionTheme = {
     tagPinkText: '#F5C2E7',
     tagRed: 'rgba(243, 139, 168, 0.2)',
     tagRedText: '#F38BA8',
+    favoriteStar: '#F9E2AF',
     notionBlue: '#89B4FA',
     notionBlueHover: '#B4BEFE',
     columnGray: 'rgba(108, 112, 134, 0.12)',

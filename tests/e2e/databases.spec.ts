@@ -6,13 +6,13 @@ test('databases: create one, fill the table, tag, open a page, use the board, an
   let { app, page } = await launch(userData);
   try {
     const sidebar = page.locator('aside');
-    await sidebar.getByRole('tab', { name: 'Databases' }).click();
-    await sidebar.getByRole('button', { name: 'New database' }).first().click();
+    await sidebar.getByRole('tab', { name: 'Notion' }).click();
+    await sidebar.getByRole('button', { name: 'New database' }).click();
 
     const title = page.getByRole('textbox', { name: 'Database name' });
     await title.fill('Content ideas');
     await title.press('Enter');
-    await expect(sidebar.getByRole('button', { name: /Content ideas/ })).toBeVisible();
+    await expect(sidebar.getByRole('button', { name: 'Content ideas', exact: true })).toBeVisible();
 
     const table = page.getByRole('table', { name: 'Content ideas' });
     const rows = table.getByRole('row');
@@ -61,8 +61,8 @@ test('databases: create one, fill the table, tag, open a page, use the board, an
     await page.waitForTimeout(600);
     await app.close();
     ({ app, page } = await launch(userData));
-    await page.locator('aside').getByRole('tab', { name: 'Databases' }).click();
-    await page.locator('aside').getByRole('button', { name: /Content ideas/ }).click();
+    await page.locator('aside').getByRole('tab', { name: 'Notion' }).click();
+    await page.locator('aside').getByRole('button', { name: 'Content ideas', exact: true }).click();
     await page.getByRole('tab', { name: 'Table' }).click();
     await expect(page.getByRole('table', { name: 'Content ideas' }).locator('.db-tag')).toContainText(['In progress', 'Reels', 'Spain', 'Done', 'Not started']);
     await page.getByRole('table', { name: 'Content ideas' }).getByRole('row').nth(1).getByRole('button', { name: 'Open' }).click({ force: true });

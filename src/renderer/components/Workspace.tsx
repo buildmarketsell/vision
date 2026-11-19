@@ -3,6 +3,9 @@ import type { FolderLayout } from '../../shared/ipc';
 import { Dock } from '../core/Dock';
 import { useWorkspace } from '../core/workspaceStore';
 import { Sidebar, SidebarToggle } from './Sidebar';
+import { useActiveView } from './SidebarViews';
+import { ErrorBoundary } from './ErrorBoundary';
+import { allSidebarViews } from '../core/featureIndex';
 
 const SAVE_LAYOUT_DELAY_MS = 500;
 
@@ -57,14 +60,25 @@ export function Workspace({ layout }: { layout: FolderLayout | null }) {
   useWatchSync();
   const onLayoutChange = useLayoutSaver(layout?.dock ?? null);
   const collapsed = useWorkspace((state) => state.sidebarCollapsed);
+  const views = allSidebarViews();
+  const [activeView] = useActiveView(views);
+  const Takeover = views.find((view) => view.id === activeView)?.main;
 
   return (
     <div className="relative flex h-full">
       <Sidebar />
       <SidebarToggle />
-      <main className={`min-w-0 flex-1 ${collapsed ? 'sidebar-collapsed' : ''}`}>
+      {/* The panes stay mounted while a view takes over, so Claude chats and terminals keep running. */}
+      <main className={`min-w-0 flex-1 ${collapsed ? 'sidebar-collapsed' : ''}`} hidden={Boolean(Takeover)}>
         <Dock savedLayout={layout?.dock ?? null} onLayoutChange={onLayoutChange} />
       </main>
+      {Takeover && (
+        <main className={`min-w-0 flex-1 ${collapsed ? 'sidebar-collapsed' : ''}`}>
+          <ErrorBoundary name="Page">
+            <Takeover />
+          </ErrorBoundary>
+        </main>
+      )}
     </div>
   );
 }

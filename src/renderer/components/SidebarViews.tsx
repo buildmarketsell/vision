@@ -1,29 +1,11 @@
-import { useState } from 'react';
 import type { SidebarView } from '../core/feature';
 import { ErrorBoundary } from './ErrorBoundary';
-
-const ACTIVE_VIEW_KEY = 'vision.sidebarView';
-
-function readStoredView(): string | null {
-  try {
-    return localStorage.getItem(ACTIVE_VIEW_KEY);
-  } catch {
-    return null;
-  }
-}
+import { useActiveViewStore } from '../core/activeView';
 
 /** Which sidebar view shows, remembered across launches. Falls back to the first view. */
 export function useActiveView(views: SidebarView[]): [string, (id: string) => void] {
-  const [stored, setStored] = useState(readStoredView);
+  const { stored, select } = useActiveViewStore();
   const active = views.some((view) => view.id === stored) ? stored : views[0]?.id;
-  const select = (id: string) => {
-    setStored(id);
-    try {
-      localStorage.setItem(ACTIVE_VIEW_KEY, id);
-    } catch {
-      // Not remembering the view is fine; it still switches.
-    }
-  };
   return [active ?? '', select];
 }
 
