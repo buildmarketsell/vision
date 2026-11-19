@@ -27,7 +27,7 @@ export function useActiveView(views: SidebarView[]): [string, (id: string) => vo
   return [active ?? '', select];
 }
 
-/** Notion-style row: the open view shows its icon and name, the others just an icon. */
+/** Notion-style row of plain icons; the open view sits on a soft gray square. Icons only, so more views still fit. */
 export function ViewSwitcher({ views, active, onSelect }: { views: SidebarView[]; active: string; onSelect: (id: string) => void }) {
   return (
     <div role="tablist" aria-label="Sidebar views" className="view-row">
@@ -44,7 +44,6 @@ export function ViewSwitcher({ views, active, onSelect }: { views: SidebarView[]
           onClick={() => onSelect(view.id)}
         >
           {view.icon}
-          {view.id === active && <span className="view-tab-label">{view.title}</span>}
         </button>
       ))}
     </div>

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useNow } from '../../../../renderer/core/useNow';
 import { Check, ChevronRight, Circle } from 'lucide-react';
 import type { Todo } from './chatTypes';
 
@@ -8,20 +9,11 @@ const WORKING_VERBS = [
   'Discombobulating', 'Conjuring', 'Untangling', 'Simmering', 'Puzzling', 'Crafting', 'Wrangling', 'Musing',
 ];
 
-function useElapsedSeconds(): number {
-  const [startedAt] = useState(Date.now);
-  const [now, setNow] = useState(startedAt);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-  return Math.floor((now - startedAt) / 1000);
-}
-
 /** Claude Code's working line: a twinkling orange star, a verb and how long it has been going. */
 export function WorkingLine() {
   const [verb] = useState(() => WORKING_VERBS[Math.floor(Math.random() * WORKING_VERBS.length)] ?? 'Thinking');
-  const seconds = useElapsedSeconds();
+  const [startedAt] = useState(Date.now);
+  const seconds = Math.floor((useNow(1000) - startedAt) / 1000);
   return (
     <div className="working-line enter" role="status" aria-live="polite">
       <span className="working-star" aria-hidden />

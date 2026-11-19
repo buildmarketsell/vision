@@ -45,23 +45,26 @@ function targetGroupForFiles(api: DockviewApi): DockviewGroupPanel | undefined {
   return api.groups.find(groupIsForFiles);
 }
 
-export function openFile(path: string): void {
+/** Opens a tab where files open (focusing it if it is already open): the files' pane, or left of Claude. */
+export function openPageTab(id: string, tabType: string, title: string, params: TabParams = {}): void {
   const api = dockApi;
-  const tabType = tabTypeForFile(path);
-  if (!api || !tabType) return;
-  const id = fileTabId(path);
+  if (!api) return;
   const existing = api.getPanel(id);
   if (existing) {
     existing.api.setActive();
     return;
   }
-  const params: TabParams = { path };
   const group = targetGroupForFiles(api);
   const sidePanel = api.panels.find(keepsOwnGroup);
-  const base = { id, component: tabType, title: baseName(path), params, renderer: 'always' as const };
+  const base = { id, component: tabType, title, params, renderer: 'always' as const };
   if (group) api.addPanel({ ...base, position: { referenceGroup: group } });
   else if (sidePanel) api.addPanel({ ...base, position: { referencePanel: sidePanel, direction: 'left' } });
   else api.addPanel(base);
+}
+
+export function openFile(path: string): void {
+  const tabType = tabTypeForFile(path);
+  if (tabType) openPageTab(fileTabId(path), tabType, baseName(path), { path });
 }
 
 /**

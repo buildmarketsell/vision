@@ -45,6 +45,22 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Top row is 36px like Notion's tab bar (Dan, 2026-11-19: "la barra de arriba más pequeñita como en notion"); `titleBarHeight` in `theme.ts`, traffic lights at y 12 in `windows.ts`. Change both together.
 - Sidebar button (`SidebarToggle` in `Sidebar.tsx`) sits right of the traffic lights and never moves; ⌘\\ does the same. Hidden state is saved per folder (`sidebarCollapsed` in the layout). When hidden, the top-left pane's tab strip (`.dock-corner`, measured in `Dock.tsx`) leaves `--title-bar-inset` (112px) free for the lights and the button.
 
+## Look (Dan, 2026-11-19: "look at how beautiful notion is... i want our app to be that beautiful")
+- Notion is the reference for every screen: flat gray sidebar, plain icons, soft gray hover and selection, colored tags (`--color-tag-*`), big bold page titles. Compare with a Notion screenshot before calling a screen done.
+- Sidebar view switcher: a row of plain icons, the open view on a soft gray square (`.view-row`), icons only so more views still fit. Replaced the orange gradient tray.
+- Claude header shows no "Ready": the pill appears only for Working, Needs you, Starting, Stopped (Dan: "that ready has absolutely no point").
+- No bar for connectors that need sign-in; Claude says so when one is needed (Dan, 2026-11-19). Browser, failed servers and usage limits still get bars (`chatBanners.ts`).
+- While Claude works, the chat shows Claude Code's line, not a card: a twinkling orange ✻, a playful verb and the seconds (`WorkingLine` in `LiveCards.tsx`). Dan: "i like it more the way its in claude code".
+
+## To-do (`src/features/todo/`)
+- Saved on this Mac in `userData/todos.json` (Dan chose this over syncing Notion Tasks, 2026-11-19), app-wide, through `src/main/jsonListStore.ts` (shared with the Inbox). Statuses To do / In progress / Done (`src/shared/todos.ts`).
+- Sidebar view = checklist with two buttons that open the To-do page as a list or a board. The page has a List / Board switch, remembered in localStorage. Board: drag cards between columns; right-click a row or card to rename, move or delete; double-click to rename.
+
+## Calendar (`src/features/calendar/`)
+- Read-only Google Calendar through its "Secret address in iCal format" (Dan chose this over a Google login, 2026-11-19). The link is a password: it stays in main (`userData/calendar.json`, mode 600), is never sent to the page or the logs, https only.
+- Main downloads and parses it with `ical.js` (repeats, moved occurrences, time zones), next 14 days, cached 5 minutes; the sidebar view shows an agenda by day with "in 25 min" / "Now". `VISION_CALENDAR_FIXTURE` makes the e2e test read a file instead of the internet.
+- One calendar link for now. More calendars = a list of links in `calendar.json`.
+
 ## Claude sidebar view
 - Usage card on top, then Past chats: the folder's saved conversations, newest first (Dan, 2026-11-19: "usage box at the top and instead of open sessions i want past chats"). Open tabs are no longer listed there; the tab strip shows them. Clicking a past chat goes to its tab if open, else opens it in a new tab (`newClaudeSession(sessionId, title)`). `SessionsView.tsx`.
 
@@ -67,7 +83,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - `src/features/settings/`: the sidebar view for settings, and where Dan will add his other app features (Dan, 2026-11-17). Each new setting or feature gets its own section in `SettingsView.tsx`; state shared with another feature goes in `src/renderer/core`.
 
 ## Terminal light / dark
-- Sun/moon button in the Claude panel header (Terminal view) switches every terminal; remembered in localStorage (`src/renderer/core/terminalTheme.ts`, shared because Settings sets it too). It sets `body[data-terminal-theme]`, which overrides the `--color-terminal-*` variables (terminal.css), so the chat's working card follows too.
+- Sun/moon button in the Claude panel header (Terminal view) switches every terminal; remembered in localStorage (`src/renderer/core/terminalTheme.ts`, shared because Settings sets it too). It sets `body[data-terminal-theme]`, which overrides the `--color-terminal-*` variables (terminal.css), so terminal-colored parts of the chat follow too.
 - Claude Code's own colors follow on their own: with its theme on `auto` it asks the terminal for its background (OSC 11) at start, and xterm.js answers with the current one. Checked 2026-11-17 in Claude's debug log (`detected=light`). A terminal already open keeps Claude's colors until Restart.
 
 ## Images in Markdown

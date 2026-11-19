@@ -1,5 +1,7 @@
 /** Types shared by the main process, the preload bridge and the renderer. */
+import type { CalendarState } from './calendar';
 import type { InboxMessage } from './inbox';
+import type { TodoChange, TodoItem, TodoStatus } from './todos';
 import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions, ChatStartResult, PastConversation } from './claudeChat';
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -100,6 +102,22 @@ export interface VisionApi {
     /** Fires in every window when any window changes the inbox. */
     onChange(callback: (messages: InboxMessage[]) => void): Unsubscribe;
   };
+  todos: {
+    list(): Promise<TodoItem[]>;
+    /** Each returns the whole list after the change. */
+    add(text: string, status?: TodoStatus): Promise<TodoItem[]>;
+    update(id: string, change: TodoChange): Promise<TodoItem[]>;
+    remove(id: string): Promise<TodoItem[]>;
+    /** Fires in every window when any window changes the list. */
+    onChange(callback: (todos: TodoItem[]) => void): Unsubscribe;
+  };
+  calendar: {
+    /** Upcoming events; `force` skips the few-minute cache (the refresh button). */
+    upcoming(force?: boolean): Promise<CalendarState>;
+    /** Checks the private iCal link, then saves it. */
+    connect(url: string): Promise<CalendarState>;
+    disconnect(): Promise<CalendarState>;
+  };
   chat: {
     start(options: ChatStartOptions): Promise<ChatStartResult>;
     send(id: number, message: ChatOutgoing): void;
@@ -152,4 +170,12 @@ export const IPC = {
   inboxSetDone: 'inbox:setDone',
   inboxRemove: 'inbox:remove',
   inboxChanged: 'inbox:changed',
+  todosList: 'todos:list',
+  todosAdd: 'todos:add',
+  todosUpdate: 'todos:update',
+  todosRemove: 'todos:remove',
+  todosChanged: 'todos:changed',
+  calendarUpcoming: 'calendar:upcoming',
+  calendarConnect: 'calendar:connect',
+  calendarDisconnect: 'calendar:disconnect',
 } as const;

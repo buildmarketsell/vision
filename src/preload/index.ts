@@ -47,6 +47,18 @@ const api: VisionApi = {
     remove: (id) => ipcRenderer.invoke(IPC.inboxRemove, id),
     onChange: (callback) => subscribe(IPC.inboxChanged, callback),
   },
+  todos: {
+    list: () => ipcRenderer.invoke(IPC.todosList),
+    add: (text, status) => ipcRenderer.invoke(IPC.todosAdd, text, status),
+    update: (id, change) => ipcRenderer.invoke(IPC.todosUpdate, id, change),
+    remove: (id) => ipcRenderer.invoke(IPC.todosRemove, id),
+    onChange: (callback) => subscribe(IPC.todosChanged, callback),
+  },
+  calendar: {
+    upcoming: (force) => ipcRenderer.invoke(IPC.calendarUpcoming, force === true),
+    connect: (url) => ipcRenderer.invoke(IPC.calendarConnect, url),
+    disconnect: () => ipcRenderer.invoke(IPC.calendarDisconnect),
+  },
   chat: {
     start: (options) => ipcRenderer.invoke(IPC.chatStart, options),
     send: (id, message) => ipcRenderer.send(IPC.chatSend, id, message),

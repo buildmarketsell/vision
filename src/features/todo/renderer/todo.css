@@ -1,0 +1,277 @@
+/* To-do: Notion-style checklist, status tags and a kanban board. */
+
+.todo-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: var(--size-small);
+  white-space: nowrap;
+  background: var(--color-tag-gray);
+  color: var(--color-tag-gray-text);
+}
+
+.todo-tag[data-status='doing'] {
+  background: var(--color-tag-blue);
+  color: var(--color-tag-blue-text);
+}
+
+.todo-tag[data-status='done'] {
+  background: var(--color-tag-green);
+  color: var(--color-tag-green-text);
+}
+
+.todo-count {
+  font-size: var(--size-small);
+  color: var(--color-text-faint);
+}
+
+.todo-add,
+.todo-edit {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-row);
+  background: transparent;
+  font: inherit;
+  color: var(--color-text);
+  outline: none;
+}
+
+.todo-add::placeholder {
+  color: var(--color-text-faint);
+}
+
+.todo-add:hover,
+.todo-add:focus {
+  background: var(--color-row-hover);
+}
+
+.todo-edit {
+  height: 24px;
+  padding: 0 4px;
+  background: var(--color-card);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.todo-sidebar .todo-list {
+  padding: 0 var(--space-2) var(--space-3);
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 30px;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-row);
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.todo-row:hover {
+  background: var(--color-row-hover);
+}
+
+.todo-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.todo-row[data-done='true'] .todo-text {
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}
+
+/* Notion's checkbox: a soft square that fills with the accent when ticked. */
+.todo-check {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1.5px var(--color-text-faint);
+  color: var(--color-on-accent);
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.todo-check:hover {
+  background: var(--color-row-hover);
+}
+
+.todo-check[aria-checked='true'] {
+  background: var(--color-accent);
+  box-shadow: none;
+}
+
+.todo-check:active {
+  transform: scale(0.9);
+  transition-duration: 0ms;
+}
+
+.todo-empty {
+  padding: var(--space-2);
+  font-size: var(--size-small);
+  color: var(--color-text-faint);
+}
+
+.todo-done-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  margin-top: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-row);
+  font-size: var(--size-small);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.todo-done-toggle:hover {
+  background: var(--color-row-hover);
+}
+
+.todo-error {
+  margin: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: var(--size-small);
+}
+
+/* The page: a Notion-like title over a centered column (list) or the full width (board). */
+.todo-page {
+  height: 100%;
+  overflow: auto;
+  background: var(--color-card);
+}
+
+.todo-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-12) var(--space-6) var(--space-4);
+}
+
+.todo-page-head[data-layout='board'] {
+  max-width: none;
+  margin: 0;
+  padding-left: var(--space-6);
+}
+
+.todo-page-icon {
+  color: var(--color-text-muted);
+}
+
+.todo-page-title {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.todo-page-body {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 var(--space-6) var(--space-12);
+}
+
+.todo-board {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-6) var(--space-12);
+}
+
+.todo-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 320px;
+  padding: var(--space-2);
+  border-radius: 10px;
+  background: var(--color-column-gray);
+  transition: box-shadow var(--duration-fast) var(--ease);
+}
+
+.todo-column[data-status='doing'] {
+  background: var(--color-column-blue);
+}
+
+.todo-column[data-status='done'] {
+  background: var(--color-column-green);
+}
+
+.todo-column[data-over='true'] {
+  box-shadow: inset 0 0 0 2px var(--color-accent-soft);
+}
+
+.todo-column-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px 2px 0;
+}
+
+.todo-card {
+  padding: 10px var(--space-3);
+  border-radius: 8px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+  cursor: grab;
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.todo-card:hover {
+  background: var(--color-pill-hover);
+}
+
+.todo-card:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.todo-card:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+}
+
+.todo-column[data-status='done'] .todo-text {
+  color: var(--color-text-muted);
+}
+
+.todo-new {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-row);
+  color: var(--color-text-faint);
+}
+
+.todo-new:hover {
+  background: var(--color-row-hover);
+  color: var(--color-text-muted);
+}

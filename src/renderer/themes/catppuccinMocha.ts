@@ -51,6 +51,15 @@ export const catppuccinMocha: VisionTheme = {
     inboxSend: '#A6E3A1',
     inboxSendHover: '#94E2D5',
     inboxAvatar: '#45475A',
+    tagGray: 'rgba(108, 112, 134, 0.35)',
+    tagGrayText: '#CDD6F4',
+    tagBlue: 'rgba(137, 180, 250, 0.2)',
+    tagBlueText: '#89B4FA',
+    tagGreen: 'rgba(166, 227, 161, 0.2)',
+    tagGreenText: '#A6E3A1',
+    columnGray: 'rgba(108, 112, 134, 0.12)',
+    columnBlue: 'rgba(137, 180, 250, 0.06)',
+    columnGreen: 'rgba(166, 227, 161, 0.06)',
     // The rainbow of the Catppuccin logo.
   },
   // On a dark page shadows barely show: a faint light ring keeps cards and menus apart from the page.

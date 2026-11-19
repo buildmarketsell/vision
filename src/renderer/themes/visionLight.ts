@@ -49,6 +49,16 @@ export const visionLightColors = {
   inboxSend: '#00A884',
   inboxSendHover: '#008F72',
   inboxAvatar: '#DFE5E7',
+  /** To-do status tags and board columns: Notion's gray, blue and green. */
+  tagGray: 'rgba(227, 226, 224, 0.6)',
+  tagGrayText: '#32302C',
+  tagBlue: '#D3E5EF',
+  tagBlueText: '#183347',
+  tagGreen: '#DBEDDB',
+  tagGreenText: '#1C3829',
+  columnGray: 'rgba(227, 226, 224, 0.22)',
+  columnBlue: 'rgba(211, 229, 239, 0.32)',
+  columnGreen: 'rgba(219, 237, 219, 0.32)',
 };
 
 export const visionLight: VisionTheme = {

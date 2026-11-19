@@ -1,0 +1,126 @@
+/* Calendar: an agenda of upcoming events, like Notion Calendar's side list. */
+
+.calendar-agenda {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 0 var(--space-2) var(--space-4);
+}
+
+.calendar-day {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 0 var(--space-2) var(--space-1);
+  font-size: var(--size-base);
+  font-weight: 600;
+}
+
+.calendar-date {
+  font-size: var(--size-small);
+  font-weight: 400;
+  color: var(--color-text-faint);
+}
+
+/* Each event has a colored bar on the left, like a block in a calendar. */
+.calendar-event {
+  position: relative;
+  padding: 6px var(--space-2) 6px var(--space-4);
+  border-radius: var(--radius-row);
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.calendar-event::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: var(--space-2);
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-accent);
+}
+
+.calendar-event[data-all-day='true']::before {
+  background: var(--color-tag-blue-text);
+  opacity: 0.6;
+}
+
+.calendar-event:hover {
+  background: var(--color-row-hover);
+}
+
+.calendar-event[data-now='true'] {
+  background: var(--color-accent-soft);
+}
+
+.calendar-meta {
+  font-size: var(--size-small);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.calendar-soon {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: var(--size-small);
+  font-weight: 500;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+}
+
+.calendar-empty {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--size-small);
+  color: var(--color-text-faint);
+}
+
+.calendar-connect {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0 var(--space-3) var(--space-3);
+  padding: var(--space-4);
+  border-radius: 12px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+}
+
+.calendar-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-4);
+  list-style: decimal;
+  font-size: var(--size-small);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.calendar-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-row);
+  border: 1px solid var(--color-composer-border);
+  background: var(--color-card);
+  font: inherit;
+  font-size: var(--size-small);
+  color: var(--color-text);
+  outline: none;
+}
+
+.calendar-input:focus {
+  border-color: var(--color-composer-border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.calendar-error {
+  font-size: var(--size-small);
+  color: var(--color-danger);
+}
+
+.calendar-spinning {
+  animation: spin 0.8s linear infinite;
+}
