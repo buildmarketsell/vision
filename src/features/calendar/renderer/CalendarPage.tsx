@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Plus, RotateCw } from 'lucide-react';
 import type { CalendarState, NewEventInput } from '../../../shared/calendar';
 import { NewEventForm } from './NewEventForm';
-import { WeekGrid, type SlotPick } from './WeekGrid';
-import { addDays, DAYS_IN_WEEK, startOfWeek, weekDays, weekTitle } from './weekLayout';
+import { WeekGrid, type SlotPick, type TimeSlot } from './WeekGrid';
+import { addDays, clockTime, DAYS_IN_WEEK, startOfWeek, weekDays, weekTitle } from './weekLayout';
 import './calendar.css';
 import './calendar-page.css';
 
@@ -40,21 +40,21 @@ function useWeek(weekStart: number) {
   };
 }
 
-type Draft = { initial: Partial<NewEventInput>; left: number; top: number };
+type Draft = { initial: Partial<NewEventInput>; left: number; top: number; slot: TimeSlot | null };
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
 function draftFromPick(pick: SlotPick): Draft {
   const date = new Date(pick.dayStart);
-  const end = Math.min(pick.minutes + 60, 23 * 60 + 59);
   return {
     initial: {
       date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
-      startTime: `${pad(Math.floor(pick.minutes / 60))}:${pad(pick.minutes % 60)}`,
-      endTime: `${pad(Math.floor(end / 60))}:${pad(end % 60)}`,
+      startTime: clockTime(pick.start),
+      endTime: clockTime(pick.end),
     },
-    left: Math.max(8, Math.min(pick.x + 8, window.innerWidth - POPOVER.width - 8)),
+    left: Math.max(8, Math.min(pick.x + 12, window.innerWidth - POPOVER.width - 8)),
     top: Math.max(8, Math.min(pick.y - 40, window.innerHeight - POPOVER.height - 8)),
+    slot: { dayStart: pick.dayStart, start: pick.start, end: pick.end },
   };
 }
 
@@ -66,12 +66,7 @@ export function CalendarPage() {
   const ready = state?.kind === 'ready' ? state : null;
   const canAdd = ready?.calendars.some((calendar) => calendar.writable) ?? false;
 
-  const openNew = () =>
-    setDraft({
-      initial: {},
-      left: Math.max(8, window.innerWidth - POPOVER.width - 24),
-      top: 64,
-    });
+  const openNew = () => setDraft({ initial: {}, left: Math.max(8, window.innerWidth - POPOVER.width - 24), top: 64, slot: null });
 
   return (
     <div className="calendar-page">
@@ -108,7 +103,7 @@ export function CalendarPage() {
         </div>
       )}
       {state?.kind === 'setup' && <p className="calendar-empty px-6">Connect Google Calendar in the Calendar view of the sidebar first.</p>}
-      <WeekGrid days={weekDays(weekStart)} events={ready?.events ?? []} onPick={(pick) => canAdd && setDraft(draftFromPick(pick))} />
+      <WeekGrid days={weekDays(weekStart)} events={ready?.events ?? []} pending={draft?.slot ?? null} onPick={(pick) => canAdd && setDraft(draftFromPick(pick))} />
       {draft &&
         ready &&
         // On the body: the dock's panes clip anything fixed-positioned inside them.
