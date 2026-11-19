@@ -8,6 +8,7 @@ import { flushAppState, loadAppState } from './stateStore';
 import { createWindow, restoreSession, setQuitting } from './windows';
 import { registerFsHandlers } from './workspace/fsHandlers';
 import { registerImageProtocol, registerImageScheme } from './workspace/imageProtocol';
+import { registerPreviewProtocol } from './workspace/previewProtocol';
 import { killAllClaudeSessions } from '../features/claude-terminal/main/ptyHandlers';
 import { stopAllChats } from '../features/claude-terminal/main/chatProcess';
 
@@ -29,6 +30,7 @@ app.whenReady().then(() => {
   registerAppHandlers();
   registerFsHandlers();
   registerImageProtocol();
+  registerPreviewProtocol();
   for (const registerFeature of mainFeatures) registerFeature();
   buildAppMenu();
   restoreSession();

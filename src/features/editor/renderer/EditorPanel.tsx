@@ -1,10 +1,12 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import type { IDockviewPanelProps } from 'dockview-react';
-import { ChevronRight, Code, Eye } from 'lucide-react';
+import { ChevronRight, Code, Eye, RotateCw } from 'lucide-react';
+import { isHtmlFile } from '../../../shared/htmlPreview';
 import { Markdown } from '../../../renderer/components/Markdown';
 import type { TabParams } from '../../../renderer/core/feature';
 import { relativeParts, useWorkspace, baseName, parentPath } from '../../../renderer/core/workspaceStore';
 import { reloadFromDisk, useEditor, type Buffer } from './editorStore';
+import { HtmlPreview } from './HtmlPreview';
 
 const MonacoEditor = lazy(async () => {
   await import('./monacoSetup');
@@ -17,15 +19,15 @@ function isMarkdown(path: string): boolean {
   return /\.(md|markdown)$/i.test(path);
 }
 
-/** Preview / Edit switch shown on .md tabs. */
-function ViewSwitch({ view, onChange }: { view: View; onChange: (view: View) => void }) {
+/** Preview / Edit switch on .md tabs, Preview / Code on .html tabs. */
+function ViewSwitch({ view, onChange, editLabel }: { view: View; onChange: (view: View) => void; editLabel: string }) {
   return (
-    <div className="view-switch ml-auto shrink-0" role="group" aria-label="Markdown view">
+    <div className="view-switch shrink-0" role="group" aria-label="View">
       <button aria-pressed={view === 'preview'} onClick={() => onChange('preview')}>
         <Eye size={12} strokeWidth={1.75} /> Preview
       </button>
       <button aria-pressed={view === 'edit'} onClick={() => onChange('edit')}>
-        <Code size={12} strokeWidth={1.75} /> Edit
+        <Code size={12} strokeWidth={1.75} /> {editLabel}
       </button>
     </div>
   );
@@ -96,7 +98,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function EditorBody({ path, buffer, view }: { path: string; buffer: Buffer | undefined; view: View }) {
+function EditorBody({ path, buffer, view, reloadToken }: { path: string; buffer: Buffer | undefined; view: View; reloadToken: number }) {
   if (!buffer || buffer.status === 'loading') return <Message title="Opening…" action={<div className="spinner" />} />;
   if (buffer.status === 'binary') return <Message title="This file can't be shown as text." detail="Images, PDFs and other file types get their own viewers in a later version." />;
   if (buffer.status === 'tooLarge') return <Message title={`This file is too large to edit (${formatSize(buffer.sizeBytes)}).`} detail="Files up to 5 MB open in the editor." />;
@@ -112,7 +114,12 @@ function EditorBody({ path, buffer, view }: { path: string; buffer: Buffer | und
   return (
     <div className="flex h-full flex-col">
       <DiskBanners path={path} buffer={buffer} />
-      {view === 'preview' && (
+      {view === 'preview' && isHtmlFile(path) && (
+        <div className="min-h-0 flex-1">
+          <HtmlPreview path={path} saved={buffer.saved} reloadToken={reloadToken} />
+        </div>
+      )}
+      {view === 'preview' && !isHtmlFile(path) && (
         <div className="reading-surface min-h-0 flex-1 overflow-y-auto">
           <Markdown text={buffer.current} className="markdown-document" baseDir={parentPath(path)} />
         </div>
@@ -126,12 +133,14 @@ function EditorBody({ path, buffer, view }: { path: string; buffer: Buffer | und
   );
 }
 
-/** A file tab: breadcrumbs on top, the editor below. Markdown files open in Preview, with a switch to Edit. */
+/** A file tab: breadcrumbs on top, the editor below. Markdown and HTML files open in Preview, with a switch to the text. */
 export function EditorPanel({ params }: IDockviewPanelProps<TabParams>) {
   const path = params.path ?? '';
   const buffer = useEditor((state) => state.buffers[path]);
-  const markdown = isMarkdown(path);
-  const [view, setView] = useState<View>(markdown ? 'preview' : 'edit');
+  const html = isHtmlFile(path);
+  const previewable = isMarkdown(path) || html;
+  const [view, setView] = useState<View>(previewable ? 'preview' : 'edit');
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     if (path && !useEditor.getState().buffers[path]) void useEditor.getState().load(path);
@@ -139,9 +148,20 @@ export function EditorPanel({ params }: IDockviewPanelProps<TabParams>) {
 
   return (
     <div className="flex h-full flex-col bg-(--color-card)">
-      <Breadcrumbs path={path}>{markdown && <ViewSwitch view={view} onChange={setView} />}</Breadcrumbs>
+      <Breadcrumbs path={path}>
+        {previewable && (
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            {html && view === 'preview' && (
+              <button className="icon-button" title="Reload preview" aria-label="Reload preview" onClick={() => setReloadToken((token) => token + 1)}>
+                <RotateCw size={13} strokeWidth={1.75} />
+              </button>
+            )}
+            <ViewSwitch view={view} onChange={setView} editLabel={html ? 'Code' : 'Edit'} />
+          </div>
+        )}
+      </Breadcrumbs>
       <div className="min-h-0 flex-1">
-        <EditorBody path={path} buffer={buffer} view={view} />
+        <EditorBody path={path} buffer={buffer} view={view} reloadToken={reloadToken} />
       </div>
     </div>
   );

@@ -3,10 +3,11 @@ import { pathToFileURL } from 'node:url';
 import { IMAGE_SCHEME, imageExtension, videoExtension } from '../../shared/markdownImages';
 import { isInsideFolder } from '../paths';
 import { allWindowContexts } from '../windows';
+import { previewSchemePrivileges } from './previewProtocol';
 
-/** Must run before the app is ready. */
+/** Must run before the app is ready. Registers the preview scheme too: Electron takes only one call. */
 export function registerImageScheme(): void {
-  protocol.registerSchemesAsPrivileged([{ scheme: IMAGE_SCHEME, privileges: { standard: true, secure: true, stream: true } }]);
+  protocol.registerSchemesAsPrivileged([{ scheme: IMAGE_SCHEME, privileges: { standard: true, secure: true, stream: true } }, previewSchemePrivileges]);
 }
 
 /** Serves image and video files from inside an open folder (Markdown previews, boards). Anything else is refused. */

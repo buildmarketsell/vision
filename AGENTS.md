@@ -112,6 +112,11 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Pasted or dropped images are saved in `images/` next to the note (`src/shared/markdownImages.ts`, main side `saveImageNextTo`). Chosen 2026-11-17 so pictures sit with the note they belong to; it matches the BUSINESS OS rule (`assets/` = templates, `outputs/images/` = generated).
 - Local images reach the page only through `vision-file://local/<path>` (`src/main/workspace/imageProtocol.ts`): image extensions only, inside an open folder only. The CSP `img-src` and DOMPurify's `ALLOWED_URI_REGEXP` in `Markdown.tsx` both list the scheme; keep the three in sync.
 
+## HTML preview (Dan, 2026-11-19: "if im coding an html page ... preview it directly inside VISION")
+- `.html`/`.htm` tabs open in Preview with a Preview / Code switch and a reload button (`HtmlPreview.tsx`). The frame loads the file from disk through `vision-preview://local/<path>` (`src/main/workspace/previewProtocol.ts`), so relative CSS, JS, images and fonts work. It reloads after each save and when any file in the page's folder changes.
+- Safety: the frame is sandboxed without same-origin (its scripts can't reach VISION), and the scheme serves only web file types inside an open folder, never anything hidden (`.env`, `.git`): rules in `src/shared/htmlPreview.ts`, unit tested; the e2e test checks a page can't read `.env`. The scheme is registered in the same `registerSchemesAsPrivileged` call as images (Electron allows one). CSP `frame-src` lists it.
+- Next (not built): a browser tab for local dev servers (`localhost:5173`).
+
 ## Boards (Excalidraw)
 - `src/features/board/`: any `.excalidraw` file opens as a board tab; "New Board" in the Files header creates `Untitled board.excalidraw` at the folder's top level. Chosen 2026-11-17 over tldraw, whose SDK needs a licence key outside development; Excalidraw is MIT.
 - Boards view in the menu (`BoardsView.tsx`): every `.excalidraw` file in the folder via `fs.findFiles` (main `findFiles.ts`: skips hidden folders and node_modules, max 500 files / 5000 folders), refreshed when opened or a board changes; New board button.
