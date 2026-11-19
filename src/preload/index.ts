@@ -61,6 +61,12 @@ const api: VisionApi = {
     remove: (id) => ipcRenderer.invoke(IPC.databasesRemove, id),
     onChange: (callback) => subscribe(IPC.databasesChanged, callback),
   },
+  pages: {
+    list: () => ipcRenderer.invoke(IPC.pagesList),
+    save: (page) => ipcRenderer.invoke(IPC.pagesSave, page),
+    remove: (id) => ipcRenderer.invoke(IPC.pagesRemove, id),
+    onChange: (callback) => subscribe(IPC.pagesChanged, callback),
+  },
   calendar: {
     state: (force) => ipcRenderer.invoke(IPC.calendarState, force === true),
     range: (from, to, force) => ipcRenderer.invoke(IPC.calendarRange, from, to, force === true),

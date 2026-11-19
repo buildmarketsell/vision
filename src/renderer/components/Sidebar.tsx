@@ -121,7 +121,7 @@ export function Sidebar() {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <ViewPanels views={views} active={activeView} />
       </div>
-      <BottomBar />
+      {!views.find((view) => view.id === activeView)?.ownBottomBar && <BottomBar />}
       {!collapsed && <ResizeHandle onPreview={setPreview} />}
     </aside>
   );

@@ -3,6 +3,7 @@ import type { CalendarState, NewEventInput } from './calendar';
 import type { InboxMessage } from './inbox';
 import type { TodoChange, TodoItem, TodoStatus } from './todos';
 import type { Database } from './databases';
+import type { Page } from './pages';
 import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions, ChatStartResult, PastConversation } from './claudeChat';
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -122,6 +123,14 @@ export interface VisionApi {
     /** Fires in every window when any window changes a database. */
     onChange(callback: (databases: Database[]) => void): Unsubscribe;
   };
+  pages: {
+    list(): Promise<Page[]>;
+    /** Saves one page (new or changed); returns every page after the change. */
+    save(page: Page): Promise<Page[]>;
+    /** Deletes the page and every page under it. */
+    remove(id: string): Promise<Page[]>;
+    onChange(callback: (pages: Page[]) => void): Unsubscribe;
+  };
   calendar: {
     /** Upcoming events from every signed-in account; `force` skips the few-minute cache (refresh button). */
     state(force?: boolean): Promise<CalendarState>;
@@ -199,6 +208,10 @@ export const IPC = {
   databasesSave: 'databases:save',
   databasesRemove: 'databases:remove',
   databasesChanged: 'databases:changed',
+  pagesList: 'pages:list',
+  pagesSave: 'pages:save',
+  pagesRemove: 'pages:remove',
+  pagesChanged: 'pages:changed',
   calendarState: 'calendar:state',
   calendarRange: 'calendar:range',
   calendarSetClient: 'calendar:setClient',

@@ -70,6 +70,8 @@ export const visionLightColors = {
   tagRed: '#FFE2DD',
   tagRedText: '#5D1715',
   /** Notion's blue "New" button. */
+  /** Notion's yellow Favorites star. */
+  favoriteStar: '#F5B82E',
   notionBlue: '#2383E2',
   notionBlueHover: '#0077D4',
   columnGray: 'rgba(227, 226, 224, 0.22)',

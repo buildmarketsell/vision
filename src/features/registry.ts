@@ -7,7 +7,7 @@ import { calendarFeature } from './calendar';
 import { inboxFeature } from './inbox';
 import { settingsFeature } from './settings';
 import { todoFeature } from './todo';
-import { databasesFeature } from './databases';
+import { notionFeature } from './notion';
 
 /**
  * Renderer parts of every feature. Adding a feature = a new folder in src/features/
@@ -15,4 +15,4 @@ import { databasesFeature } from './databases';
  * Order matters: sidebar view icons follow this order (Files first), and the first file handler
  * that matches a file wins, so the editor (matches everything) stays last.
  */
-export const features: Feature[] = [explorerFeature, claudeTerminalFeature, inboxFeature, todoFeature, databasesFeature, calendarFeature, settingsFeature, boardFeature, editorFeature];
+export const features: Feature[] = [explorerFeature, claudeTerminalFeature, inboxFeature, todoFeature, notionFeature, calendarFeature, settingsFeature, boardFeature, editorFeature];

@@ -32,6 +32,7 @@
 - Calendar page (2026-11-19): Notion Calendar-style week view in a tab, click an empty slot to add an event.
 - Databases (2026-11-19): Notion-style databases in the sidebar (table icon): table with typed columns, colored tags, resizable columns, sort and search, board grouped by Select, rows open as a side page with notes.
 - Board media (2026-11-19): paste any website, YouTube/Vimeo, X or Reddit link on a board and it shows live; drop or paste video files and they play on the board (saved in `videos/` next to it). Images were already supported.
+- Notion view (2026-11-19): the table icon turns the window into Notion: sidebar with Search, Favorites, a page tree and Databases; pages with cover, icon, title and blocks (text, headings, to-dos, lists, toggles, quote, callout, divider, sub-pages, inline databases), "/" menu and markdown shortcuts, back/forward and breadcrumbs.
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).

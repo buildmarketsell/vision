@@ -10,6 +10,10 @@ export interface SidebarView {
   title: string;
   icon: ReactNode;
   component: ComponentType;
+  /** Shown instead of the panes while this view is open (Notion mode). The panes stay alive underneath. */
+  main?: ComponentType;
+  /** Hides the sidebar's Claude button row while this view is open (the view draws its own). */
+  ownBottomBar?: boolean;
 }
 
 export interface TabType {

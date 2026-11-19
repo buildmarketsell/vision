@@ -8,7 +8,7 @@ import type { Edit } from './Cell';
 import { BoardView } from './BoardView';
 import { RowPeek } from './RowPeek';
 import { TableView } from './TableView';
-import { newId, useDatabaseList } from './dbStore';
+import { databases, newId } from './dbStore';
 import './databases.css';
 
 const LAYOUTS: { value: DbLayout; label: string; icon: typeof Table2 }[] = [
@@ -53,23 +53,21 @@ function SearchBox({ search, setSearch }: { search: string; setSearch: (search: 
   );
 }
 
-/** A database page: Notion's big title, view tabs, toolbar, the table or board, and the side peek. */
-export function DatabasePanel({ params, api }: IDockviewPanelProps<TabParams>) {
-  const { databases, error, change } = useDatabaseList();
-  const id = params.id ?? '';
-  const db = databases?.find((candidate) => candidate.id === id);
+/**
+ * A database: Notion's title, view tabs, toolbar, the table or board, and the side peek.
+ * `embedded` is the inline version inside a page: smaller title (click it to open the full database), no page margins.
+ */
+export function DatabasePage({ id, embedded = false, onOpenFull }: { id: string; embedded?: boolean; onOpenFull?: () => void }) {
+  const { items, error } = databases.useLoaded();
+  const db = items?.find((candidate) => candidate.id === id);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<RowSort | null>(null);
   const [peek, setPeek] = useState<string | null>(null);
-  const edit: Edit = useCallback((fn) => change(id, fn), [change, id]);
+  const edit: Edit = useCallback((fn) => databases.change(id, fn), [id]);
   const closePeek = useCallback(() => setPeek(null), [setPeek]);
-  const name = db?.name;
-  useEffect(() => {
-    if (name !== undefined && api.title !== (name || 'Untitled')) api.setTitle(name || 'Untitled');
-  }, [api, name]);
 
-  if (databases === null) return <div className="db-page">{error ? <div className="db-error">{error}</div> : <div className="spinner mx-auto mt-12" aria-label="Loading" />}</div>;
-  if (!db) return <div className="db-page"><p className="db-gone">This database was deleted.</p></div>;
+  if (items === null) return <div className="db-page">{error ? <div className="db-error">{error}</div> : <div className="spinner mx-auto mt-12" aria-label="Loading" />}</div>;
+  if (!db) return <div className="db-page" data-embedded={embedded}><p className="db-gone">This database was deleted.</p></div>;
 
   const rows = visibleRows(db, search, sort);
   const peekRow = db.rows.find((row) => row.id === peek);
@@ -85,12 +83,18 @@ export function DatabasePanel({ params, api }: IDockviewPanelProps<TabParams>) {
   };
 
   return (
-    <div className="db-page">
+    <div className="db-page" data-embedded={embedded}>
       <div className="db-main">
-        <div className="db-head">
-          <Table2 size={36} strokeWidth={1.25} className="db-head-icon" aria-hidden />
-          <PageTitle key={db.name} db={db} edit={edit} />
-        </div>
+        {embedded ? (
+          <button className="db-inline-title" onClick={onOpenFull} title="Open as full page">
+            <Table2 size={18} strokeWidth={1.5} aria-hidden /> {db.name || 'Untitled'}
+          </button>
+        ) : (
+          <div className="db-head">
+            <Table2 size={36} strokeWidth={1.25} className="db-head-icon" aria-hidden />
+            <PageTitle key={db.name} db={db} edit={edit} />
+          </div>
+        )}
         {error && <div className="db-error" role="alert">{error}</div>}
         <div className="db-viewbar">
           <div className="db-tabs" role="tablist" aria-label="Views">
@@ -121,4 +125,14 @@ export function DatabasePanel({ params, api }: IDockviewPanelProps<TabParams>) {
       {peekRow && <RowPeek key={peekRow.id} db={db} row={peekRow} edit={edit} onClose={closePeek} />}
     </div>
   );
+}
+
+/** The same page in a dock tab (databases opened as tabs before the Notion view existed). */
+export function DatabasePanel({ params, api }: IDockviewPanelProps<TabParams>) {
+  const id = params.id ?? '';
+  const name = databases.useLoaded().items?.find((db) => db.id === id)?.name;
+  useEffect(() => {
+    if (name !== undefined && api.title !== (name || 'Untitled')) api.setTitle(name || 'Untitled');
+  }, [api, name]);
+  return <DatabasePage id={id} />;
 }
