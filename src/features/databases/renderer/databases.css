@@ -1,0 +1,703 @@
+/* Databases: Notion's table, board and side peek. */
+
+.db-page {
+  position: relative;
+  display: flex;
+  height: 100%;
+  background: var(--color-card);
+}
+
+.db-main {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: var(--space-12);
+}
+
+.db-head,
+.db-viewbar,
+.db-error {
+  margin-left: calc(var(--space-12) * 2);
+  margin-right: calc(var(--space-12) * 2);
+}
+
+.db-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-12);
+}
+
+.db-head-icon {
+  color: var(--color-text-muted);
+}
+
+.db-title {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font: inherit;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.db-title::placeholder,
+.db-peek-title::placeholder,
+.db-notes::placeholder,
+.db-placeholder {
+  color: var(--color-text-faint);
+}
+
+.db-viewbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.db-tabs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.db-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 var(--space-2);
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.db-tab:hover {
+  color: var(--color-text);
+}
+
+.db-tab[aria-selected='true'] {
+  border-bottom-color: var(--color-text);
+  color: var(--color-text);
+}
+
+.db-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.db-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: 12px;
+  background: var(--color-tag-blue);
+  color: var(--color-tag-blue-text);
+  font-size: var(--size-small);
+}
+
+.db-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-faint);
+}
+
+.db-search input {
+  width: 160px;
+  border: none;
+  background: transparent;
+  outline: none;
+  font: inherit;
+  color: var(--color-text);
+}
+
+.db-new,
+.db-button {
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: 6px;
+  background: var(--color-notion-blue);
+  color: var(--color-on-accent);
+  font-weight: 500;
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.db-new:hover,
+.db-button:hover {
+  background: var(--color-notion-blue-hover);
+}
+
+.db-new:active,
+.db-button:active {
+  transform: scale(0.97);
+}
+
+.db-view {
+  overflow-x: auto;
+}
+
+.db-view[data-layout='table'] {
+  padding-left: calc(var(--space-12) * 2);
+  padding-right: calc(var(--space-12) * 2);
+}
+
+.db-error {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: var(--size-small);
+}
+
+.db-gone {
+  margin: var(--space-12) auto;
+  color: var(--color-text-faint);
+  text-align: center;
+}
+
+/* Table */
+.db-table {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 100%;
+}
+
+.db-tr {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.db-thead {
+  color: var(--color-text-muted);
+}
+
+.db-th,
+.db-td {
+  position: relative;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+}
+
+.db-th:last-of-type,
+.db-td:last-child {
+  border-right: none;
+}
+
+.db-th-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 34px;
+  padding: 0 var(--space-2);
+  font-size: var(--size-base);
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.db-th-button:hover,
+.db-th-add:hover,
+.db-new-row:hover {
+  background: var(--color-row-hover);
+}
+
+.db-type-icon {
+  flex-shrink: 0;
+  color: var(--color-text-faint);
+}
+
+.db-resize {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  z-index: 1;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+}
+
+.db-resize:hover {
+  background: var(--color-notion-blue);
+  opacity: 0.5;
+}
+
+.db-th-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  color: var(--color-text-faint);
+}
+
+.db-cell {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  height: 100%;
+  padding: 0 var(--space-2);
+  overflow: hidden;
+  cursor: default;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.db-cell:hover {
+  background: var(--color-row-hover);
+}
+
+.db-cell:focus-visible,
+.db-prop-value:focus-visible,
+.db-card:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.db-td[data-title='true'] .db-cell {
+  font-weight: 500;
+  padding-right: 64px;
+}
+
+.db-cell-input {
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 0 4px;
+  border: none;
+  border-radius: 4px;
+  background: var(--color-card);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+  outline: none;
+  font: inherit;
+  color: var(--color-text);
+}
+
+.db-open {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+  font-size: var(--size-small);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+.db-tr:hover .db-open,
+.db-open:focus-visible {
+  opacity: 1;
+}
+
+.db-open:hover {
+  background: var(--color-pill-hover);
+}
+
+.db-new-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-faint);
+}
+
+.db-url {
+  text-decoration: underline;
+  text-decoration-color: var(--color-composer-border);
+}
+
+.db-number {
+  margin-left: auto;
+}
+
+.db-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1.5px var(--color-text-faint);
+  color: var(--color-on-accent);
+  transition: transform var(--duration-fast) var(--ease);
+}
+
+.db-checkbox[aria-checked='true'] {
+  background: var(--color-notion-blue);
+  box-shadow: none;
+}
+
+.db-checkbox:active {
+  transform: scale(0.9);
+}
+
+/* Tags */
+.db-tags {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.db-tag {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: var(--size-small);
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.db-tag-remove {
+  display: inline-flex;
+  opacity: 0.6;
+}
+
+.db-tag-remove:hover {
+  opacity: 1;
+}
+
+.db-tag[data-color='gray'] { background: var(--color-tag-gray); color: var(--color-tag-gray-text); }
+.db-column[data-color='gray'] { background: color-mix(in srgb, var(--color-tag-gray) 30%, transparent); }
+.db-tag[data-color='brown'] { background: var(--color-tag-brown); color: var(--color-tag-brown-text); }
+.db-column[data-color='brown'] { background: color-mix(in srgb, var(--color-tag-brown) 30%, transparent); }
+.db-tag[data-color='orange'] { background: var(--color-tag-orange); color: var(--color-tag-orange-text); }
+.db-column[data-color='orange'] { background: color-mix(in srgb, var(--color-tag-orange) 30%, transparent); }
+.db-tag[data-color='yellow'] { background: var(--color-tag-yellow); color: var(--color-tag-yellow-text); }
+.db-column[data-color='yellow'] { background: color-mix(in srgb, var(--color-tag-yellow) 30%, transparent); }
+.db-tag[data-color='green'] { background: var(--color-tag-green); color: var(--color-tag-green-text); }
+.db-column[data-color='green'] { background: color-mix(in srgb, var(--color-tag-green) 30%, transparent); }
+.db-tag[data-color='blue'] { background: var(--color-tag-blue); color: var(--color-tag-blue-text); }
+.db-column[data-color='blue'] { background: color-mix(in srgb, var(--color-tag-blue) 30%, transparent); }
+.db-tag[data-color='purple'] { background: var(--color-tag-purple); color: var(--color-tag-purple-text); }
+.db-column[data-color='purple'] { background: color-mix(in srgb, var(--color-tag-purple) 30%, transparent); }
+.db-tag[data-color='pink'] { background: var(--color-tag-pink); color: var(--color-tag-pink-text); }
+.db-column[data-color='pink'] { background: color-mix(in srgb, var(--color-tag-pink) 30%, transparent); }
+.db-tag[data-color='red'] { background: var(--color-tag-red); color: var(--color-tag-red-text); }
+.db-column[data-color='red'] { background: color-mix(in srgb, var(--color-tag-red) 30%, transparent); }
+
+/* Menus */
+.db-popover {
+  position: fixed;
+  z-index: 60;
+  overflow: auto;
+  padding: 4px;
+  border-radius: var(--radius-control);
+  background: var(--color-card);
+  box-shadow: var(--shadow-popover);
+  transform-origin: top left;
+}
+
+.db-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.db-menu-hint {
+  padding: 6px var(--space-2) 4px;
+  font-size: var(--size-small);
+  color: var(--color-text-faint);
+}
+
+.db-menu-faint {
+  color: var(--color-text-faint);
+  font-size: var(--size-small);
+}
+
+.db-menu-input {
+  height: 28px;
+  margin: 2px 2px 4px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-composer-border);
+  border-radius: 6px;
+  background: var(--color-sidebar);
+  outline: none;
+  font: inherit;
+  color: var(--color-text);
+}
+
+.db-menu-input:focus {
+  border-color: var(--color-notion-blue);
+}
+
+.db-menu-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--color-border);
+}
+
+.db-danger {
+  color: var(--color-danger);
+}
+
+.db-select-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  margin: -4px -4px 0;
+  padding: 6px var(--space-2);
+  background: var(--color-sidebar);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.db-select-field input {
+  flex: 1;
+  min-width: 60px;
+  border: none;
+  background: transparent;
+  outline: none;
+  font: inherit;
+  color: var(--color-text);
+}
+
+/* Board */
+.db-board {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) calc(var(--space-12) * 2) 0;
+}
+
+.db-column {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 260px;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: 10px;
+  transition: box-shadow var(--duration-fast) var(--ease);
+}
+
+.db-column[data-over='true'] {
+  box-shadow: inset 0 0 0 2px var(--color-notion-blue);
+}
+
+.db-column-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px;
+}
+
+.db-no-group,
+.db-count,
+.db-sidebar-count {
+  font-size: var(--size-small);
+  color: var(--color-text-faint);
+}
+
+.db-sidebar-count {
+  margin-left: auto;
+}
+
+.db-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px var(--space-3);
+  border-radius: 8px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.db-card:hover {
+  background: var(--color-pill-hover);
+}
+
+.db-card:active {
+  transform: scale(0.98);
+}
+
+.db-card-title {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.db-card-prop {
+  display: flex;
+  min-width: 0;
+  font-size: var(--size-small);
+  color: var(--color-text-muted);
+}
+
+.db-column-new {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-row);
+  color: var(--color-text-faint);
+}
+
+.db-column-new:hover {
+  background: var(--color-row-hover);
+  color: var(--color-text-muted);
+}
+
+.db-board-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-6) calc(var(--space-12) * 2);
+  color: var(--color-text-muted);
+}
+
+/* Side peek */
+/* Slides in over the database like Notion's side peek, instead of squeezing it. */
+.db-peek {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 92%);
+  border-left: 1px solid var(--color-border);
+  background: var(--color-card);
+  box-shadow: var(--shadow-card);
+  animation: db-peek-in var(--duration-base) var(--ease);
+}
+
+@keyframes db-peek-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.db-peek-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2);
+}
+
+.db-peek-body {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-4) var(--space-8) var(--space-12);
+}
+
+.db-peek-title {
+  width: 100%;
+  margin-bottom: var(--space-4);
+  border: none;
+  background: transparent;
+  outline: none;
+  font: inherit;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.db-props {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.db-prop-row {
+  display: flex;
+  align-items: flex-start;
+  min-height: 34px;
+}
+
+.db-prop-name {
+  display: flex;
+  flex: 0 0 140px;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 6px;
+  color: var(--color-text-muted);
+}
+
+.db-prop-value {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-row);
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.db-prop-value:hover {
+  background: var(--color-row-hover);
+}
+
+.db-prop-value .db-tags {
+  flex-wrap: wrap;
+  padding: 6px 0;
+}
+
+.db-notes {
+  field-sizing: content;
+  width: 100%;
+  min-height: 240px;
+  padding: var(--space-2) 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  resize: none;
+  font: inherit;
+  font-size: var(--size-reading);
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.db-sidebar-empty {
+  color: var(--color-text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-peek {
+    animation-name: db-fade-in;
+  }
+
+  @keyframes db-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}

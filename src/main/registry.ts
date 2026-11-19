@@ -4,9 +4,10 @@ import { registerTranscripts } from '../features/claude-terminal/main/transcript
 import { registerCalendar } from '../features/calendar/main/calendarStore';
 import { registerInbox } from '../features/inbox/main/inboxStore';
 import { registerTodos } from '../features/todo/main/todoStore';
+import { registerDatabases } from '../features/databases/main/databaseStore';
 
 /**
  * Main-process parts of features. Adding a feature with a main side = one line here.
  * (Renderer parts are listed in src/features/registry.ts.)
  */
-export const mainFeatures: Array<() => void> = [registerClaudeTerminal, registerClaudeChat, registerTranscripts, registerInbox, registerTodos, registerCalendar];
+export const mainFeatures: Array<() => void> = [registerClaudeTerminal, registerClaudeChat, registerTranscripts, registerInbox, registerTodos, registerDatabases, registerCalendar];

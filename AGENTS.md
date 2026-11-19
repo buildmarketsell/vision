@@ -56,6 +56,12 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Saved on this Mac in `userData/todos.json` (Dan chose this over syncing Notion Tasks, 2026-11-19), app-wide, through `src/main/jsonListStore.ts` (shared with the Inbox). Statuses To do / In progress / Done (`src/shared/todos.ts`).
 - Sidebar view = checklist with two buttons that open the To-do page as a list or a board. The page has a List / Board switch, remembered in localStorage. Board: drag cards between columns; right-click a row or card to rename, move or delete; double-click to rename.
 
+## Databases (`src/features/databases/`)
+- Notion database copy (Dan, 2026-11-19: "una database que sea una copia exacta de Notion y que se vea muy bonito"). Table icon in the sidebar's top row lists the databases; each opens as a page tab: big title, Table / Board tabs, search, sort (column header menu), blue New button.
+- Saved app-wide on this Mac in `userData/databases.json` (like To-do). The window edits its own copy and sends the whole database; main checks it again with `normalizeDatabase` (`src/shared/databases.ts`). Edits are pure functions in `src/shared/databaseOps.ts` (unit tested). While saves are in flight, change broadcasts are skipped so the screen never jumps back (`dbStore.ts`).
+- Column types: Title (always first, can't be deleted), Text, Number, Select, Multi-select, Date, Checkbox, URL. Tag colors are Notion's nine (`--color-tag-*` in every theme). Board groups by the first Select column.
+- Rows open in a side peek over the table (title, properties, notes). Notes save 400 ms after typing stops and at once on blur or close: the first version lost notes closed within 0.4 s (caught by `tests/e2e/databases.spec.ts`).
+
 ## Calendar (`src/features/calendar/`)
 - Google Calendar API with Google sign-in (Dan, 2026-11-19: "i want to be able to add events and also connect more calendars"; replaced the read-only iCal link). Dan's own Google Cloud project gives the Client ID/secret (Desktop app type), pasted once in the Calendar view.
 - Sign-in: browser + loopback redirect on 127.0.0.1 with PKCE (`googleAuth.ts`), scopes `calendar.readonly` + `calendar.events`. Any number of accounts; all their calendars appear, each in Google's color, show/hide per calendar (default follows Google's `selected`; missing means hidden).
