@@ -46,6 +46,8 @@ function viewMenu(): MenuItemConstructorOptions {
   return {
     label: 'View',
     submenu: [
+      rendererItem('Show Menu', 'CmdOrCtrl+\\', 'view.toggleMenu'),
+      rendererItem('Show Sidebar', 'CmdOrCtrl+Shift+\\', 'view.toggleSidebar'),
       rendererItem('Show Hidden Files', 'CmdOrCtrl+Shift+.', 'view.toggleHidden'),
       { type: 'separator' },
       ...devItems,

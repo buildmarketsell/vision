@@ -34,6 +34,8 @@ export const theme = {
     base: '200ms',
   },
   layout: {
+    /** The feature menu on the left; fixed, like Notion's. */
+    menuWidth: '220px',
     sidebarDefaultWidth: 260,
     sidebarMinWidth: 200,
     sidebarMaxWidth: 480,
@@ -41,6 +43,8 @@ export const theme = {
     titleBarHeight: '36px',
     /** Top-left room for the traffic lights and the sidebar button; the strip starts after it when the sidebar is hidden. */
     titleBarInset: '112px',
+    /** Top-right room for the sidebar button when the sidebar is hidden. */
+    titleBarInsetRight: '44px',
     tabWidth: '240px',
     tabMinWidth: '96px',
   },
@@ -71,6 +75,8 @@ export function applyThemeVariables(root: HTMLElement, active: VisionTheme): voi
   root.style.setProperty('--duration-base', theme.motion.base);
   root.style.setProperty('--title-bar-height', theme.layout.titleBarHeight);
   root.style.setProperty('--title-bar-inset', theme.layout.titleBarInset);
+  root.style.setProperty('--title-bar-inset-right', theme.layout.titleBarInsetRight);
+  root.style.setProperty('--menu-width', theme.layout.menuWidth);
   root.style.setProperty('--tab-width', theme.layout.tabWidth);
   root.style.setProperty('--tab-min-width', theme.layout.tabMinWidth);
   // Native scrollbars, form controls and the default selection follow the theme.

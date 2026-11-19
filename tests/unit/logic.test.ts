@@ -73,6 +73,15 @@ describe('app state', () => {
     expect(state.layouts['/a']?.sidebarCollapsed).toBe(true);
     expect(state.layouts['/b']?.sidebarCollapsed).toBe(false);
   });
+  it('remembers a hidden menu, separately from the sidebar', () => {
+    const state = normalizeAppState({
+      recentFolders: ['/a', '/b'],
+      layouts: { '/a': { dock: null, menuCollapsed: true }, '/b': { dock: null, menuCollapsed: 1 } },
+    });
+    expect(state.layouts['/a']?.menuCollapsed).toBe(true);
+    expect(state.layouts['/a']?.sidebarCollapsed).toBe(false);
+    expect(state.layouts['/b']?.menuCollapsed).toBe(false);
+  });
 });
 
 describe('shortcutFromEvent', () => {

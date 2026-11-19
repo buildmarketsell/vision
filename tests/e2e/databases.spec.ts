@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { launch, makeFixture } from './helpers';
+import { launch, makeFixture, menu } from './helpers';
 
 test('databases: create one, fill the table, tag, open a page, use the board, and keep it after a restart', async () => {
   const { userData } = makeFixture();
   let { app, page } = await launch(userData);
   try {
-    const sidebar = page.locator('aside');
-    await sidebar.getByRole('tab', { name: 'Notion' }).click();
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+    await menu(page).getByRole('tab', { name: 'Database' }).click();
     await sidebar.getByRole('button', { name: 'New database' }).click();
 
     const title = page.getByRole('textbox', { name: 'Database name' });
@@ -52,7 +52,7 @@ test('databases: create one, fill the table, tag, open a page, use the board, an
     await page.screenshot({ animations: 'disabled', path: 'test-results/database-peek.png' });
     await peek.getByRole('button', { name: 'Close' }).click();
 
-    await page.getByRole('tab', { name: 'Board' }).click();
+    await page.getByRole('tab', { name: 'Board', exact: true }).click();
     const board = page.locator('.db-board');
     await board.getByText('Behind the scenes').dragTo(board.getByRole('region', { name: 'Not started' }));
     await expect(board.getByRole('region', { name: 'Not started' }).getByRole('listitem')).toHaveText(['Behind the scenes']);
@@ -61,8 +61,8 @@ test('databases: create one, fill the table, tag, open a page, use the board, an
     await page.waitForTimeout(600);
     await app.close();
     ({ app, page } = await launch(userData));
-    await page.locator('aside').getByRole('tab', { name: 'Notion' }).click();
-    await page.locator('aside').getByRole('button', { name: 'Content ideas', exact: true }).click();
+    await menu(page).getByRole('tab', { name: 'Database' }).click();
+    await page.getByRole('complementary', { name: 'Sidebar' }).getByRole('button', { name: 'Content ideas', exact: true }).click();
     await page.getByRole('tab', { name: 'Table' }).click();
     await expect(page.getByRole('table', { name: 'Content ideas' }).locator('.db-tag')).toContainText(['In progress', 'Reels', 'Spain', 'Done', 'Not started']);
     await page.getByRole('table', { name: 'Content ideas' }).getByRole('row').nth(1).getByRole('button', { name: 'Open' }).click({ force: true });

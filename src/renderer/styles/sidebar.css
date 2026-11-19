@@ -1,45 +1,137 @@
 /* Sidebar: view icons, the file tree's inline name box, and the Claude usage meters. */
 
-.sidebar {
+/* Two side panels: the feature menu on the left, the open feature's panel (the sidebar) on the right. */
+.side-panel {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--color-sidebar);
+}
+
+.side-panel[data-side='left'] {
+  width: var(--menu-width);
   box-shadow: inset -1px 0 0 var(--color-border);
 }
 
-/* View switcher, like Notion's top row: plain icons, the open view on a soft gray square. */
-.view-row {
+.side-panel[data-side='right'] {
+  box-shadow: inset 1px 0 0 var(--color-border);
+}
+
+/* Hidden: it floats off-screen and slides back over the page while hovered, like Notion's sidebar. */
+.side-panel[data-collapsed='true'] {
+  position: absolute;
+  z-index: 30;
+  top: calc(var(--title-bar-height) + var(--space-1));
+  bottom: var(--space-2);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-popover);
+  opacity: 0;
+  transition:
+    transform var(--duration-base) var(--ease),
+    opacity var(--duration-base) var(--ease);
+}
+
+.side-panel[data-collapsed='true'][data-side='left'] {
+  left: var(--space-2);
+  transform: translateX(calc(-100% - var(--space-4)));
+}
+
+.side-panel[data-collapsed='true'][data-side='right'] {
+  right: var(--space-2);
+  transform: translateX(calc(100% + var(--space-4)));
+}
+
+.side-panel[data-collapsed='true'][data-peeking='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+/* The floating menu starts below the top row, so its empty top row (room for the traffic lights) shrinks away. */
+.side-panel[data-collapsed='true'][data-side='left'] .side-panel-top {
+  height: var(--space-2);
+}
+
+/* Invisible strip along a window edge that brings a hidden panel out. Below the top row, so tabs and lights still work. */
+.edge-zone {
+  position: absolute;
+  z-index: 25;
+  top: var(--title-bar-height);
+  bottom: 0;
+  width: var(--space-3);
+}
+
+.edge-zone[data-side='left'] {
+  left: 0;
+}
+
+.edge-zone[data-side='right'] {
+  right: 0;
+}
+
+/* The buttons stay put whether their panel is open or hidden, centered in the top row. */
+.panel-toggle {
+  position: absolute;
+  z-index: 40;
+  top: calc((var(--title-bar-height) - 28px) / 2);
+}
+
+/* Right of the traffic lights, which end at 68px. */
+.panel-toggle[data-side='left'] {
+  left: 76px;
+}
+
+.panel-toggle[data-side='right'] {
+  right: var(--space-2);
+}
+
+/* The menu: one row per feature, Notion's sidebar rows. */
+.menu-list {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  overflow-y: auto;
+}
+
+.menu-row {
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 2px;
-  padding: 0 var(--space-2) var(--space-2);
-}
-
-.view-tab {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  gap: var(--space-2);
+  height: 30px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-row);
   color: var(--color-text-muted);
+  font-weight: 500;
+  text-align: left;
   transition:
     background-color var(--duration-fast) var(--ease),
     transform var(--duration-fast) var(--ease);
 }
 
-.view-tab:hover {
+.menu-row:hover {
   background: var(--color-row-hover);
 }
 
-.view-tab[aria-selected='true'] {
+.menu-row[aria-selected='true'] {
   background: var(--color-row-selected);
   color: var(--color-text);
 }
 
-.view-tab:active {
-  transform: scale(0.96);
+.menu-row:active {
+  transform: scale(0.98);
   transition-duration: 0ms;
+}
+
+.menu-row-icon {
+  display: inline-flex;
+  width: 20px;
+  flex-shrink: 0;
+  justify-content: center;
 }
 
 .text-input {
@@ -124,12 +216,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .view-tab:active {
+  .menu-row:active {
     transform: none;
   }
 
-  .view-ring::before {
-    animation: none;
+  .side-panel[data-collapsed='true'] {
+    transform: none;
+    transition: opacity var(--duration-base) var(--ease);
   }
 }
 
@@ -178,12 +271,4 @@
   .theme-row:active {
     transform: none;
   }
-}
-
-/* Fixed spot right of the traffic lights (they end at 68px), centered in the top row. */
-.sidebar-toggle {
-  position: absolute;
-  top: calc((var(--title-bar-height) - 28px) / 2);
-  left: 76px;
-  z-index: 20;
 }

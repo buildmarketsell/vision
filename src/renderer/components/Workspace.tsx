@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import type { FolderLayout } from '../../shared/ipc';
 import { Dock } from '../core/Dock';
 import { useWorkspace } from '../core/workspaceStore';
-import { Sidebar, SidebarToggle } from './Sidebar';
+import { FeatureMenu } from './FeatureMenu';
+import { Sidebar } from './Sidebar';
 import { useActiveView } from './SidebarViews';
 import { ErrorBoundary } from './ErrorBoundary';
 import { allSidebarViews } from '../core/featureIndex';
@@ -31,8 +32,8 @@ function useLayoutSaver(initialDock: unknown) {
   const scheduleSave = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      const { sidebarWidth, sidebarCollapsed, showHidden } = useWorkspace.getState();
-      window.vision.app.saveLayout({ dock: dockRef.current, sidebarWidth, sidebarCollapsed, showHidden });
+      const { sidebarWidth, sidebarCollapsed, menuCollapsed, showHidden } = useWorkspace.getState();
+      window.vision.app.saveLayout({ dock: dockRef.current, sidebarWidth, sidebarCollapsed, menuCollapsed, showHidden });
     }, SAVE_LAYOUT_DELAY_MS);
   };
 
@@ -41,6 +42,7 @@ function useLayoutSaver(initialDock: unknown) {
       const changed =
         state.sidebarWidth !== previous.sidebarWidth ||
         state.sidebarCollapsed !== previous.sidebarCollapsed ||
+        state.menuCollapsed !== previous.menuCollapsed ||
         state.showHidden !== previous.showHidden;
       if (changed) scheduleSave();
     });
@@ -59,26 +61,29 @@ function useLayoutSaver(initialDock: unknown) {
 export function Workspace({ layout }: { layout: FolderLayout | null }) {
   useWatchSync();
   const onLayoutChange = useLayoutSaver(layout?.dock ?? null);
-  const collapsed = useWorkspace((state) => state.sidebarCollapsed);
+  const sidebarCollapsed = useWorkspace((state) => state.sidebarCollapsed);
+  const menuCollapsed = useWorkspace((state) => state.menuCollapsed);
+  // Hidden panels leave room in the top row for the traffic lights and the buttons that bring them back.
+  const mainClass = `min-w-0 flex-1 ${menuCollapsed ? 'menu-collapsed' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`;
   const views = allSidebarViews();
   const [activeView] = useActiveView(views);
   const Takeover = views.find((view) => view.id === activeView)?.main;
 
   return (
     <div className="relative flex h-full">
-      <Sidebar />
-      <SidebarToggle />
+      <FeatureMenu />
       {/* The panes stay mounted while a view takes over, so Claude chats and terminals keep running. */}
-      <main className={`min-w-0 flex-1 ${collapsed ? 'sidebar-collapsed' : ''}`} hidden={Boolean(Takeover)}>
+      <main className={mainClass} hidden={Boolean(Takeover)}>
         <Dock savedLayout={layout?.dock ?? null} onLayoutChange={onLayoutChange} />
       </main>
       {Takeover && (
-        <main className={`min-w-0 flex-1 ${collapsed ? 'sidebar-collapsed' : ''}`}>
+        <main className={mainClass}>
           <ErrorBoundary name="Page">
             <Takeover />
           </ErrorBoundary>
         </main>
       )}
+      <Sidebar />
     </div>
   );
 }

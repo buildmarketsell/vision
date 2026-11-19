@@ -6,7 +6,7 @@ import { ExplorerView, startCreate } from './renderer/ExplorerView';
 export const explorerFeature: Feature = {
   id: 'explorer',
   name: 'Explorer',
-  sidebarViews: [{ id: 'explorer', title: 'Files', icon: createElement(Files, { size: 16, strokeWidth: 1.5 }), component: ExplorerView }],
+  sidebarViews: [{ id: 'explorer', title: 'Workspace', icon: createElement(Files, { size: 16, strokeWidth: 1.5 }), component: ExplorerView }],
   commands: [
     { id: 'explorer.newFile', title: 'New File', run: () => startCreate('newFile') },
     { id: 'explorer.newFolder', title: 'New Folder', run: () => startCreate('newDir') },

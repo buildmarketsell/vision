@@ -1,32 +1,85 @@
-import { expect, test } from '@playwright/test';
-import { launch, makeFixture } from './helpers';
+import { expect, test, type Locator } from '@playwright/test';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { launch, makeFixture, menu } from './helpers';
 
-test('the sidebar button and ⌘\\ hide and show the sidebar, and it stays hidden after a restart', async () => {
+const width = (panel: Locator) => panel.evaluate((element) => element.getBoundingClientRect().width);
+const onScreen = (panel: Locator) =>
+  panel.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return box.right > 0 && box.left < window.innerWidth && getComputedStyle(element).opacity === '1';
+  });
+
+test('the menu sits left and the open feature on the right; each hides with its button and peeks out on hover', async () => {
   const { userData } = makeFixture();
   let { app, page } = await launch(userData);
   try {
-    const sidebar = page.locator('aside');
-    const strip = page.locator('.dock-corner .dv-tabs-and-actions-container');
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+    const left = page.locator('.dock-corner .dv-tabs-and-actions-container');
+    const right = page.locator('.dock-corner-right .dv-tabs-and-actions-container');
     await expect(page.locator('.dv-tabs-and-actions-container').first()).toHaveCSS('height', '36px');
-    await expect(sidebar.getByRole('tab', { name: 'Files' })).toBeVisible();
-    await page.screenshot({ animations: 'disabled', path: 'test-results/sidebar-open.png' });
+    const names = await menu(page).getByRole('tab').allTextContents();
+    expect(names.slice(0, 5)).toEqual(['Workspace', 'To-do', 'Boards', 'Database', 'Calendar']);
+    expect(names.at(-1)).toBe('Settings');
+    const menuBox = await menu(page).boundingBox();
+    const sidebarBox = await sidebar.boundingBox();
+    expect(menuBox!.x).toBe(0);
+    expect(sidebarBox!.x).toBeGreaterThan(menuBox!.x + menuBox!.width);
+    await expect(sidebar.getByRole('treeitem', { name: /hello\.md/ })).toBeVisible();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/layout-open.png' });
 
-    await page.getByRole('button', { name: 'Hide sidebar' }).click();
-    await expect.poll(() => sidebar.evaluate((element) => element.getBoundingClientRect().width)).toBe(0);
-    await expect(strip).toHaveCSS('padding-left', '112px');
-    await page.screenshot({ animations: 'disabled', path: 'test-results/sidebar-hidden.png' });
-
+    // Menu: button and ⌘\.
+    await page.getByRole('button', { name: 'Hide menu' }).click();
+    await expect.poll(() => onScreen(menu(page))).toBe(false);
+    await expect(left).toHaveCSS('padding-left', '112px');
     await page.keyboard.press('Meta+Backslash');
-    await expect.poll(() => sidebar.evaluate((element) => element.getBoundingClientRect().width)).toBeGreaterThan(100);
-    await expect(strip).toHaveCSS('padding-left', '0px');
+    await expect.poll(() => onScreen(menu(page))).toBe(true);
+    await expect(left).toHaveCSS('padding-left', '0px');
 
+    // Sidebar: button; then hovering the right edge slides it out over the page, leaving slides it back.
     await page.getByRole('button', { name: 'Hide sidebar' }).click();
-    await expect(page.getByRole('button', { name: 'Show sidebar' })).toBeVisible();
-    // The layout is saved shortly after a change.
+    await expect.poll(() => onScreen(sidebar)).toBe(false);
+    await expect(right).toHaveCSS('padding-right', '44px');
+    const viewport = page.viewportSize() ?? (await page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight })));
+    await page.mouse.move(viewport.width - 3, viewport.height / 2);
+    await expect.poll(() => onScreen(sidebar)).toBe(true);
+    await expect(sidebar.getByRole('treeitem', { name: /hello\.md/ })).toBeVisible();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/layout-sidebar-peek.png' });
+    await page.mouse.move(viewport.width / 2, viewport.height / 2);
+    await expect.poll(() => onScreen(sidebar)).toBe(false);
+
+    // Same for the menu on the left edge; picking a feature from the peek works.
+    await page.getByRole('button', { name: 'Hide menu' }).click();
+    await page.mouse.move(3, viewport.height / 2);
+    await expect.poll(() => onScreen(menu(page))).toBe(true);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/layout-menu-peek.png' });
+
     await page.waitForTimeout(800);
     await app.close();
     ({ app, page } = await launch(userData));
+    await expect(page.getByRole('button', { name: 'Show menu' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Show sidebar' })).toBeVisible();
+    expect(await width(page.getByRole('complementary', { name: 'Sidebar' }))).toBeGreaterThan(100);
+  } finally {
+    await app.close();
+  }
+});
+
+test('Boards lists every board in the folder, opens one, and makes new ones', async () => {
+  const { folder, userData } = makeFixture();
+  mkdirSync(join(folder, 'plans'));
+  writeFileSync(join(folder, 'plans', 'Launch.excalidraw'), '');
+  const { app, page } = await launch(userData);
+  try {
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+    await menu(page).getByRole('tab', { name: 'Boards' }).click();
+    const list = sidebar.getByRole('list', { name: 'Boards' });
+    await expect(list.getByRole('button')).toHaveText(['plans/Launch']);
+    await list.getByRole('button', { name: 'plans/Launch' }).click();
+    await expect(page.locator('.dv-tab', { hasText: 'Launch.excalidraw' })).toBeVisible();
+    await sidebar.getByRole('button', { name: 'New board' }).click();
+    await expect(list.getByRole('button')).toHaveText(['plans/Launch', 'Untitled board']);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/boards-view.png' });
   } finally {
     await app.close();
   }

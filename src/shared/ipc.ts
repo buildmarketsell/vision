@@ -26,6 +26,8 @@ export interface FolderLayout {
   dock: unknown;
   sidebarWidth: number;
   sidebarCollapsed: boolean;
+  /** The feature menu on the left (Workspace, To-do, Boards…). The sidebar is the open feature's panel on the right. */
+  menuCollapsed: boolean;
   showHidden: boolean;
 }
 
@@ -56,7 +58,7 @@ export interface PtyExitEvent {
 }
 
 /** Commands the main process sends to a window (from the app menu). */
-export type MenuCommandId = 'editor.save' | 'tab.close' | 'view.toggleHidden';
+export type MenuCommandId = 'editor.save' | 'tab.close' | 'view.toggleHidden' | 'view.toggleMenu' | 'view.toggleSidebar';
 
 export type Unsubscribe = () => void;
 
@@ -73,6 +75,8 @@ export interface VisionApi {
   };
   fs: {
     listDir(path: string): Promise<Result<DirEntry[]>>;
+    /** Files ending in `extension` anywhere in the folder, skipping hidden folders and node_modules. */
+    findFiles(root: string, extension: string): Promise<Result<string[]>>;
     readFile(path: string): Promise<ReadFileResult>;
     writeFile(path: string, content: string): Promise<Result<void>>;
     /** Saves image bytes in the `images/` folder next to a note; returns the new file's path. */
@@ -169,6 +173,7 @@ export const IPC = {
   setDirtyFiles: 'app:setDirtyFiles',
   menuCommand: 'app:menuCommand',
   listDir: 'fs:listDir',
+  findFiles: 'fs:findFiles',
   readFile: 'fs:readFile',
   writeFile: 'fs:writeFile',
   saveImage: 'fs:saveImage',

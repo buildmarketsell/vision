@@ -1,11 +1,12 @@
 import { useState, type PointerEvent } from 'react';
-import { FolderOpen, PanelLeft } from 'lucide-react';
+import { FolderOpen, PanelRight } from 'lucide-react';
 import { ClaudeLogo } from './ClaudeLogo';
 import { runCommand } from '../core/commands';
 import { allSidebarViews } from '../core/featureIndex';
 import { baseName, useWorkspace } from '../core/workspaceStore';
 import { theme } from '../theme';
-import { useActiveView, ViewPanels, ViewSwitcher } from './SidebarViews';
+import { usePeek } from '../core/usePeek';
+import { useActiveView, ViewPanels } from './SidebarViews';
 
 const RUBBER_BAND = 0.55;
 
@@ -21,7 +22,7 @@ function previewWidth(raw: number): number {
   return raw;
 }
 
-/** Drag to resize, 1:1 with the pointer; past the limits it stretches, then springs back. */
+/** Drag its left edge to resize, 1:1 with the pointer; past the limits it stretches, then springs back. */
 function ResizeHandle({ onPreview }: { onPreview: (width: number | null) => void }) {
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -31,7 +32,7 @@ function ResizeHandle({ onPreview }: { onPreview: (width: number | null) => void
     target.setPointerCapture(event.pointerId);
     let raw = startWidth;
     const onMove = (move: globalThis.PointerEvent) => {
-      raw = startWidth + move.clientX - startX;
+      raw = startWidth - (move.clientX - startX);
       onPreview(previewWidth(raw));
     };
     const onUp = () => {
@@ -50,8 +51,8 @@ function ResizeHandle({ onPreview }: { onPreview: (width: number | null) => void
       role="separator"
       aria-orientation="vertical"
       aria-label="Resize sidebar"
-      className="absolute top-0 right-0 z-10 h-full w-3 cursor-col-resize"
-      style={{ transform: 'translateX(50%)' }}
+      className="absolute top-0 left-0 z-10 h-full w-3 cursor-col-resize"
+      style={{ transform: 'translateX(-50%)' }}
       onPointerDown={onPointerDown}
     />
   );
@@ -77,52 +78,55 @@ function BottomBar() {
   );
 }
 
-/** Notion's sidebar button: sits right of the traffic lights and stays put whether the sidebar is open or hidden (⌘\\). */
-export function SidebarToggle() {
-  const collapsed = useWorkspace((state) => state.sidebarCollapsed);
-  const label = collapsed ? 'Show sidebar' : 'Hide sidebar';
-  return (
-    <button
-      className="icon-button sidebar-toggle no-drag"
-      title={`${label} (⌘\\)`}
-      aria-label={label}
-      aria-expanded={!collapsed}
-      onClick={() => useWorkspace.getState().toggleSidebar()}
-    >
-      <PanelLeft size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
-    </button>
-  );
-}
-
-/** Notion-style sidebar, flush left: traffic lights and folder name on top, view icons, the active view, a Claude button at the bottom. */
+/** The open feature's panel (files, to-dos, calendar…), flush right. Hidden with its button or ⌘⇧\; then hovering the right edge slides it out. */
 export function Sidebar() {
   const folder = useWorkspace((state) => state.folder);
   const storedWidth = useWorkspace((state) => state.sidebarWidth);
   const collapsed = useWorkspace((state) => state.sidebarCollapsed);
   const [preview, setPreview] = useState<number | null>(null);
   const views = allSidebarViews();
-  const [activeView, selectView] = useActiveView(views);
-  const settling = preview === null;
+  const [activeView] = useActiveView(views);
+  const peek = usePeek(collapsed);
+  const label = collapsed ? 'Show sidebar' : 'Hide sidebar';
 
   return (
-    <aside
-      className="sidebar relative flex shrink-0 flex-col overflow-hidden"
-      inert={collapsed}
-      aria-hidden={collapsed}
-      style={{
-        width: collapsed ? 0 : (preview ?? storedWidth),
-        transition: settling ? 'width var(--duration-base) var(--ease)' : 'none',
-      }}
-    >
-      <div className="drag-region flex h-(--title-bar-height) shrink-0 items-center gap-2 pr-3 pl-(--title-bar-inset)">
-        <span className="title truncate" title={folder}>{baseName(folder)}</span>
-      </div>
-      <ViewSwitcher views={views} active={activeView} onSelect={selectView} />
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <ViewPanels views={views} active={activeView} />
-      </div>
-      {!views.find((view) => view.id === activeView)?.ownBottomBar && <BottomBar />}
-      {!collapsed && <ResizeHandle onPreview={setPreview} />}
-    </aside>
+    <>
+      {collapsed && <div className="edge-zone" data-side="right" aria-hidden onPointerEnter={peek.show} onPointerLeave={peek.hideSoon} />}
+      <aside
+        className="sidebar side-panel"
+        data-side="right"
+        data-collapsed={collapsed}
+        data-peeking={peek.peeking}
+        aria-label="Sidebar"
+        inert={collapsed && !peek.peeking}
+        style={{ width: preview ?? storedWidth, transition: preview === null ? undefined : 'none' }}
+        onPointerEnter={peek.show}
+        onPointerLeave={peek.hideSoon}
+      >
+        <div className="side-panel-top drag-region flex h-(--title-bar-height) shrink-0 items-center gap-2 pr-11 pl-3">
+          <span className="title truncate" title={folder}>{baseName(folder)}</span>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <ViewPanels views={views} active={activeView} />
+        </div>
+        {!views.find((view) => view.id === activeView)?.ownBottomBar && <BottomBar />}
+        {!collapsed && <ResizeHandle onPreview={setPreview} />}
+      </aside>
+      <button
+        className="icon-button panel-toggle no-drag"
+        data-side="right"
+        title={`${label} (⌘⇧\\)`}
+        aria-label={label}
+        aria-expanded={!collapsed}
+        onClick={() => {
+          peek.hide();
+          useWorkspace.getState().toggleSidebar();
+        }}
+        onPointerEnter={peek.show}
+        onPointerLeave={peek.hideSoon}
+      >
+        <PanelRight size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
+      </button>
+    </>
   );
 }

@@ -20,6 +20,7 @@ const api: VisionApi = {
   },
   fs: {
     listDir: (path) => ipcRenderer.invoke(IPC.listDir, path),
+    findFiles: (root, extension) => ipcRenderer.invoke(IPC.findFiles, root, extension),
     readFile: (path) => ipcRenderer.invoke(IPC.readFile, path),
     writeFile: (path, content) => ipcRenderer.invoke(IPC.writeFile, path, content),
     saveImage: (notePath, bytes, ext) => ipcRenderer.invoke(IPC.saveImage, notePath, bytes, ext),

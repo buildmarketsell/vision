@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { startFakeGoogle } from './fixtures/fake-google';
-import { launch, makeFixture } from './helpers';
+import { launch, makeFixture, menu } from './helpers';
 
 test('to-do: add, tick off, open as a board, drag between columns, and keep it after a restart', async () => {
   const { userData } = makeFixture();
   let { app, page } = await launch(userData);
   try {
-    const sidebar = page.locator('aside');
-    await sidebar.getByRole('tab', { name: 'To-do' }).click();
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+    await menu(page).getByRole('tab', { name: 'To-do' }).click();
     const add = sidebar.getByRole('textbox', { name: 'Add a to-do' });
     for (const text of ['Send the email to Adrian', 'Fit the new spiral', 'Ship the old part']) {
       await add.fill(text);
@@ -31,8 +31,8 @@ test('to-do: add, tick off, open as a board, drag between columns, and keep it a
 
     await app.close();
     ({ app, page } = await launch(userData));
-    await page.locator('aside').getByRole('tab', { name: 'To-do' }).click();
-    await expect(page.locator('aside').getByRole('list', { name: 'To-dos' }).getByRole('listitem')).toHaveCount(2);
+    await menu(page).getByRole('tab', { name: 'To-do' }).click();
+    await expect(page.getByRole('complementary', { name: 'Sidebar' }).getByRole('list', { name: 'To-dos' }).getByRole('listitem')).toHaveCount(2);
   } finally {
     await app.close();
   }
@@ -43,8 +43,8 @@ test('calendar: set up Google, sign in, see events in their colors, hide a calen
   const { userData } = makeFixture();
   const { app, page } = await launch(userData, undefined, { VISION_GOOGLE_TEST_BASE: google.base });
   try {
-    const sidebar = page.locator('aside');
-    await sidebar.getByRole('tab', { name: 'Calendar' }).click();
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+    await menu(page).getByRole('tab', { name: 'Calendar' }).click();
     await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-setup.png' });
     await sidebar.getByRole('textbox', { name: 'Client ID' }).fill('not-a-client-id');
     await sidebar.getByRole('textbox', { name: 'Client secret' }).fill('secret');
@@ -86,8 +86,8 @@ test('calendar: a sign-in Google never finishes shows Waiting for Google, and Ca
   const { userData } = makeFixture();
   const { app, page } = await launch(userData, undefined, { VISION_GOOGLE_TEST_BASE: google.base });
   try {
-    const sidebar = page.locator('aside');
-    await sidebar.getByRole('tab', { name: 'Calendar' }).click();
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+    await menu(page).getByRole('tab', { name: 'Calendar' }).click();
     await sidebar.getByRole('textbox', { name: 'Client ID' }).fill('123-test.apps.googleusercontent.com');
     await sidebar.getByRole('textbox', { name: 'Client secret' }).fill('test-secret');
     await sidebar.getByRole('button', { name: 'Save' }).click();

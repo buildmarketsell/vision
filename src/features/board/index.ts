@@ -1,27 +1,18 @@
 import { createElement } from 'react';
 import { Shapes } from 'lucide-react';
 import type { Feature } from '../../renderer/core/feature';
-import { openFile } from '../../renderer/core/dockActions';
-import { useWorkspace } from '../../renderer/core/workspaceStore';
-import { isBoardFile, nextBoardName } from './boardFile';
+import { isBoardFile } from './boardFile';
+import { createBoard } from './renderer/createBoard';
 import { BoardPanel } from './renderer/BoardPanel';
+import { BoardsView } from './renderer/BoardsView';
 
 export const BOARD_TAB = 'board';
 export const NEW_BOARD_COMMAND = 'board.new';
 
-/** Creates "Untitled board.excalidraw" in the folder's top level and opens it. */
-async function createBoard(): Promise<void> {
-  const folder = useWorkspace.getState().folder;
-  if (!folder) return;
-  const listing = await window.vision.fs.listDir(folder);
-  const names = listing.ok ? listing.value.map((entry) => entry.name) : [];
-  const result = await window.vision.fs.createFile(folder, nextBoardName(names));
-  if (result.ok) openFile(result.value);
-}
-
 export const boardFeature: Feature = {
   id: 'board',
   name: 'Boards',
+  sidebarViews: [{ id: 'boards', title: 'Boards', icon: createElement(Shapes, { size: 15, strokeWidth: 1.5 }), component: BoardsView }],
   tabTypes: [
     {
       id: BOARD_TAB,

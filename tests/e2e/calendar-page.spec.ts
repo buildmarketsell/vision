@@ -8,7 +8,7 @@ test('calendar page: open the week from the sidebar, see events, click an empty 
   const { app, page } = await launch(userData, undefined, { VISION_GOOGLE_TEST_BASE: google.base });
   try {
     await page.setViewportSize({ width: 1440, height: 900 });
-    const sidebar = page.locator('aside');
+    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
     await connectFakeGoogle(sidebar);
     await sidebar.getByRole('button', { name: 'Open calendar' }).click();
 
