@@ -22,8 +22,11 @@
 - Later (Dan): notifications view and more sidebar views.
 - Ideas not started: images in the Inbox, Kokonut-style tool rows and Allow/Deny cards, showing images when reopening old conversations.
 
+- App icon and install (2026-11-19): eye-and-arc icon (`build/icon.icns`, drawn by `scripts/make_icon.py`); VISION lives in `/Applications` so it opens from Launchpad, Spotlight and the Dock.
+
+
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).
 - In dev mode the menu bar says "Electron"; the built `.app` says "VISION".
 - The main UI bundle is about 1.9 MB; Monaco is already lazy loaded. Fine for a local app, revisit if startup feels slow.
-- No app icon yet (uses Electron's default).
+

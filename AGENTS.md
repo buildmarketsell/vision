@@ -79,7 +79,10 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 
 ## Rebuild and restart (Dan's routine)
 - When a change is done and tested, merge it into `main` and push. Then offer to rebuild and restart: restarting closes Dan's open chats, so ask first (he has said yes every time so far).
-- Restart: quit VISION, `npm run dist` (with `ELECTRON_RUN_AS_NODE` unset), then open `dist/mac-arm64/VISION.app` with a clean environment (`env -i HOME=… USER=… SHELL=… LANG=… PATH=/usr/bin:/bin:/usr/sbin:/sbin open …`). Launched straight from a Claude Code session, VISION inherits its `CLAUDE_CODE_*` variables and the Claude panes inside it warn "Transcript saving is off".
+- Restart: quit VISION, `npm run dist` (with `ELECTRON_RUN_AS_NODE` unset), copy it to Applications (`ditto dist/mac-arm64/VISION.app /Applications/VISION.app`), then open `/Applications/VISION.app` with a clean environment (`env -i HOME=… USER=… SHELL=… LANG=… PATH=/usr/bin:/bin:/usr/sbin:/sbin open …`). Launched straight from a Claude Code session, VISION inherits its `CLAUDE_CODE_*` variables and the Claude panes inside it warn "Transcript saving is off".
+
+## App icon
+- `build/icon.icns` (eye under an arc, after Dan's reference, 2026-11-19), drawn by `scripts/make_icon.py`. To change it: edit the script, make `build/icon.png`, rebuild the `.icns` with `sips` + `iconutil`, then `npm run dist`.
 
 ## Gotchas
 - Automated runs (tests, screenshots) must set `VISION_HEADLESS=1`: windows render but never show and there is no Dock icon, so nothing pops up on Dan's screen. The e2e tests already do.
