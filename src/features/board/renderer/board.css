@@ -161,3 +161,13 @@
     transform: none;
   }
 }
+
+/* Videos dropped on a board play in place, filling their box. */
+.board-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  border-radius: var(--embeddable-radius);
+}

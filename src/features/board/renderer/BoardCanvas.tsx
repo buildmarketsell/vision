@@ -4,10 +4,12 @@ import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/t
 import '@excalidraw/excalidraw/index.css';
 import './board.css';
 import { useAppTheme } from '../../../renderer/core/appTheme';
+import { isBoardEmbeddable } from '../boardEmbeds';
 import { parseBoardText, type BoardScene } from '../boardFile';
 import { CANVAS_BACKGROUND, DEFAULT_STYLE } from '../boardStyle';
 import { addStickyNote, applyStyle, currentItemState } from './boardActions';
 import { BoardTopLeft, BoardZoom } from './BoardCorners';
+import { addVideos, renderBoardEmbed, videoFiles } from './boardMedia';
 import { BoardToolbar } from './BoardToolbar';
 import { watchBoard } from './boardWatch';
 import { StylePanel } from './StylePanel';
@@ -50,6 +52,7 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
   const scheme = useAppTheme((state) => state.active.scheme);
   const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [mediaError, setMediaError] = useState<string | null>(null);
   const lastSaved = useRef(initialText);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapper = useRef<HTMLDivElement>(null);
@@ -100,8 +103,24 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
     if (api) addStickyNote(api, container(), chrome.style);
   }, [api, chrome.style]);
 
+  const placeVideos = useCallback(
+    (files: File[], client?: { clientX: number; clientY: number }) => {
+      if (!api) return;
+      const { scrollX, scrollY, zoom, width, height, offsetLeft, offsetTop } = api.getAppState();
+      const viewX = client ? client.clientX - offsetLeft : width / 2;
+      const viewY = client ? client.clientY - offsetTop : height / 2;
+      void addVideos(api, path, files, { x: viewX / zoom.value - scrollX, y: viewY / zoom.value - scrollY }).then(setMediaError);
+    },
+    [api, path],
+  );
+
   return (
     <div className="flex h-full flex-col">
+      {mediaError && (
+        <div role="alert" className="mx-3 my-2 rounded-lg bg-(--color-danger-soft) px-3 py-2" style={{ fontSize: 'var(--size-small)' }}>
+          {mediaError}
+        </div>
+      )}
       {saveError && (
         <div role="alert" className="mx-3 my-2 rounded-lg bg-(--color-danger-soft) px-3 py-2" style={{ fontSize: 'var(--size-small)' }}>
           Could not save this board: {saveError}. Your drawing is still here; the next change tries again.
@@ -110,6 +129,22 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
       <div
         ref={wrapper}
         className="board-stage relative min-h-0 flex-1"
+        // Excalidraw only takes images; video files become players here instead.
+        onDropCapture={(event) => {
+          const videos = videoFiles(event.dataTransfer.files);
+          if (videos.length === 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          placeVideos(videos, event);
+        }}
+        // Read here, before Excalidraw's own paste handler: pasted files are gone once it awaits.
+        onPasteCapture={(event) => {
+          const videos = videoFiles(event.clipboardData.files);
+          if (videos.length === 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          placeVideos(videos);
+        }}
         onKeyDown={(event) => {
           // N = sticky note, as in tldraw (Excalidraw doesn't use the key).
           if (event.key === 'n' && !event.metaKey && !event.ctrlKey && !event.altKey && !isTyping(event.target)) {
@@ -122,6 +157,8 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
           excalidrawAPI={setApi}
           initialData={initialData}
           theme={scheme}
+          validateEmbeddable={isBoardEmbeddable}
+          renderEmbeddable={(element) => renderBoardEmbed(path, element)}
           UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false, toggleTheme: false } }}
         />
         {api && (

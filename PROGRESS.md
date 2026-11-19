@@ -31,6 +31,7 @@
 - Google Calendar (2026-11-19): sign in with Google (several accounts), all calendars in their colors with show/hide, add events from VISION.
 - Calendar page (2026-11-19): Notion Calendar-style week view in a tab, click an empty slot to add an event.
 - Databases (2026-11-19): Notion-style databases in the sidebar (table icon): table with typed columns, colored tags, resizable columns, sort and search, board grouped by Select, rows open as a side page with notes.
+- Board media (2026-11-19): paste any website, YouTube/Vimeo, X or Reddit link on a board and it shows live; drop or paste video files and they play on the board (saved in `videos/` next to it). Images were already supported.
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).

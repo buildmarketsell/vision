@@ -2,8 +2,8 @@ import { dialog, ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { IPC, type Result } from '../../shared/ipc';
 import { isInsideFolder } from '../paths';
 import { onWindowClosed, windowContextFor, type WindowContext } from '../windows';
-import { IMAGE_EXTENSIONS, MAX_IMAGE_BYTES } from '../../shared/markdownImages';
-import { createEntry, listDirectory, moveToTrash, readTextFile, renameEntry, saveImageNextTo, writeTextFile } from './fileSystem';
+import { IMAGE_EXTENSIONS, MAX_IMAGE_BYTES, MAX_PASTED_VIDEO_BYTES, videoExtension } from '../../shared/markdownImages';
+import { createEntry, listDirectory, moveToTrash, readTextFile, renameEntry, saveImageNextTo, saveVideoNextTo, writeTextFile } from './fileSystem';
 import { FolderWatcher } from './watcher';
 
 const watchers = new Map<WindowContext, FolderWatcher>();
@@ -61,6 +61,16 @@ function registerWriteHandlers(): void {
     }
     if (!isText(ext) || !(IMAGE_EXTENSIONS as readonly string[]).includes(ext)) return { ok: false, error: 'That is not an image type VISION knows.' };
     return saveImageNextTo(notePath as string, bytes, ext);
+  });
+  ipcMain.handle(IPC.saveVideo, (event, boardPath: unknown, source: unknown, ext: unknown) => {
+    if (!guardPaths(event, [boardPath])) return OUTSIDE;
+    if (!isText(ext) || videoExtension(`.${ext}`) === null) return { ok: false, error: 'VISION plays MP4, MOV and WebM videos.' };
+    // A dropped file is copied by path, and only when it really is a video file.
+    if (isText(source)) return videoExtension(source) === null ? { ok: false, error: 'That is not a video file.' } : saveVideoNextTo(boardPath as string, source, ext);
+    if (!(source instanceof Uint8Array) || source.byteLength === 0 || source.byteLength > MAX_PASTED_VIDEO_BYTES) {
+      return { ok: false, error: 'The video is empty or larger than 200 MB. Drag the file in instead.' };
+    }
+    return saveVideoNextTo(boardPath as string, source, ext);
   });
   ipcMain.handle(IPC.createFile, (event, parent: unknown, name: unknown) =>
     guardPaths(event, [parent]) && isText(name) ? createEntry(parent as string, name, 'file') : OUTSIDE,

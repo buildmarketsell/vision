@@ -11,8 +11,25 @@ export const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 export const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'avif', 'bmp', 'ico'] as const;
 
 export function imageExtension(path: string): string | null {
+  return extensionIn(path, IMAGE_EXTENSIONS);
+}
+
+/** Video files dropped or pasted on a board go in this folder, next to the board. */
+export const VIDEOS_FOLDER = 'videos';
+
+/** Pasted videos without a file on disk are sent as bytes; dropped files are copied by path, at any size. */
+export const MAX_PASTED_VIDEO_BYTES = 200 * 1024 * 1024;
+
+/** Formats Chromium plays on its own. */
+export const VIDEO_EXTENSIONS = ['mp4', 'm4v', 'mov', 'webm'] as const;
+
+export function videoExtension(path: string): string | null {
+  return extensionIn(path, VIDEO_EXTENSIONS);
+}
+
+function extensionIn(path: string, extensions: readonly string[]): string | null {
   const ext = path.split('.').pop()?.toLowerCase() ?? '';
-  return path.includes('.') && (IMAGE_EXTENSIONS as readonly string[]).includes(ext) ? ext : null;
+  return path.includes('.') && extensions.includes(ext) ? ext : null;
 }
 
 /** `/a/b/../c` → `/a/c`. Absolute POSIX paths only. */

@@ -112,6 +112,9 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Sticky notes are rectangles with `customData.boardNote`, so restyling keeps them notes (paper color only, dark text). N or the toolbar button adds one in the middle of the view and starts typing.
 - Fonts: `scripts/postinstall.mjs` copies Excalidraw's fonts to `src/renderer/public/excalidraw/` (gitignored) so boards work offline; the CSP blocks the CDN fallback on purpose. Missing fonts after a fresh clone: run `npm install`.
 - Board files over 5 MB don't open (the shared file-read limit); pasted images make boards heavy.
+- Media (Dan, 2026-11-19: "paste videos, images, websites"): images are Excalidraw's own. Any pasted web link becomes a live embed (`validateEmbeddable` = `isBoardEmbeddable` in `boardEmbeds.ts`). X and Reddit posts use their official embed pages (`renderEmbeddable`), because Excalidraw's version runs their scripts in the app page, which the CSP blocks.
+- Video files dropped or pasted on a board are copied to `videos/` next to the board (a file already inside the board's folder is linked in place) and stored as an embeddable whose link is the relative path; `boardMedia.tsx` draws a native `<video>` through `vision-file://` (which streams videos with Range). Pasted files are read in `onPasteCapture`: once Excalidraw awaits, the clipboard's files are gone.
+- Frames: `board/main/embedFrames.ts` drops X-Frame-Options and CSP `frame-ancestors` for sub-frames only, so most sites load, and adds a Referer to YouTube embeds (without one the built app gets YouTube error 153). CSP has `frame-src https: http:` and `media-src vision-file:`. Test: `tests/e2e/boardMedia.spec.ts`.
 
 ## Rebuild and restart (Dan's routine)
 - When a change is done and tested, merge it into `main` and push. Then offer to rebuild and restart: restarting closes Dan's open chats, so ask first (he has said yes every time so far).
