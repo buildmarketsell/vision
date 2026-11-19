@@ -48,8 +48,11 @@ function fieldsFor(element: ExcalidrawElement, style: BoardStyle, noteIds: Set<s
   return { strokeColor, backgroundColor, fillStyle, strokeStyle, roughness, strokeWidth };
 }
 
-/** Applies a style to the selection (and the labels inside it) and makes it the style for new shapes. */
-export function applyStyle(api: Api, style: BoardStyle): void {
+/**
+ * Applies a style to the selection (and the labels inside it) and makes it the style for new shapes.
+ * `final` false = a preview while a picker is open; the last, final call makes it one undo step.
+ */
+export function applyStyle(api: Api, style: BoardStyle, final = true): void {
   const selected = selectedIds(api);
   const touches = (element: ExcalidrawElement) =>
     selected.has(element.id) || (element.type === 'text' && element.containerId !== null && selected.has(element.containerId));
@@ -57,10 +60,10 @@ export function applyStyle(api: Api, style: BoardStyle): void {
   const noteIds = new Set(elements.filter(isNote).map((element) => element.id));
   const changed = elements.map((element) => (touches(element) ? newElementWith(element, fieldsFor(element, style, noteIds) as Parameters<typeof newElementWith>[1]) : element));
   api.updateScene({
-    // Re-measures text so a new font or size doesn't leave a wrongly sized box.
-    elements: selected.size > 0 ? restoreElements(changed, null, { refreshDimensions: true }) : undefined,
+    // Re-measures text so a new font or size doesn't leave a wrongly sized box (Excalidraw only does it with repairBindings on).
+    elements: selected.size > 0 ? restoreElements(changed, null, { refreshDimensions: true, repairBindings: true }) : undefined,
     appState: currentItemState(style),
-    captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    captureUpdate: final ? CaptureUpdateAction.IMMEDIATELY : CaptureUpdateAction.EVENTUALLY,
   });
 }
 

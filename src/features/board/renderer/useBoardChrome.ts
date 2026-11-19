@@ -16,13 +16,16 @@ export interface BoardChrome {
 const INITIAL: BoardChrome = { tool: 'selection', zoom: 1, style: DEFAULT_STYLE, hasSelection: false, width: 0 };
 
 function styleOf(elements: readonly ExcalidrawElement[], appState: AppState): BoardStyle {
+  // Shapes have no font: show (and keep) the font and size new text will get.
+  const textNow = { fontFamily: appState.currentItemFontFamily, fontSize: appState.currentItemFontSize };
   const selected = elements.find((element) => appState.selectedElementIds[element.id]);
   if (selected && isNote(selected)) {
     // A note's color lives in its paper, not its (invisible) outline.
     const color = BOARD_COLORS.find(({ id }) => noteFill(id) === selected.backgroundColor)?.id ?? DEFAULT_STYLE.color;
-    return { ...DEFAULT_STYLE, color };
+    const { font, fontSize } = fieldsToStyle(textNow, true);
+    return { ...DEFAULT_STYLE, color, font, fontSize };
   }
-  if (selected) return fieldsToStyle(selected as Parameters<typeof fieldsToStyle>[0], selected.type === 'text');
+  if (selected) return fieldsToStyle({ ...textNow, ...(selected as Parameters<typeof fieldsToStyle>[0]) }, selected.type === 'text');
   return fieldsToStyle({
     strokeColor: appState.currentItemStrokeColor,
     backgroundColor: appState.currentItemBackgroundColor,
@@ -31,6 +34,7 @@ function styleOf(elements: readonly ExcalidrawElement[], appState: AppState): Bo
     roughness: appState.currentItemRoughness,
     strokeWidth: appState.currentItemStrokeWidth,
     fontFamily: appState.currentItemFontFamily,
+    fontSize: appState.currentItemFontSize,
   });
 }
 

@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
-import { BOARD_COLORS, DASHES, FILLS, FONTS, SIZES, type BoardStyle, type Dash, type Fill, type Font } from '../boardStyle';
+import { BOARD_COLORS, DASHES, FILLS, FONTS, FONT_SIZES, SIZES, type BoardStyle, type Dash, type Fill } from '../boardStyle';
+import { CustomColor } from './CustomColor';
+import { FONT_LABELS, FontPicker, FontSizeField, fontCss } from './FontPicker';
 
 const FILL_LABELS: Record<Fill, string> = { none: 'No fill', semi: 'Light fill', solid: 'Solid fill', pattern: 'Pattern fill' };
 const DASH_LABELS: Record<Dash, string> = { draw: 'Hand-drawn', solid: 'Solid', dashed: 'Dashed', dotted: 'Dotted' };
-const FONT_LABELS: Record<Font, string> = { draw: 'Hand-drawn', sans: 'Sans', mono: 'Mono' };
-const FONT_FAMILIES: Record<Font, string> = { draw: 'Excalifont', sans: 'Nunito', mono: 'Cascadia' };
 const DASH_PATTERNS: Record<Dash, string | undefined> = { draw: undefined, solid: undefined, dashed: '5 3', dotted: '0.5 3.5' };
 
 function DashIcon({ dash }: { dash: Dash }) {
@@ -26,10 +26,11 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 interface StylePanelProps {
   style: BoardStyle;
-  onChange: (style: BoardStyle) => void;
+  /** `final` false while the color panel is still open (a live preview). */
+  onChange: (style: BoardStyle, final?: boolean) => void;
 }
 
-/** tldraw's style panel: color grid, fill, dash, size and font. */
+/** tldraw's style panel: color grid, fill, dash, size and font, plus any Mac font and any text size. */
 export function StylePanel({ style, onChange }: StylePanelProps) {
   const set = (change: Partial<BoardStyle>) => onChange({ ...style, ...change });
   return (
@@ -41,6 +42,7 @@ export function StylePanel({ style, onChange }: StylePanelProps) {
           </button>
         ))}
       </div>
+      <CustomColor color={style.color} onPick={(color, final) => onChange({ ...style, color }, final)} />
       <div className="board-divider" />
       <Row label="Fill">
         {FILLS.map((fill) => (
@@ -58,7 +60,7 @@ export function StylePanel({ style, onChange }: StylePanelProps) {
       </Row>
       <Row label="Size">
         {SIZES.map((size) => (
-          <button key={size} className="board-button board-text-button" aria-label={`Size ${size.toUpperCase()}`} aria-pressed={style.size === size} onClick={() => set({ size })}>
+          <button key={size} className="board-button board-text-button" aria-label={`Size ${size.toUpperCase()}`} aria-pressed={style.size === size} onClick={() => set({ size, fontSize: FONT_SIZES[size] })}>
             {size.toUpperCase()}
           </button>
         ))}
@@ -71,13 +73,19 @@ export function StylePanel({ style, onChange }: StylePanelProps) {
             title={FONT_LABELS[font]}
             aria-label={`${FONT_LABELS[font]} font`}
             aria-pressed={style.font === font}
-            style={{ fontFamily: FONT_FAMILIES[font] }}
+            style={{ fontFamily: fontCss(font) }}
             onClick={() => set({ font })}
           >
             Aa
           </button>
         ))}
       </Row>
+      <div className="board-style-row">
+        <FontPicker font={style.font} onPick={(font) => set({ font })} />
+      </div>
+      <div className="board-style-row">
+        <FontSizeField size={style.fontSize} onChange={(fontSize) => set({ fontSize })} />
+      </div>
     </div>
   );
 }

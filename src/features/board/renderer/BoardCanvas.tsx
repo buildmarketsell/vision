@@ -15,6 +15,7 @@ import { watchBoard } from './boardWatch';
 import { StylePanel } from './StylePanel';
 import { useBoardChrome } from './useBoardChrome';
 import { useDotGrid } from './useDotGrid';
+import { useMacFonts } from './macFonts';
 
 // Fonts are copied next to the page at install time (scripts/postinstall.mjs), so boards work offline.
 window.EXCALIDRAW_ASSET_PATH = new URL('excalidraw/', window.location.href).href;
@@ -59,6 +60,8 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
   const wrapper = useRef<HTMLDivElement>(null);
   const chrome = useBoardChrome(api);
   useDotGrid(api, wrapper);
+  // Text in a Mac font needs Excalidraw to know that font before the first draw.
+  const macFonts = useMacFonts();
   const container = () => wrapper.current?.querySelector<HTMLElement>('.excalidraw') ?? null;
 
   const initialData = useMemo(() => {
@@ -155,19 +158,23 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
           }
         }}
       >
-        <Excalidraw
-          excalidrawAPI={setApi}
-          initialData={initialData}
-          theme={scheme}
-          validateEmbeddable={isBoardEmbeddable}
-          renderEmbeddable={(element) => renderBoardEmbed(path, element)}
-          UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false, toggleTheme: false } }}
-        />
+        {macFonts === null ? (
+          <div className="spinner absolute top-1/2 left-1/2" aria-label="Loading board" />
+        ) : (
+          <Excalidraw
+            excalidrawAPI={setApi}
+            initialData={initialData}
+            theme={scheme}
+            validateEmbeddable={isBoardEmbeddable}
+            renderEmbeddable={(element) => renderBoardEmbed(path, element)}
+            UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false, toggleTheme: false } }}
+          />
+        )}
         {api && (
           <>
             <BoardTopLeft api={api} getContainer={container} hasSelection={chrome.hasSelection} />
             {(chrome.width >= ROOMY_WIDTH || chrome.hasSelection || !STYLELESS_TOOLS.has(chrome.tool)) && (
-              <StylePanel style={chrome.style} onChange={(style) => applyStyle(api, style)} />
+              <StylePanel style={chrome.style} onChange={(style, final) => applyStyle(api, style, final)} />
             )}
             <BoardZoom api={api} zoom={chrome.zoom} />
             <BoardToolbar activeTool={chrome.tool} onPickTool={(type) => api.setActiveTool({ type } as Parameters<typeof api.setActiveTool>[0])} onAddNote={addNote} />

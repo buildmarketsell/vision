@@ -1,0 +1,148 @@
+/* Any Mac font and any text size, under the font buttons. */
+.board-font-picker {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.board-font-button,
+.board-size-field {
+  display: flex;
+  width: 100%;
+  height: 32px;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  border-radius: 8px;
+  background: var(--color-row-hover);
+  color: var(--color-text);
+  font-size: var(--size-small);
+}
+.board-font-button {
+  justify-content: space-between;
+  transition: transform 120ms var(--ease);
+}
+.board-font-button:hover {
+  background: var(--color-row-pressed);
+}
+.board-font-button:active {
+  transform: scale(0.97);
+}
+.board-size-field input {
+  min-width: 0;
+  flex: 1;
+  background: transparent;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+.board-size-field span {
+  color: var(--color-text-muted);
+}
+.board-font-button:focus-visible,
+.board-size-field:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.board-font-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 4;
+  width: 240px;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-popover);
+  transform-origin: top right;
+}
+.board-font-list ul {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+.board-font-search {
+  height: 32px;
+  margin-bottom: 4px;
+  padding: 0 var(--space-2);
+  border-radius: 8px;
+  background: var(--color-row-hover);
+  color: var(--color-text);
+  font-size: var(--size-small);
+  outline: none;
+}
+.board-font-option {
+  display: block;
+  width: 100%;
+  padding: 6px var(--space-2);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 15px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.board-font-option:hover,
+.board-font-option:focus-visible {
+  background: var(--color-row-hover);
+  outline: none;
+}
+[aria-selected='true'] > .board-font-option {
+  background: var(--color-row-selected);
+}
+.board-font-note {
+  padding: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--size-small);
+}
+@media (prefers-reduced-motion: reduce) {
+  .board-font-button:active {
+    transform: none;
+  }
+}
+
+/* Any color: the swatch opens the Mac's color panel. */
+.board-custom-color {
+  display: flex;
+  height: 32px;
+  margin-top: 2px;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: var(--size-small);
+  cursor: pointer;
+}
+.board-custom-color:hover {
+  background: var(--color-row-hover);
+}
+.board-custom-color[aria-pressed='true'] {
+  background: var(--color-row-selected);
+}
+.board-custom-color:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.board-custom-color input {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.board-custom-color input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.board-custom-color input::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
