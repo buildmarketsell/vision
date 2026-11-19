@@ -6,7 +6,6 @@ import { runCommand } from '../core/commands';
 import { allSidebarViews } from '../core/featureIndex';
 import { baseName, useWorkspace } from '../core/workspaceStore';
 import { theme } from '../theme';
-import type { SidebarView } from '../core/feature';
 import { usePeek } from '../core/usePeek';
 import { useActiveView, ViewPanels } from './SidebarViews';
 
@@ -60,29 +59,6 @@ function ResizeHandle({ onPreview }: { onPreview: (width: number | null) => void
   );
 }
 
-/** Views that live at the bottom of the sidebar instead of the menu (Usage). Clicking one again goes back to the menu's first view. */
-function SidebarViewButtons({ views, active, onSelect }: { views: SidebarView[]; active: string; onSelect: (id: string) => void }) {
-  const own = views.filter((view) => view.inSidebar);
-  if (own.length === 0) return null;
-  return (
-    <div className="flex shrink-0 flex-col px-2 pt-2">
-      {own.map((view) => (
-        <button
-          key={view.id}
-          className="menu-row"
-          aria-pressed={view.id === active}
-          onClick={() => onSelect(view.id === active ? (views.find((other) => !other.inSidebar)?.id ?? view.id) : view.id)}
-        >
-          <span className="menu-row-icon" aria-hidden>
-            {view.icon}
-          </span>
-          <span className="truncate">{view.title}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function BottomBar() {
   return (
     <div className="flex shrink-0 items-center gap-2 p-3">
@@ -110,11 +86,13 @@ export function Sidebar() {
   const collapsed = useWorkspace((state) => state.sidebarCollapsed);
   const [preview, setPreview] = useState<number | null>(null);
   const views = allSidebarViews();
-  const [activeView, selectView] = useActiveView(views);
+  const [activeView] = useActiveView(views);
   const peek = usePeek(collapsed);
   const label = collapsed ? 'Show sidebar' : 'Hide sidebar';
   // Pages like To-do and Settings fill the window alone; the panels stay mounted so the file tree keeps its open folders.
-  const hasPanel = Boolean(views.find((view) => view.id === activeView)?.component);
+  const active = views.find((view) => view.id === activeView);
+  const hasPanel = Boolean(active?.component);
+  const Header = active?.header;
 
   return (
     <>
@@ -132,13 +110,12 @@ export function Sidebar() {
         onPointerLeave={peek.hideSoon}
       >
         <div className="side-panel-top drag-region flex h-(--title-bar-height) shrink-0 items-center gap-2 pr-11 pl-3">
-          <span className="title truncate" title={folder}>{baseName(folder)}</span>
+          {Header ? <Header /> : <span className="title truncate" title={folder}>{baseName(folder)}</span>}
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ViewPanels views={views} active={activeView} />
         </div>
-        <SidebarViewButtons views={views} active={activeView} onSelect={selectView} />
-        {!views.find((view) => view.id === activeView)?.ownBottomBar && <BottomBar />}
+        {!active?.ownBottomBar && <BottomBar />}
         {!collapsed && <ResizeHandle onPreview={setPreview} />}
       </aside>
       {/* Last in the page, like the menu button: a draggable top row after it would swallow its clicks. */}

@@ -51,9 +51,9 @@ export function FeatureMenu() {
       >
         <div className="side-panel-top drag-region h-(--title-bar-height) shrink-0" />
         <div role="tablist" aria-orientation="vertical" aria-label="Features" className="menu-list">
-          {views.filter((view) => !view.pinBottom && !view.inSidebar).map(row)}
+          {views.filter((view) => !view.pinBottom).map(row)}
           <div className="flex-1" />
-          {views.filter((view) => view.pinBottom && !view.inSidebar).map(row)}
+          {views.filter((view) => view.pinBottom).map(row)}
         </div>
       </aside>
       {/*

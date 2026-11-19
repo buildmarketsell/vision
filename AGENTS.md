@@ -79,8 +79,10 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - While the browser sign-in is open, the view shows "Waiting for Google…" with Cancel (3-minute limit). Before this, a sign-in Google blocked left every button silently disabled and Dan thought Save was broken (2026-11-19). Disabled buttons now look disabled (styles.css).
 - Tests: `VISION_GOOGLE_TEST_BASE` points sign-in and the API at `tests/e2e/fixtures/fake-google.ts`, which also stands in for the browser.
 
-## Claude sidebar view (Usage)
-- Not in the menu: the Usage button at the bottom of the sidebar opens it (`inSidebar` view; Dan, 2026-11-19: "put this ... to the right at the bottom and call it usage"). Clicking Usage again goes back to Workspace.
+## Workspace panel tabs (Dan, 2026-11-19)
+- The Workspace sidebar has VS Code-style tabs in its top row (`WorkspacePanel.tsx`, `header` on the view): Files, Claude, Calendar, from features' `workspaceTabs` in registry order. Files shows the folder name and its action buttons below the tabs. Calendar here is the quick "what's next" list (`CalendarView`), not the week page. Replaced the short-lived Usage button.
+
+## Claude tab (usage and past chats)
 - Usage card on top, then Past chats: the folder's saved conversations, newest first (Dan, 2026-11-19: "usage box at the top and instead of open sessions i want past chats"). Open tabs are no longer listed there; the tab strip shows them. Clicking a past chat goes to its tab if open, else opens it in a new tab (`newClaudeSession(sessionId, title)`). `SessionsView.tsx`.
 
 ## Claude chat (stream-json)

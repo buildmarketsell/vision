@@ -272,3 +272,44 @@
     transform: none;
   }
 }
+
+/* Workspace's tabs in the sidebar's top row: plain icons, the open one on a soft gray square. */
+.ws-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: calc(-1 * var(--space-1));
+}
+
+.ws-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  border-radius: var(--radius-row);
+  color: var(--color-text-muted);
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.ws-tab:hover {
+  background: var(--color-row-hover);
+}
+
+.ws-tab[aria-selected='true'] {
+  background: var(--color-row-selected);
+  color: var(--color-text);
+}
+
+.ws-tab:active {
+  transform: scale(0.96);
+  transition-duration: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-tab:active {
+    transform: none;
+  }
+}

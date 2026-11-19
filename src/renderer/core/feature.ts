@@ -17,10 +17,18 @@ export interface SidebarView {
   ownBottomBar?: boolean;
   /** The `main` page draws its own top row; otherwise it gets an empty one for the traffic lights and panel buttons. */
   ownTopBar?: boolean;
-  /** Not in the menu: a button at the bottom of the sidebar opens it (Usage). */
-  inSidebar?: boolean;
+  /** Replaces the folder name in the sidebar's top row while this view is open (Workspace's tabs). */
+  header?: ComponentType;
   /** Sits at the bottom of the menu, like Notion's Settings. */
   pinBottom?: boolean;
+}
+
+/** A tab in the Workspace panel's top row (Files, Claude, Calendar), like VS Code's sidebar tabs. */
+export interface WorkspaceTab {
+  id: string;
+  title: string;
+  icon: ReactNode;
+  component: ComponentType;
 }
 
 export interface TabType {
@@ -63,6 +71,7 @@ export interface Feature {
   id: string;
   name: string;
   sidebarViews?: SidebarView[];
+  workspaceTabs?: WorkspaceTab[];
   tabTypes?: TabType[];
   fileHandlers?: FileHandler[];
   defaultPanels?: DefaultPanel[];
