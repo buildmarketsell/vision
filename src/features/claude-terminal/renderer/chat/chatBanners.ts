@@ -3,6 +3,7 @@ import type { McpServer } from './sessionInfo';
 
 /**
  * The bars above the composer, like Claude Code in VS Code: usage limits and connection problems.
+ * Connectors that need sign-in get no bar: Claude says so when one is needed (Dan, 2026-11-19).
  * Pure: the same inputs give the same bars. Ids change when the content does, so a dismissed bar
  * comes back when something new happens (a limit is hit, another server fails).
  */
@@ -59,7 +60,6 @@ function connectionBanners(servers: McpServer[]): Banner[] {
   return [
     ...(browser ? [{ id: 'browser-connected', tone: 'info' as const, text: 'Browser connected' }] : []),
     ...serverBanner(servers, 'failed', 'error', (count) => (count === 1 ? 'Failed to connect' : `${count} servers failed to connect`)),
-    ...serverBanner(servers, 'needs-auth', 'warning', (count) => (count === 1 ? 'Needs sign-in' : `${count} connectors need sign-in`)),
   ];
 }
 

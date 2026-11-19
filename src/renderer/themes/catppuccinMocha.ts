@@ -51,15 +51,7 @@ export const catppuccinMocha: VisionTheme = {
     inboxSend: '#A6E3A1',
     inboxSendHover: '#94E2D5',
     inboxAvatar: '#45475A',
-    trayGradient: 'linear-gradient(180deg, #11111B 0%, #141421 100%)',
     // The rainbow of the Catppuccin logo.
-    ringGradient: 'conic-gradient(from 220deg, #CBA6F7 0%, #F5C2E7 16%, #FAB387 32%, #F9E2AF 48%, #A6E3A1 64%, #89DCEB 80%, #89B4FA 90%, #CBA6F7 100%)',
-    viewBar: 'linear-gradient(180deg, #313244 0%, #2A2B3D 100%)',
-    viewIndicator: '#181825',
-    viewGap: '#11111B',
-    viewFace: '#313244',
-    bevel: 'rgba(205, 214, 244, 0.05)',
-    bevelStrong: 'rgba(205, 214, 244, 0.08)',
   },
   // On a dark page shadows barely show: a faint light ring keeps cards and menus apart from the page.
   shadow: {

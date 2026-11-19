@@ -97,30 +97,7 @@
   box-shadow: var(--shadow-control);
 }
 
-.wave-text > span {
-  display: inline-block;
-  white-space: pre;
-  animation: wave 1.6s var(--ease) infinite;
-}
-
-@keyframes wave {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  30% {
-    transform: translateY(-2px);
-    opacity: 0.45;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .wave-text > span {
-    animation: none;
-  }
-
   .composer-pill:active {
     transform: none;
   }

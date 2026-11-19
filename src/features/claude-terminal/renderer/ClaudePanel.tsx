@@ -14,24 +14,27 @@ import { useTerminalTheme } from '../../../renderer/core/terminalTheme';
 type ViewMode = 'chat' | 'terminal';
 const TITLE_FROM_MESSAGE_CHARS = 48;
 
-function statusLabel(session: ClaudeSession | undefined): string {
+/** Null when Claude is idle and ready: that is the normal state, so nothing is shown (Dan, 2026-11-19). */
+function statusLabel(session: ClaudeSession | undefined): string | null {
   if (!session || session.status === 'starting') return 'Starting';
   if (session.status === 'failed') return 'Did not start';
   if (session.status === 'stopped') return 'Stopped';
   if (session.waiting) return 'Needs you';
-  return session.busy ? 'Working' : 'Ready';
+  return session.busy ? 'Working' : null;
 }
 
-/** Status pill: pulsing orange while Claude works or needs you, calm gray otherwise. */
+/** Status pill: pulsing orange while Claude works or needs you, calm gray when it stopped. */
 function StatusPill({ session }: { session: ClaudeSession | undefined }) {
   const active = session?.status === 'running' && (session.busy || session.waiting);
+  const label = statusLabel(session);
+  if (!label) return null;
   return (
     <span
       className="caption flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5"
       style={{ background: active ? 'var(--color-accent-soft)' : 'var(--color-row-hover)', color: active ? 'var(--color-accent-hover)' : undefined }}
     >
       {session?.status === 'running' && <span className="live-dot" data-busy={active} />}
-      {statusLabel(session)}
+      {label}
     </span>
   );
 }

@@ -49,16 +49,6 @@ export const visionLightColors = {
   inboxSend: '#00A884',
   inboxSendHover: '#008F72',
   inboxAvatar: '#DFE5E7',
-  /** Sidebar view switcher: recessed tray, raised bar, sunken well and the spinning ring around the active view. */
-  trayGradient: 'linear-gradient(180deg, #DCDCDF 0%, #D3D3D7 50%, #CCCCD1 100%)',
-  ringGradient: 'conic-gradient(from 220deg, #F26B3A 0%, #F7A072 18%, #FFD8B8 36%, #F7A072 54%, #D97757 72%, #E35A28 86%, #F26B3A 100%)',
-  viewBar: 'linear-gradient(180deg, #FFFFFF 0%, #FCFCFE 100%)',
-  viewIndicator: '#ECECEF',
-  viewGap: '#E4E4E7',
-  viewFace: '#F9F9FA',
-  /** The light edge under raised and sunken parts. */
-  bevel: 'rgba(255, 255, 255, 0.6)',
-  bevelStrong: 'rgba(255, 255, 255, 0.9)',
 };
 
 export const visionLight: VisionTheme = {

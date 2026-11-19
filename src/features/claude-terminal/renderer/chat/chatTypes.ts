@@ -61,8 +61,6 @@ export interface ChatState {
   phase: ChatPhase;
   sessionId: string | null;
   model: string | null;
-  /** What Claude is doing right now, for the live card. */
-  activity: string;
   costUsd: number;
   /** Models, slash commands and context use. */
   info: SessionInfo;
@@ -83,7 +81,6 @@ export function emptyChatState(): ChatState {
     phase: 'starting',
     sessionId: null,
     model: null,
-    activity: '',
     costUsd: 0,
     info: emptySessionInfo(),
     streamingKeys: {},

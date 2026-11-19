@@ -203,9 +203,9 @@ test('slash commands, model picker, context meter and message queue', async () =
     await expect(messageBox(page).first()).toHaveValue('/review ');
     await messageBox(page).first().fill('');
 
-    await expect(page.locator('.chat-banner')).toHaveText(['Browser connected', 'Needs sign-in: Gmail']);
-    await page.locator('.chat-banner').filter({ hasText: 'Browser connected' }).getByRole('button', { name: 'Dismiss' }).click();
-    await expect(page.locator('.chat-banner')).toHaveText(['Needs sign-in: Gmail']);
+    await expect(page.locator('.chat-banner')).toHaveText(['Browser connected']);
+    await page.locator('.chat-banner').getByRole('button', { name: 'Dismiss' }).click();
+    await expect(page.locator('.chat-banner')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Opus 5.5 Medium' }).click();
     await page.getByRole('radiogroup', { name: 'Effort' }).getByRole('radio', { name: 'High' }).click();
