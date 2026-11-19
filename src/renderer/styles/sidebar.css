@@ -7,7 +7,8 @@
   flex-shrink: 0;
   flex-direction: column;
   overflow: hidden;
-  background: var(--color-sidebar);
+  /* Glass (Dan, 2026-11-19): docked, macOS's own frosted blur shows through the see-through window (vibrancy). */
+  background: var(--color-glass);
 }
 
 .side-panel[data-side='left'] {
@@ -26,7 +27,12 @@
   top: calc(var(--title-bar-height) + var(--space-1));
   bottom: var(--space-2);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-popover);
+  /* Floating over the page: the page behind is frosted, with a light edge like a pane of glass. */
+  background: var(--color-glass-floating);
+  backdrop-filter: blur(28px) saturate(180%);
+  box-shadow:
+    inset 0 0 0 0.5px var(--color-glass-edge),
+    var(--shadow-popover);
   opacity: 0;
   transition:
     transform var(--duration-base) var(--ease),
@@ -68,6 +74,15 @@
 
 .edge-zone[data-side='right'] {
   right: 0;
+}
+
+/* Where macOS can't blur (Reduce Transparency), the panels are solid again. */
+@media (prefers-reduced-transparency: reduce) {
+  .side-panel,
+  .side-panel[data-collapsed='true'] {
+    background: var(--color-sidebar);
+    backdrop-filter: none;
+  }
 }
 
 /* The buttons stay put whether their panel is open or hidden, centered in the top row. */

@@ -37,7 +37,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 ## Design rules (Apple principles + Dan's coding rules)
 - System font (San Francisco) and SF Mono; type classes `.title`, `.display`, `.caption`, `.section-label` carry size-specific tracking. Don't add fonts.
 - Feedback on press (`:active`), animate only transform and opacity, easing `var(--ease)` (critically damped, no overshoot). Every animation has a calmer version under `prefers-reduced-motion`.
-- Solid surfaces only: no blur or glass (coding rules ban glassmorphism). Depth comes from `--shadow-card`, `--shadow-control`, `--shadow-popover`.
+- Glass only on the two side panels (Dan chose it on 2026-11-19, replacing "solid surfaces only"): docked, the window is see-through and macOS's own frosted glass shows behind them (`vibrancy: 'sidebar'` in `windows.ts`; `body:has(.app-shell)` is transparent and each `main` paints `--color-card`); floating (peek), they blur the page with `backdrop-filter`. Tints are `--color-glass*` in every theme; macOS's light/dark follows the theme (`app.setScheme` → `nativeTheme.themeSource`). Reduce Transparency makes them solid again. Everything else stays solid; depth comes from `--shadow-card`, `--shadow-control`, `--shadow-popover`.
 - Nested corners are concentric: inner radius = outer radius minus the inset.
 - Menus and popovers grow from where they were opened (`transform-origin`).
 

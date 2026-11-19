@@ -22,7 +22,8 @@ let isQuitting = false;
 const DEFAULT_SIZE = { width: 1440, height: 900 };
 /** Background mode for tests: windows render but are never shown. */
 const HEADLESS = process.env['VISION_HEADLESS'] === '1';
-const BACKGROUND_COLOR = '#FFFFFF';
+/** See-through, so macOS's frosted glass (vibrancy) shows behind the menus; the page paints its own background. */
+const BACKGROUND_COLOR = '#00000000';
 
 export function setQuitting(value: boolean): void {
   isQuitting = value;
@@ -118,6 +119,8 @@ export function createWindow(folder: string | null, bounds: WindowBounds | null 
     /** Centered in the 36px top row (the lights are 12px tall). */
     trafficLightPosition: { x: 16, y: 12 },
     backgroundColor: BACKGROUND_COLOR,
+    vibrancy: 'sidebar',
+    visualEffectState: 'followWindow',
     webPreferences: {
       preload: join(app.getAppPath(), 'out/preload/index.cjs'),
       contextIsolation: true,

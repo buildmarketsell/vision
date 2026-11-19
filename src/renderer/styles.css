@@ -38,6 +38,14 @@ body {
   user-select: none;
 }
 
+/* With a folder open, the window is see-through (for the menus' glass) and only the page between them is painted. */
+body:has(.app-shell) {
+  background: transparent;
+}
+.app-shell > main {
+  background: var(--color-card);
+}
+
 ::selection {
   background: var(--color-selection);
 }

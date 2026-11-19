@@ -80,6 +80,10 @@ export const visionLightColors = {
   /** Boards: Freeform's plain canvas with a faint dot grid. */
   boardCanvas: '#FFFFFF',
   boardDot: '#CBCBCB',
+  /** The two menus' glass: a tint over macOS's frosted blur, and the thin light edge glass catches. */
+  glass: 'rgba(247, 247, 245, 0.55)',
+  glassFloating: 'rgba(250, 250, 249, 0.72)',
+  glassEdge: 'rgba(255, 255, 255, 0.6)',
 };
 
 export const visionLight: VisionTheme = {
