@@ -6,6 +6,7 @@ import { runCommand } from '../core/commands';
 import { allSidebarViews } from '../core/featureIndex';
 import { baseName, useWorkspace } from '../core/workspaceStore';
 import { theme } from '../theme';
+import type { SidebarView } from '../core/feature';
 import { usePeek } from '../core/usePeek';
 import { useActiveView, ViewPanels } from './SidebarViews';
 
@@ -59,6 +60,29 @@ function ResizeHandle({ onPreview }: { onPreview: (width: number | null) => void
   );
 }
 
+/** Views that live at the bottom of the sidebar instead of the menu (Usage). Clicking one again goes back to the menu's first view. */
+function SidebarViewButtons({ views, active, onSelect }: { views: SidebarView[]; active: string; onSelect: (id: string) => void }) {
+  const own = views.filter((view) => view.inSidebar);
+  if (own.length === 0) return null;
+  return (
+    <div className="flex shrink-0 flex-col px-2 pt-2">
+      {own.map((view) => (
+        <button
+          key={view.id}
+          className="menu-row"
+          aria-pressed={view.id === active}
+          onClick={() => onSelect(view.id === active ? (views.find((other) => !other.inSidebar)?.id ?? view.id) : view.id)}
+        >
+          <span className="menu-row-icon" aria-hidden>
+            {view.icon}
+          </span>
+          <span className="truncate">{view.title}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function BottomBar() {
   return (
     <div className="flex shrink-0 items-center gap-2 p-3">
@@ -67,21 +91,14 @@ function BottomBar() {
         Claude
         <span className="keycap">⌘T</span>
       </button>
-      {/*
-        Last in the page: the window's drag areas are applied in page order, so a draggable top row that
-        comes later (a page's top bar) would swallow clicks on a button placed before it.
-      */}
-      {createPortal(
-        <button
-          className="pill-button w-9"
-          title="Open Folder (⌘O)"
-          aria-label="Open Folder"
-          onClick={() => void window.vision.app.openFolderDialog()}
-        >
-          <FolderOpen size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
-        </button>,
-        document.body,
-      )}
+      <button
+        className="pill-button w-9"
+        title="Open Folder (⌘O)"
+        aria-label="Open Folder"
+        onClick={() => void window.vision.app.openFolderDialog()}
+      >
+        <FolderOpen size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
+      </button>
     </div>
   );
 }
@@ -93,7 +110,7 @@ export function Sidebar() {
   const collapsed = useWorkspace((state) => state.sidebarCollapsed);
   const [preview, setPreview] = useState<number | null>(null);
   const views = allSidebarViews();
-  const [activeView] = useActiveView(views);
+  const [activeView, selectView] = useActiveView(views);
   const peek = usePeek(collapsed);
   const label = collapsed ? 'Show sidebar' : 'Hide sidebar';
   // Pages like To-do and Settings fill the window alone; the panels stay mounted so the file tree keeps its open folders.
@@ -120,25 +137,30 @@ export function Sidebar() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ViewPanels views={views} active={activeView} />
         </div>
+        <SidebarViewButtons views={views} active={activeView} onSelect={selectView} />
         {!views.find((view) => view.id === activeView)?.ownBottomBar && <BottomBar />}
         {!collapsed && <ResizeHandle onPreview={setPreview} />}
       </aside>
-      <button
-        hidden={!hasPanel}
-        className="icon-button panel-toggle no-drag"
-        data-side="right"
-        title={`${label} (⌘⇧\\)`}
-        aria-label={label}
-        aria-expanded={!collapsed}
-        onClick={() => {
-          peek.hide();
-          useWorkspace.getState().toggleSidebar();
-        }}
-        onPointerEnter={peek.show}
-        onPointerLeave={peek.hideSoon}
-      >
-        <PanelRight size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
-      </button>
+      {/* Last in the page, like the menu button: a draggable top row after it would swallow its clicks. */}
+      {createPortal(
+        <button
+          hidden={!hasPanel}
+          className="icon-button panel-toggle no-drag"
+          data-side="right"
+          title={`${label} (⌘⇧\\)`}
+          aria-label={label}
+          aria-expanded={!collapsed}
+          onClick={() => {
+            peek.hide();
+            useWorkspace.getState().toggleSidebar();
+          }}
+          onPointerEnter={peek.show}
+          onPointerLeave={peek.hideSoon}
+        >
+          <PanelRight size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
+        </button>,
+        document.body,
+      )}
     </>
   );
 }

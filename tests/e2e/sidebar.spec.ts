@@ -21,6 +21,8 @@ test('the menu sits left and the open feature on the right; each hides with its 
     const names = await menu(page).getByRole('tab').allTextContents();
     expect(names.slice(0, 5)).toEqual(['Workspace', 'To-do', 'Boards', 'Database', 'Calendar']);
     expect(names.at(-1)).toBe('Settings');
+    expect(names).not.toContain('Claude');
+    await expect(sidebar.getByRole('button', { name: 'Open Folder' })).toBeVisible();
     const menuBox = await menu(page).boundingBox();
     const sidebarBox = await sidebar.boundingBox();
     expect(menuBox!.x).toBe(0);
@@ -76,7 +78,7 @@ test('the panel buttons come after every draggable area on every page, so the wi
         const draggable = [...document.querySelectorAll('*')].filter((element) => getComputedStyle(element).getPropertyValue('-webkit-app-region') === 'drag');
         return buttons.length === 2 && draggable.every((area) => buttons.every((button) => area.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING));
       });
-    for (const name of ['Workspace', 'To-do', 'Boards', 'Database', 'Calendar', 'Claude', 'Inbox', 'Settings']) {
+    for (const name of ['Workspace', 'To-do', 'Boards', 'Database', 'Calendar', 'Inbox', 'Settings']) {
       await menu(page).getByRole('tab', { name }).click();
       expect(await buttonsLast(), name).toBe(true);
     }
