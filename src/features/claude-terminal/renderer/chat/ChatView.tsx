@@ -13,6 +13,7 @@ import { PermissionCard, QuestionCard } from './RequestCards';
 import { ToolRow } from './ToolRow';
 import type { ChatSession } from './useChatSession';
 import { timeAgo } from '../timeAgo';
+import { textForDocument } from './copyText';
 
 const STICK_TO_BOTTOM_PX = 80;
 
@@ -78,12 +79,12 @@ function useStickToBottom(dependency: unknown) {
   return { ref, onScroll };
 }
 
-/** Copies chat text without its styling, so pasting into Google Docs or Word takes on the document's own font and sizes. */
+/** Copies chat text without its styling (so Google Docs or Word use their own font and sizes) and with one empty line between paragraphs. */
 function copyAsPlainText(event: ClipboardEvent) {
   const text = window.getSelection()?.toString();
   if (!text) return;
   event.preventDefault();
-  event.clipboardData.setData('text/plain', text);
+  event.clipboardData.setData('text/plain', textForDocument(text));
 }
 
 /** A Claude conversation as a chat, like Claude Code in VS Code. */
