@@ -30,6 +30,6 @@ export const claudeTerminalFeature: Feature = {
         if (id) focusClaudeTerminal(id);
       },
     },
-    { id: 'claude.new', title: 'New Claude Session', shortcut: 'Mod+T', run: newClaudeSession },
+    { id: 'claude.new', title: 'New Claude Session', shortcut: 'Mod+T', run: () => newClaudeSession() },
   ],
 };
