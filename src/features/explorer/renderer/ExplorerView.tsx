@@ -3,7 +3,7 @@ import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, Pencil, RefreshCw, S
 import type { DirEntry } from '../../../shared/ipc';
 import { ContextMenu, type ContextMenuItem } from '../../../renderer/components/ContextMenu';
 import { runCommand } from '../../../renderer/core/commands';
-import { parentPath, useWorkspace } from '../../../renderer/core/workspaceStore';
+import { baseName, parentPath, useWorkspace } from '../../../renderer/core/workspaceStore';
 import { trashEntry } from './treeActions';
 import { TreeChildren } from './TreeChildren';
 import { useTree } from './treeStore';
@@ -57,8 +57,8 @@ function HeaderButton({ label, icon: Icon, onClick }: { label: string; icon: Luc
 function ExplorerHeader({ folder, showHidden }: { folder: string; showHidden: boolean }) {
   const hiddenLabel = showHidden ? 'Hide hidden files' : 'Show hidden files';
   return (
-    <div className="flex items-center justify-between pr-2">
-      <div className="section-label">Files</div>
+    <div className="flex items-center justify-between gap-2 pr-2 pl-3">
+      <div className="title min-w-0 truncate" title={folder}>{baseName(folder)}</div>
       <div className="flex items-center">
         <HeaderButton label="New File" icon={FilePlus} onClick={() => startCreate('newFile')} />
         <HeaderButton label="New Folder" icon={FolderPlus} onClick={() => startCreate('newDir')} />

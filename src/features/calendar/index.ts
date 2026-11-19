@@ -11,5 +11,7 @@ export const calendarFeature: Feature = {
   id: 'calendar',
   name: 'Calendar',
   sidebarViews: [{ id: 'calendar', title: 'Calendar', icon: icon(), component: CalendarView, main: CalendarPage }],
+  // The quick "what's next" list also sits in the Workspace panel (Dan, 2026-11-19).
+  workspaceTabs: [{ id: 'calendar', title: 'Calendar', icon: icon(), component: CalendarView }],
   tabTypes: [{ id: CALENDAR_TAB, component: CalendarPage, closable: true, icon }],
 };

@@ -1,5 +1,5 @@
 import { registerCommands } from './commands';
-import type { DefaultPanel, Feature, SidebarView, TabType } from './feature';
+import type { DefaultPanel, Feature, SidebarView, TabType, WorkspaceTab } from './feature';
 
 let installed: Feature[] = [];
 
@@ -24,6 +24,10 @@ export function tabTypeForFile(path: string): string | undefined {
 
 export function allSidebarViews(): SidebarView[] {
   return installed.flatMap((feature) => feature.sidebarViews ?? []);
+}
+
+export function allWorkspaceTabs(): WorkspaceTab[] {
+  return installed.flatMap((feature) => feature.workspaceTabs ?? []);
 }
 
 export function allDefaultPanels(): DefaultPanel[] {

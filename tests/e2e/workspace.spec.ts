@@ -329,9 +329,12 @@ test('the Claude view shows usage on top and reopens past chats', async () => {
   const { app, page } = await launch(userData, projectsDir);
   try {
     const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
-    await sidebar.getByRole('button', { name: 'Usage' }).click();
-    await expect(sidebar.getByRole('button', { name: 'Usage' })).toHaveAttribute('aria-pressed', 'true');
-    const view = sidebar.getByRole('tabpanel', { name: 'Usage' });
+    const tabs = sidebar.getByRole('tablist', { name: 'Workspace' }).getByRole('tab');
+    await expect(tabs).toHaveCount(3);
+    expect(await tabs.evaluateAll((elements) => elements.map((element) => element.getAttribute('aria-label')))).toEqual(['Files', 'Claude', 'Calendar']);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/workspace-tabs.png' });
+    await tabs.nth(1).click();
+    const view = sidebar.getByRole('tabpanel', { name: 'Claude' });
     const usage = view.getByRole('region', { name: 'Usage' });
     const pastChat = view.getByRole('button', { name: /Old launch plan/ });
     await expect(pastChat).toBeVisible({ timeout: 15_000 });
