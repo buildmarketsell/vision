@@ -35,6 +35,7 @@
 - Notion view (2026-11-19): the table icon turns the window into Notion: sidebar with Search, Favorites, a page tree and Databases; pages with cover, icon, title and blocks (text, headings, to-dos, lists, toggles, quote, callout, divider, sub-pages, inline databases), "/" menu and markdown shortcuts, back/forward and breadcrumbs.
 - Menu and sidebar (2026-11-19): feature menu on the left (Workspace, To-do, Boards, Database, Calendar, Claude, Inbox, Settings), the picked feature's panel on the right; each hides with its own button and peeks out when you hover the window edge. Boards is its own view listing every board in the folder.
 - Menu pages (2026-11-19): each menu item opens its own page: To-do, Boards (picked board full window), Calendar (week), Inbox and Settings fill the window; the week page updates right after signing in.
+- Workspace tabs and HTML preview (2026-11-19): Files / Claude / Calendar tabs in the Workspace panel; HTML files open as the real page with a Preview / Code switch and live reload.
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).
