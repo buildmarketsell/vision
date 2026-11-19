@@ -5,11 +5,13 @@ interface WorkspaceState {
   folder: string;
   showHidden: boolean;
   sidebarWidth: number;
+  sidebarCollapsed: boolean;
   /** Extra paths features want watched (e.g. open files), keyed by feature id. */
   watchedByFeature: Record<string, string[]>;
   setFolder: (folder: string) => void;
   toggleHidden: () => void;
   setSidebarWidth: (width: number) => void;
+  toggleSidebar: () => void;
   setWatched: (featureId: string, paths: string[]) => void;
 }
 
@@ -23,10 +25,12 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
   folder: '',
   showHidden: true,
   sidebarWidth: theme.layout.sidebarDefaultWidth,
+  sidebarCollapsed: false,
   watchedByFeature: {},
   setFolder: (folder) => set({ folder }),
   toggleHidden: () => set((state) => ({ showHidden: !state.showHidden })),
   setSidebarWidth: (width) => set({ sidebarWidth: clampSidebar(width) }),
+  toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setWatched: (featureId, paths) =>
     set((state) => ({ watchedByFeature: { ...state.watchedByFeature, [featureId]: paths } })),
 }));

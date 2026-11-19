@@ -26,6 +26,7 @@
 
 
 - Claude sidebar (2026-11-19): Usage card at the top, Past chats list below it (click to reopen).
+- Notion top bar (2026-11-19): 36px top row, sidebar button next to the traffic lights (also ⌘\\) that hides and shows the sidebar, remembered per folder.
 
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).

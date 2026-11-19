@@ -10,6 +10,7 @@ function useAppCommands(): void {
   useEffect(() => {
     registerCommands([
       { id: 'tab.close', title: 'Close Tab', shortcut: 'Mod+W', run: closeActivePanel },
+      { id: 'view.toggleSidebar', title: 'Toggle Sidebar', shortcut: 'Mod+\\', run: () => useWorkspace.getState().toggleSidebar() },
       { id: 'view.toggleHidden', title: 'Show Hidden Files', shortcut: 'Mod+Shift+.', run: () => useWorkspace.getState().toggleHidden() },
     ]);
     const uninstall = installKeybindings();
@@ -63,7 +64,7 @@ export function App() {
       if (state.folder) {
         useWorkspace.setState({
           folder: state.folder,
-          ...(state.layout ? { sidebarWidth: state.layout.sidebarWidth, showHidden: state.layout.showHidden } : {}),
+          ...(state.layout ? { sidebarWidth: state.layout.sidebarWidth, sidebarCollapsed: state.layout.sidebarCollapsed, showHidden: state.layout.showHidden } : {}),
         });
         document.title = state.folder;
       }

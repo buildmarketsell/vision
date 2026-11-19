@@ -65,6 +65,14 @@ describe('app state', () => {
     });
     expect(Object.keys(pruneLayouts(state))).toEqual(['/a']);
   });
+  it('remembers a hidden sidebar and treats anything else as shown', () => {
+    const state = normalizeAppState({
+      recentFolders: ['/a', '/b'],
+      layouts: { '/a': { dock: null, sidebarCollapsed: true }, '/b': { dock: null, sidebarCollapsed: 'yes' } },
+    });
+    expect(state.layouts['/a']?.sidebarCollapsed).toBe(true);
+    expect(state.layouts['/b']?.sidebarCollapsed).toBe(false);
+  });
 });
 
 describe('shortcutFromEvent', () => {

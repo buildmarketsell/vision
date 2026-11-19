@@ -38,7 +38,9 @@ export const theme = {
     sidebarMinWidth: 200,
     sidebarMaxWidth: 480,
     /** Sidebar top row and tab strip share this height, so they line up. */
-    titleBarHeight: '44px',
+    titleBarHeight: '36px',
+    /** Top-left room for the traffic lights and the sidebar button; the strip starts after it when the sidebar is hidden. */
+    titleBarInset: '112px',
     tabWidth: '240px',
     tabMinWidth: '96px',
   },
@@ -68,6 +70,7 @@ export function applyThemeVariables(root: HTMLElement, active: VisionTheme): voi
   root.style.setProperty('--duration-fast', theme.motion.fast);
   root.style.setProperty('--duration-base', theme.motion.base);
   root.style.setProperty('--title-bar-height', theme.layout.titleBarHeight);
+  root.style.setProperty('--title-bar-inset', theme.layout.titleBarInset);
   root.style.setProperty('--tab-width', theme.layout.tabWidth);
   root.style.setProperty('--tab-min-width', theme.layout.tabMinWidth);
   // Native scrollbars, form controls and the default selection follow the theme.

@@ -246,3 +246,11 @@
     transform: none;
   }
 }
+
+/* Fixed spot right of the traffic lights (they end at 68px), centered in the top row. */
+.sidebar-toggle {
+  position: absolute;
+  top: calc((var(--title-bar-height) - 28px) / 2);
+  left: 76px;
+  z-index: 20;
+}

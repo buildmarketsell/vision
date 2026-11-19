@@ -115,8 +115,8 @@ export function createWindow(folder: string | null, bounds: WindowBounds | null 
     show: false,
     title: 'VISION',
     titleBarStyle: 'hiddenInset',
-    /** Centered in the sidebar's 44px top row. */
-    trafficLightPosition: { x: 16, y: 16 },
+    /** Centered in the 36px top row (the lights are 12px tall). */
+    trafficLightPosition: { x: 16, y: 12 },
     backgroundColor: BACKGROUND_COLOR,
     webPreferences: {
       preload: join(app.getAppPath(), 'out/preload/index.cjs'),

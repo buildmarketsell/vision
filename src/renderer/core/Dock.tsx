@@ -35,6 +35,23 @@ function restoreLayout(api: DockviewApi, saved: unknown): void {
   }
 }
 
+/**
+ * Marks the top-left pane: when the sidebar is hidden, its tab strip leaves room for the
+ * traffic lights and the sidebar button. Dockview has no "position" class, so it is measured.
+ */
+function markCornerGroup(api: DockviewApi): void {
+  let corner: HTMLElement | null = null;
+  let best = { top: Infinity, left: Infinity };
+  for (const group of api.groups) {
+    const { top, left } = group.element.getBoundingClientRect();
+    if (top < best.top - 1 || (Math.abs(top - best.top) <= 1 && left < best.left)) {
+      best = { top, left };
+      corner = group.element;
+    }
+  }
+  for (const group of api.groups) group.element.classList.toggle('dock-corner', group.element === corner);
+}
+
 interface DockProps {
   savedLayout: unknown;
   onLayoutChange: (layout: unknown) => void;
@@ -51,7 +68,11 @@ export function Dock({ savedLayout, onLayoutChange }: DockProps) {
     setDockApi(api);
     restoreLayout(api, savedLayout);
     if (api.panels.length === 0) openDefaultPanels();
-    api.onDidLayoutChange(() => onLayoutChange(api.toJSON()));
+    markCornerGroup(api);
+    api.onDidLayoutChange(() => {
+      markCornerGroup(api);
+      onLayoutChange(api.toJSON());
+    });
   };
 
   return (
