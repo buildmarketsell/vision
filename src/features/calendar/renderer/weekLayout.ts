@@ -87,3 +87,37 @@ export function weekTitle(weekStart: number): string {
   const month = (date: Date) => date.toLocaleDateString(undefined, { month: 'short' });
   return `${month(first)} – ${month(last)} ${last.getFullYear()}`;
 }
+
+const DAY_MINUTES = 24 * 60;
+/** Dragging snaps to quarter hours, like Google Calendar. */
+export const DRAG_SNAP_MINUTES = 15;
+/** A click (no drag) makes an hour from the half hour clicked. */
+const CLICK_SNAP_MINUTES = 30;
+
+/** Minutes from midnight at `offsetPx` down a day column `hourPx` tall per hour, rounded down to `snap`, kept inside the day. */
+export function minutesAt(offsetPx: number, hourPx: number, snap: number): number {
+  const minutes = Math.floor(((offsetPx / hourPx) * 60) / snap) * snap;
+  return Math.min(DAY_MINUTES - snap, Math.max(0, minutes));
+}
+
+/**
+ * The time range between where the drag started and where the pointer is now, in either direction.
+ * Each end covers its whole quarter hour, so a drag from 16:00 to 16:20 selects 16:00–16:30.
+ */
+export function dragRange(fromMinutes: number, toMinutes: number): { start: number; end: number } {
+  const start = Math.min(fromMinutes, toMinutes);
+  const end = Math.min(DAY_MINUTES, Math.max(fromMinutes, toMinutes) + DRAG_SNAP_MINUTES);
+  return { start, end };
+}
+
+/** A plain click: an hour starting at the half hour under the pointer (ends at midnight at the latest). */
+export function clickRange(offsetPx: number, hourPx: number): { start: number; end: number } {
+  const start = minutesAt(offsetPx, hourPx, CLICK_SNAP_MINUTES);
+  return { start, end: Math.min(DAY_MINUTES, start + 60) };
+}
+
+/** "16:00" for minutes from midnight; 1440 (end of the day) reads "23:59" so it stays a valid time. */
+export function clockTime(minutes: number): string {
+  const clamped = Math.min(minutes, DAY_MINUTES - 1);
+  return `${String(Math.floor(clamped / 60)).padStart(2, '0')}:${String(clamped % 60).padStart(2, '0')}`;
+}

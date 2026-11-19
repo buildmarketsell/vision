@@ -1,18 +1,24 @@
-import { useEffect, useRef, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import type { CalendarEvent } from '../../../shared/calendar';
 import { useNow } from '../../../renderer/core/useNow';
 import { timeRange } from './agenda';
-import { allDayOn, layoutDay, startOfDay } from './weekLayout';
+import { allDayOn, clickRange, clockTime, DRAG_SNAP_MINUTES, dragRange, layoutDay, minutesAt, startOfDay } from './weekLayout';
 
 /** Pixels per hour; must match `--hour` in calendar-page.css. */
 export const HOUR_PX = 48;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
-const SNAP_MINUTES = 30;
+/** Moving less than this is a click, not a drag. */
+const DRAG_THRESHOLD_PX = 4;
 
-export interface SlotPick {
+/** A stretch of one day, in minutes from midnight. */
+export interface TimeSlot {
   dayStart: number;
-  /** Minutes from midnight, snapped to the half hour. */
-  minutes: number;
+  start: number;
+  end: number;
+}
+
+/** A slot picked with the pointer, and where it was let go (to place the new-event popover). */
+export interface SlotPick extends TimeSlot {
   x: number;
   y: number;
 }
@@ -31,16 +37,59 @@ function DayHeader({ day, today }: { day: number; today: boolean }) {
   );
 }
 
-function DayColumn({ day, events, now, onPick }: { day: number; events: CalendarEvent[]; now: number; onPick: (pick: SlotPick) => void }) {
-  const today = startOfDay(now) === day;
-  const pick = (event: MouseEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget) return;
-    const offset = event.clientY - event.currentTarget.getBoundingClientRect().top;
-    const minutes = Math.min(23 * 60 + 30, Math.floor((offset / HOUR_PX) * (60 / SNAP_MINUTES)) * SNAP_MINUTES);
-    onPick({ dayStart: day, minutes, x: event.clientX, y: event.clientY });
-  };
+/** The shaded block for the time being picked (while dragging, and while the new-event popover is open). */
+function Selection({ slot }: { slot: { start: number; end: number } }) {
   return (
-    <div className="week-column" data-today={today} onClick={pick} aria-label={new Date(day).toDateString()}>
+    <div className="week-selection" style={{ top: (slot.start / 60) * HOUR_PX, height: ((slot.end - slot.start) / 60) * HOUR_PX - 2 }} aria-hidden>
+      {clockTime(slot.start)} – {clockTime(slot.end)}
+    </div>
+  );
+}
+
+function DayColumn({ day, events, now, pending, onPick }: {
+  day: number;
+  events: CalendarEvent[];
+  now: number;
+  pending: TimeSlot | null;
+  onPick: (pick: SlotPick) => void;
+}) {
+  const today = startOfDay(now) === day;
+  const [dragging, setDragging] = useState<{ start: number; end: number } | null>(null);
+
+  // Press on empty space, drag up or down to pick a stretch (quarter hours); a plain click picks an hour.
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || event.target !== event.currentTarget) return;
+    event.preventDefault();
+    const column = event.currentTarget;
+    const offset = (clientY: number) => clientY - column.getBoundingClientRect().top;
+    const startY = event.clientY;
+    const anchor = minutesAt(offset(startY), HOUR_PX, DRAG_SNAP_MINUTES);
+    let moved = false;
+    let range = dragRange(anchor, anchor);
+    column.setPointerCapture(event.pointerId);
+    const onMove = (move: globalThis.PointerEvent) => {
+      if (!moved && Math.abs(move.clientY - startY) < DRAG_THRESHOLD_PX) return;
+      moved = true;
+      range = dragRange(anchor, minutesAt(offset(move.clientY), HOUR_PX, DRAG_SNAP_MINUTES));
+      setDragging(range);
+    };
+    const onUp = (up: globalThis.PointerEvent) => {
+      column.removeEventListener('pointermove', onMove);
+      column.removeEventListener('pointerup', onUp);
+      column.removeEventListener('pointercancel', onUp);
+      setDragging(null);
+      if (up.type === 'pointercancel') return;
+      const picked = moved ? range : clickRange(offset(startY), HOUR_PX);
+      onPick({ dayStart: day, ...picked, x: up.clientX, y: up.clientY });
+    };
+    column.addEventListener('pointermove', onMove);
+    column.addEventListener('pointerup', onUp);
+    column.addEventListener('pointercancel', onUp);
+  };
+
+  const shown = dragging ?? (pending?.dayStart === day ? pending : null);
+  return (
+    <div className="week-column" data-today={today} onPointerDown={onPointerDown} aria-label={new Date(day).toDateString()}>
       {layoutDay(events, day).map(({ event, top, height, column, columns }) => (
         <div
           key={event.id}
@@ -59,13 +108,20 @@ function DayColumn({ day, events, now, onPick }: { day: number; events: Calendar
           <span className="week-event-time">{timeRange(event)}</span>
         </div>
       ))}
+      {shown && <Selection slot={shown} />}
       {today && <div className="week-now" style={{ top: ((now - day) / 3_600_000) * HOUR_PX }} aria-hidden />}
     </div>
   );
 }
 
 /** Notion Calendar's week: day headers, an all-day row, then 24 hours with events as colored blocks. */
-export function WeekGrid({ days, events, onPick }: { days: number[]; events: CalendarEvent[]; onPick: (pick: SlotPick) => void }) {
+export function WeekGrid({ days, events, pending, onPick }: {
+  days: number[];
+  events: CalendarEvent[];
+  /** The slot the new-event popover is for, kept shaded until it closes. */
+  pending: TimeSlot | null;
+  onPick: (pick: SlotPick) => void;
+}) {
   const now = useNow();
   const scrollRef = useRef<HTMLDivElement>(null);
   const firstDay = days[0];
@@ -108,7 +164,7 @@ export function WeekGrid({ days, events, onPick }: { days: number[]; events: Cal
             ))}
           </div>
           {days.map((day) => (
-            <DayColumn key={day} day={day} events={events} now={now} onPick={onPick} />
+            <DayColumn key={day} day={day} events={events} now={now} pending={pending} onPick={onPick} />
           ))}
         </div>
       </div>

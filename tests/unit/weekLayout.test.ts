@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, allDayOn, layoutDay, startOfWeek, weekDays } from '../../src/features/calendar/renderer/weekLayout';
+import { addDays, allDayOn, clickRange, clockTime, dragRange, layoutDay, minutesAt, startOfWeek, weekDays } from '../../src/features/calendar/renderer/weekLayout';
 import type { CalendarEvent } from '../../src/shared/calendar';
 
 const at = (day: number, hour: number, minute = 0) => new Date(2026, 10, day, hour, minute).getTime();
@@ -38,5 +38,28 @@ describe('week layout', () => {
     expect(allDayOn([trip], at(23, 0))).toHaveLength(1);
     expect(allDayOn([trip], at(24, 0))).toHaveLength(1);
     expect(allDayOn([trip], at(25, 0))).toHaveLength(0);
+  });
+});
+
+describe('drag to pick a time', () => {
+  const HOUR = 48;
+  it('snaps the pointer to quarter hours inside the day', () => {
+    expect(minutesAt(16 * HOUR + 10, HOUR, 15)).toBe(16 * 60);
+    expect(minutesAt(-30, HOUR, 15)).toBe(0);
+    expect(minutesAt(30 * HOUR, HOUR, 15)).toBe(23 * 60 + 45);
+  });
+
+  it('covers the quarter hours at both ends, dragging down or up', () => {
+    expect(dragRange(16 * 60, 17 * 60 + 15)).toEqual({ start: 960, end: 1050 });
+    expect(dragRange(17 * 60 + 15, 16 * 60)).toEqual({ start: 960, end: 1050 });
+    expect(dragRange(16 * 60, 16 * 60)).toEqual({ start: 960, end: 975 });
+    expect(dragRange(23 * 60 + 45, 23 * 60 + 45)).toEqual({ start: 1425, end: 1440 });
+  });
+
+  it('turns a click into an hour and writes times the form accepts', () => {
+    expect(clickRange(16 * HOUR + 30, HOUR)).toEqual({ start: 990, end: 1050 });
+    expect(clickRange(23 * HOUR + 30, HOUR)).toEqual({ start: 1410, end: 1440 });
+    expect(clockTime(990)).toBe('16:30');
+    expect(clockTime(1440)).toBe('23:59');
   });
 });
