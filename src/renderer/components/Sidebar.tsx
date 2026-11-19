@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, type PointerEvent } from 'react';
 import { FolderOpen, PanelRight } from 'lucide-react';
 import { ClaudeLogo } from './ClaudeLogo';
@@ -66,14 +67,21 @@ function BottomBar() {
         Claude
         <span className="keycap">⌘T</span>
       </button>
-      <button
-        className="pill-button w-9"
-        title="Open Folder (⌘O)"
-        aria-label="Open Folder"
-        onClick={() => void window.vision.app.openFolderDialog()}
-      >
-        <FolderOpen size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
-      </button>
+      {/*
+        Last in the page: the window's drag areas are applied in page order, so a draggable top row that
+        comes later (a page's top bar) would swallow clicks on a button placed before it.
+      */}
+      {createPortal(
+        <button
+          className="pill-button w-9"
+          title="Open Folder (⌘O)"
+          aria-label="Open Folder"
+          onClick={() => void window.vision.app.openFolderDialog()}
+        >
+          <FolderOpen size={16} strokeWidth={1.5} color="var(--color-text-muted)" />
+        </button>,
+        document.body,
+      )}
     </div>
   );
 }
