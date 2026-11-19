@@ -9,11 +9,16 @@ export function useActiveView(views: SidebarView[]): [string, (id: string) => vo
   return [active ?? '', select];
 }
 
+function ViewComponent({ view }: { view: SidebarView }) {
+  const Component = view.component;
+  return Component ? <Component /> : null;
+}
+
 /** Every view stays mounted (the tree keeps its folders open, Claude keeps tracking usage); only the active one shows. */
 export function ViewPanels({ views, active }: { views: SidebarView[]; active: string }) {
   return (
     <>
-      {views.map((view) => (
+      {views.map((view) => view.component && (
         <section
           key={view.id}
           role="tabpanel"
@@ -24,7 +29,7 @@ export function ViewPanels({ views, active }: { views: SidebarView[]; active: st
           style={{ display: view.id === active ? 'flex' : 'none' }}
         >
           <ErrorBoundary name={view.title}>
-            <view.component />
+            <ViewComponent view={view} />
           </ErrorBoundary>
         </section>
       ))}

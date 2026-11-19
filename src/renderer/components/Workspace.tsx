@@ -67,7 +67,8 @@ export function Workspace({ layout }: { layout: FolderLayout | null }) {
   const mainClass = `min-w-0 flex-1 ${menuCollapsed ? 'menu-collapsed' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`;
   const views = allSidebarViews();
   const [activeView] = useActiveView(views);
-  const Takeover = views.find((view) => view.id === activeView)?.main;
+  const takeoverView = views.find((view) => view.id === activeView);
+  const Takeover = takeoverView?.main;
 
   return (
     <div className="relative flex h-full">
@@ -77,7 +78,8 @@ export function Workspace({ layout }: { layout: FolderLayout | null }) {
         <Dock savedLayout={layout?.dock ?? null} onLayoutChange={onLayoutChange} />
       </main>
       {Takeover && (
-        <main className={mainClass}>
+        <main className={`${mainClass} flex flex-col`}>
+          {!takeoverView?.ownTopBar && <div className="drag-region h-(--title-bar-height) shrink-0" />}
           <ErrorBoundary name="Page">
             <Takeover />
           </ErrorBoundary>

@@ -236,6 +236,7 @@ test('settings: the last item in the menu switches the terminal appearance', asy
     await tabs.last().click();
     await page.getByRole('radiogroup', { name: 'Terminal appearance' }).getByRole('radio', { name: 'Light' }).click();
     await page.screenshot({ animations: 'disabled', path: 'test-results/settings.png' });
+    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
     await page.getByRole('tab', { name: 'Terminal' }).click();
     await expect(page.locator('.terminal-host .xterm-viewport')).toHaveCSS('background-color', 'rgb(247, 246, 243)');
   } finally {
@@ -252,11 +253,11 @@ test('themes: switch to Catppuccin Mocha in Settings, and keep it after a restar
     await menu(page).getByRole('tab', { name: 'Settings' }).click();
     await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'Catppuccin Mocha' }).click();
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(30, 30, 46)');
-    await expect(page.getByRole('complementary', { name: 'Sidebar' })).toHaveCSS('background-color', 'rgb(24, 24, 37)');
+    await expect(menu(page)).toHaveCSS('background-color', 'rgb(24, 24, 37)');
     await page.screenshot({ animations: 'disabled', path: 'test-results/theme-mocha.png' });
+    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
     await page.getByRole('tab', { name: 'Terminal' }).click();
     await expect(page.locator('.terminal-host .xterm-viewport')).toHaveCSS('background-color', 'rgb(24, 24, 37)');
-    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
     await page.getByRole('treeitem', { name: /hello\.md/ }).click();
     await page.getByRole('button', { name: 'Edit' }).click();
     await expect(page.locator('.monaco-editor .monaco-editor-background').first()).toHaveCSS('background-color', 'rgb(30, 30, 46)', { timeout: 15_000 });

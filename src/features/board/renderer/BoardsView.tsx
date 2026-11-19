@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Plus, RefreshCw, Shapes } from 'lucide-react';
 import { useActiveViewStore } from '../../../renderer/core/activeView';
-import { openFile } from '../../../renderer/core/dockActions';
 import { useWorkspace } from '../../../renderer/core/workspaceStore';
 import { BOARD_EXTENSION, boardLabel } from '../boardFile';
-import { createBoard } from './createBoard';
+import { useOpenBoard } from './boardSelection';
+import { makeBoardFile } from './createBoard';
 import './boards-view.css';
 
 const ICON = { size: 15, strokeWidth: 1.5 };
@@ -35,14 +35,16 @@ function useBoards(folder: string, visible: boolean) {
   return { boards, error, load };
 }
 
-/** Sidebar panel for Boards: one row per `.excalidraw` file in the folder, and New board. */
+/** Sidebar panel for Boards: one row per `.excalidraw` file in the folder (the picked one fills the window), and New board. */
 export function BoardsView() {
   const folder = useWorkspace((state) => state.folder);
   const visible = useActiveViewStore((state) => state.stored === 'boards');
   const { boards, error, load } = useBoards(folder, visible);
+  const openPath = useOpenBoard((state) => state.path);
   const newBoard = async () => {
-    await createBoard();
+    const path = await makeBoardFile();
     await load();
+    if (path) useOpenBoard.getState().open(path);
   };
 
   return (
@@ -63,7 +65,7 @@ export function BoardsView() {
       <ul aria-label="Boards" className="boards-list">
         {boards?.map((path) => (
           <li key={path}>
-            <button className="boards-row" title={path} onClick={() => openFile(path)}>
+            <button className="boards-row" title={path} aria-current={path === openPath} onClick={() => useOpenBoard.getState().open(path)}>
               <Shapes {...ICON} aria-hidden />
               <span className="truncate">{boardLabel(folder, path)}</span>
             </button>

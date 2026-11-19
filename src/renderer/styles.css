@@ -319,3 +319,19 @@ body {
     outline: 1px solid rgba(0, 0, 0, 0.35);
   }
 }
+
+/* Pages that fill the window from the menu (Settings, Inbox): a centered reading column with a big title, like Notion. */
+.page-column {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) 0;
+}
+
+.page-title {
+  margin: 0 0 var(--space-6);
+  padding: 0 var(--space-3);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

@@ -32,7 +32,11 @@ function Message({ title, detail, busy }: { title: string; detail?: string; busy
 
 /** A board tab: an Excalidraw canvas that saves itself to its `.excalidraw` file. */
 export function BoardPanel({ params }: IDockviewPanelProps<TabParams>) {
-  const path = params.path ?? '';
+  return <Board path={params.path ?? ''} />;
+}
+
+/** The canvas for one board file; used by board tabs and by the Boards page. */
+export function Board({ path }: { path: string }) {
   const [loaded, setLoaded] = useState<Loaded>({ status: 'loading' });
 
   useEffect(() => {
