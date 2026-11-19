@@ -23,7 +23,7 @@ export function ViewPanels({ views, active }: { views: SidebarView[]; active: st
           key={view.id}
           role="tabpanel"
           id={`view-${view.id}`}
-          aria-labelledby={`view-tab-${view.id}`}
+          aria-label={view.title}
           hidden={view.id !== active}
           className="min-h-0 flex-1 flex-col"
           style={{ display: view.id === active ? 'flex' : 'none' }}

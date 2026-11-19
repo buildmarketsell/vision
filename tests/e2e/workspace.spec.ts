@@ -329,8 +329,9 @@ test('the Claude view shows usage on top and reopens past chats', async () => {
   const { app, page } = await launch(userData, projectsDir);
   try {
     const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
-    await menu(page).getByRole('tab', { name: 'Claude' }).click();
-    const view = sidebar.getByRole('tabpanel', { name: 'Claude' });
+    await sidebar.getByRole('button', { name: 'Usage' }).click();
+    await expect(sidebar.getByRole('button', { name: 'Usage' })).toHaveAttribute('aria-pressed', 'true');
+    const view = sidebar.getByRole('tabpanel', { name: 'Usage' });
     const usage = view.getByRole('region', { name: 'Usage' });
     const pastChat = view.getByRole('button', { name: /Old launch plan/ });
     await expect(pastChat).toBeVisible({ timeout: 15_000 });

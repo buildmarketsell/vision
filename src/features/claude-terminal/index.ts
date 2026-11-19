@@ -9,7 +9,8 @@ import { focusClaudeTerminal } from './renderer/useClaudeTerminal';
 export const claudeTerminalFeature: Feature = {
   id: 'claude-terminal',
   name: 'Claude',
-  sidebarViews: [{ id: 'claude-sessions', title: 'Claude', icon: createElement(ClaudeLogo, { size: 15 }), component: SessionsView }],
+  // Usage and past chats: opened from the button at the bottom of the sidebar, not the menu (Dan, 2026-11-19).
+  sidebarViews: [{ id: 'claude-sessions', title: 'Usage', icon: createElement(ClaudeLogo, { size: 15 }), component: SessionsView, inSidebar: true }],
   tabTypes: [
     {
       id: CLAUDE_TAB,
