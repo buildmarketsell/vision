@@ -3,7 +3,7 @@ import type { McpServer } from './sessionInfo';
 
 /**
  * The bars above the composer, like Claude Code in VS Code: usage limits and connection problems.
- * Connectors that need sign-in get no bar: Claude says so when one is needed (Dan, 2026-11-19).
+ * Connectors that fail or need sign-in get no bar: Claude says so when one is needed (Dan, 2026-11-19, twice).
  * Pure: the same inputs give the same bars. Ids change when the content does, so a dismissed bar
  * comes back when something new happens (a limit is hit, another server fails).
  */
@@ -18,7 +18,6 @@ export interface Banner {
 
 const DAY_MS = 24 * 60 * 60_000;
 const LIMIT_NAMES: Record<string, string> = { five_hour: '5-hour limit', seven_day: 'weekly limit' };
-const CLAUDE_AI_PREFIX = 'claude.ai ';
 
 /** "seven_day_fable" → "Fable limit". */
 function limitName(key: string): string {
@@ -47,20 +46,9 @@ function usageBanners(windows: UsageWindow[], now: number): Banner[] {
   });
 }
 
-const displayName = (server: McpServer) => (server.name.startsWith(CLAUDE_AI_PREFIX) ? server.name.slice(CLAUDE_AI_PREFIX.length) : server.name);
-
-function serverBanner(servers: McpServer[], status: string, tone: BannerTone, lead: (count: number) => string): Banner[] {
-  const names = servers.filter((server) => server.status === status).map(displayName);
-  if (names.length === 0) return [];
-  return [{ id: `mcp-${status}-${names.join(',')}`, tone, text: `${lead(names.length)}: ${names.join(', ')}` }];
-}
-
 function connectionBanners(servers: McpServer[]): Banner[] {
   const browser = servers.some((server) => /chrome/i.test(server.name) && server.status === 'connected');
-  return [
-    ...(browser ? [{ id: 'browser-connected', tone: 'info' as const, text: 'Browser connected' }] : []),
-    ...serverBanner(servers, 'failed', 'error', (count) => (count === 1 ? 'Failed to connect' : `${count} servers failed to connect`)),
-  ];
+  return browser ? [{ id: 'browser-connected', tone: 'info', text: 'Browser connected' }] : [];
 }
 
 export function chatBanners(windows: UsageWindow[], servers: McpServer[], now: number): Banner[] {

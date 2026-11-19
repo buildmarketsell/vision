@@ -22,7 +22,7 @@ describe('Chat banners', () => {
     expect(banners[0]?.text).toMatch(/^You've used 92% of your 5-hour limit · resets at /);
     expect(banners[1]?.text).toMatch(/^You've hit your Fable limit · resets \w+ /);
   });
-  it('groups connection problems, shows the browser link, and stays quiet about sign-ins', () => {
+  it('shows the browser link and never shows connector problems (Claude says so when it needs one)', () => {
     const banners = chatBanners(
       [],
       [
@@ -36,7 +36,6 @@ describe('Chat banners', () => {
     );
     expect(banners.map((banner) => banner.text)).toEqual([
       'Browser connected',
-      'Failed to connect: openchatcut',
     ]);
   });
   it('reads the mcp_status reply and ignores other replies', () => {
