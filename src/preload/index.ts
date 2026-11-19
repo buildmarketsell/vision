@@ -15,6 +15,7 @@ const api: VisionApi = {
     removeRecent: (path) => ipcRenderer.invoke(IPC.removeRecent, path),
     saveLayout: (layout) => ipcRenderer.send(IPC.saveLayout, layout),
     setDirtyFiles: (paths) => ipcRenderer.send(IPC.setDirtyFiles, paths),
+    setScheme: (scheme) => ipcRenderer.send(IPC.setScheme, scheme),
     onMenuCommand: (callback) => subscribe<MenuCommandId>(IPC.menuCommand, callback),
     pathForFile: (file) => webUtils.getPathForFile(file),
   },

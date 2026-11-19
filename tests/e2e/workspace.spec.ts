@@ -262,8 +262,10 @@ test('themes: switch to Catppuccin Mocha in Settings, and keep it after a restar
     await expect(page.locator('.assistant-text').last()).toContainText('You said: hi there');
     await menu(page).getByRole('tab', { name: 'Settings' }).click();
     await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'Catppuccin Mocha' }).click();
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(30, 30, 46)');
-    await expect(menu(page)).toHaveCSS('background-color', 'rgb(24, 24, 37)');
+    // The page is painted; the window behind the menus is see-through for macOS's glass, tinted per theme.
+    await expect(page.locator('.app-shell > main').first()).toHaveCSS('background-color', 'rgb(30, 30, 46)');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(menu(page)).toHaveCSS('background-color', 'rgba(24, 24, 37, 0.3)');
     await page.screenshot({ animations: 'disabled', path: 'test-results/theme-mocha.png' });
     await menu(page).getByRole('tab', { name: 'Workspace' }).click();
     await page.getByRole('tab', { name: 'Terminal' }).click();
@@ -275,10 +277,10 @@ test('themes: switch to Catppuccin Mocha in Settings, and keep it after a restar
 
     await app.close();
     ({ app, page } = await launch(userData));
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(30, 30, 46)');
+    await expect(page.locator('.app-shell > main').first()).toHaveCSS('background-color', 'rgb(30, 30, 46)');
     await menu(page).getByRole('tab', { name: 'Settings' }).click();
     await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'VISION Light' }).click();
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(page.locator('.app-shell > main').first()).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   } finally {
     await app.close();
   }

@@ -37,7 +37,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 ## Design rules (Apple principles + Dan's coding rules)
 - System font (San Francisco) and SF Mono; type classes `.title`, `.display`, `.caption`, `.section-label` carry size-specific tracking. Don't add fonts.
 - Feedback on press (`:active`), animate only transform and opacity, easing `var(--ease)` (critically damped, no overshoot). Every animation has a calmer version under `prefers-reduced-motion`.
-- Solid surfaces only: no blur or glass (coding rules ban glassmorphism). Depth comes from `--shadow-card`, `--shadow-control`, `--shadow-popover`.
+- Glass only on the two side panels (Dan chose it on 2026-11-19, replacing "solid surfaces only"): docked, the window is see-through and macOS's own frosted glass shows behind them (`vibrancy: 'sidebar'` in `windows.ts`; `body:has(.app-shell)` is transparent and each `main` paints `--color-card`); floating (peek), they blur the page with `backdrop-filter`. Tints are `--color-glass*` in every theme; macOS's light/dark follows the theme (`app.setScheme` → `nativeTheme.themeSource`). Reduce Transparency makes them solid again. Everything else stays solid; depth comes from `--shadow-card`, `--shadow-control`, `--shadow-popover`.
 - Nested corners are concentric: inner radius = outer radius minus the inset.
 - Menus and popovers grow from where they were opened (`transform-origin`).
 
@@ -86,7 +86,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Usage card on top, then Past chats: the folder's saved conversations, newest first (Dan, 2026-11-19: "usage box at the top and instead of open sessions i want past chats"). Open tabs are no longer listed there; the tab strip shows them. Clicking a past chat goes to its tab if open, else opens it in a new tab (`newClaudeSession(sessionId, title)`). `SessionsView.tsx`.
 
 ## Claude chat (stream-json)
-- Copying text from the chat puts plain text only on the clipboard (`copyAsPlainText` in `ChatView.tsx`), so a Google Doc pastes it in its own font and sizes (Dan, 2026-11-19). The chat keeps its own look. Guarded by the first test in `workspace.spec.ts`.
+- Copying text from the chat puts plain text only on the clipboard (`copyAsPlainText` in `ChatView.tsx`), so a Google Doc pastes it in its own font and sizes (Dan, 2026-11-19). Runs of empty lines become exactly one (`textForDocument` in `chat/copyText.ts`, unit tested): Dan wants one empty line between paragraphs in the doc, not two. The chat keeps its own look. Guarded by the first test in `workspace.spec.ts`.
 - Layout follows Claude Code in VS Code (Dan, 2026-11-17): your prompts are full-width bordered cards, Claude's replies have a dot in the tool-row icon column with text aligned to the tool labels, extra space before each new prompt. Styles in `src/renderer/styles/chat.css`.
 - VISION runs `claude -p --input-format stream-json --output-format stream-json --verbose --include-partial-messages --permission-prompt-tool stdio` and sends `{"type":"control_request","request":{"subtype":"initialize"}}` first. Without `--permission-prompt-tool stdio`, permission requests are denied on the spot (`--permission-prompts host` alone is not enough).
 - Permission requests and AskUserQuestion arrive as `control_request` / `can_use_tool`; answer with `control_response` (`behavior: allow` + `updatedInput`, answers in `updatedInput.answers`). Stop = `control_request` subtype `interrupt`.

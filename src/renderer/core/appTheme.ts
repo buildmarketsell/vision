@@ -21,11 +21,13 @@ interface AppThemeState {
 export const useAppTheme = create<AppThemeState>((set) => {
   const initial = themeById(readStored());
   applyThemeVariables(document.documentElement, initial);
+  window.vision.app.setScheme(initial.scheme);
   return {
     active: initial,
     setTheme: (id) => {
       const next = themeById(id);
       applyThemeVariables(document.documentElement, next);
+      window.vision.app.setScheme(next.scheme);
       set({ active: next });
       try {
         localStorage.setItem(STORAGE_KEY, next.id);

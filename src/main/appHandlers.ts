@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, ipcMain } from 'electron';
+import { BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron';
 import { existsSync, statSync } from 'node:fs';
 import { IPC, type BootState, type FolderLayout, type Result } from '../shared/ipc';
 import { normalizeAppState } from './appState';
@@ -62,6 +62,10 @@ export function registerAppHandlers(): void {
     if (!folder) return;
     const parsed: FolderLayout | undefined = normalizeAppState({ layouts: { [folder]: layout } }).layouts[folder];
     if (parsed) updateAppState((state) => ({ ...state, layouts: { ...state.layouts, [folder]: parsed } }));
+  });
+
+  ipcMain.on(IPC.setScheme, (_event, scheme: unknown) => {
+    if (scheme === 'light' || scheme === 'dark') nativeTheme.themeSource = scheme;
   });
 
   ipcMain.on(IPC.setDirtyFiles, (event, paths: unknown) => {

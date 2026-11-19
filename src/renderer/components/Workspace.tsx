@@ -71,7 +71,7 @@ export function Workspace({ layout }: { layout: FolderLayout | null }) {
   const Takeover = takeoverView?.main;
 
   return (
-    <div className="relative flex h-full">
+    <div className="app-shell relative flex h-full">
       <FeatureMenu />
       {/* The panes stay mounted while a view takes over, so Claude chats and terminals keep running. */}
       <main className={mainClass} hidden={Boolean(Takeover)}>

@@ -70,6 +70,8 @@ export interface VisionApi {
     removeRecent(path: string): Promise<string[]>;
     saveLayout(layout: FolderLayout): void;
     setDirtyFiles(paths: string[]): void;
+    /** Light or dark for macOS's own parts (the frosted glass behind the menus, native menus), following the theme. */
+    setScheme(scheme: 'light' | 'dark'): void;
     onMenuCommand(callback: (id: MenuCommandId) => void): Unsubscribe;
     pathForFile(file: File): string;
   };
@@ -171,6 +173,7 @@ export const IPC = {
   removeRecent: 'app:removeRecent',
   saveLayout: 'app:saveLayout',
   setDirtyFiles: 'app:setDirtyFiles',
+  setScheme: 'app:setScheme',
   menuCommand: 'app:menuCommand',
   listDir: 'fs:listDir',
   findFiles: 'fs:findFiles',
