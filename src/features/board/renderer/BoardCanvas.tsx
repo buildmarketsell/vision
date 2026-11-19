@@ -14,6 +14,7 @@ import { BoardToolbar } from './BoardToolbar';
 import { watchBoard } from './boardWatch';
 import { StylePanel } from './StylePanel';
 import { useBoardChrome } from './useBoardChrome';
+import { useDotGrid } from './useDotGrid';
 
 // Fonts are copied next to the page at install time (scripts/postinstall.mjs), so boards work offline.
 window.EXCALIDRAW_ASSET_PATH = new URL('excalidraw/', window.location.href).href;
@@ -57,6 +58,7 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapper = useRef<HTMLDivElement>(null);
   const chrome = useBoardChrome(api);
+  useDotGrid(api, wrapper);
   const container = () => wrapper.current?.querySelector<HTMLElement>('.excalidraw') ?? null;
 
   const initialData = useMemo(() => {

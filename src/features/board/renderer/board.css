@@ -24,6 +24,19 @@
   --color-selection: #2f80ed;
 }
 
+/* Freeform's canvas: a theme-colored page with a dot grid that scrolls and zooms with the board
+   (useDotGrid sets the variables). Excalidraw draws on a see-through canvas on top. */
+.board-stage {
+  background-color: var(--color-board-canvas);
+  background-image: radial-gradient(circle, var(--color-board-dot) 1.25px, transparent 1.75px);
+  background-size: var(--dot-gap, 28px) var(--dot-gap, 28px);
+  background-position: var(--dot-x, -14px) var(--dot-y, -14px);
+}
+.board-canvas .excalidraw,
+.board-canvas .excalidraw .excalidraw-container {
+  background: transparent;
+}
+
 /* ---- Our controls ---- */
 .board-panel {
   position: absolute;

@@ -22,7 +22,8 @@ export const BOARD_COLORS = [
   { id: 'red', hex: '#e03131' },
 ] as const;
 
-export const CANVAS_BACKGROUND = '#f9fafb';
+/** See-through, so the theme's dot grid behind the canvas shows (board.css). */
+export const CANVAS_BACKGROUND = 'transparent';
 export const SELECTION_BLUE = '#2f80ed';
 export const NOTE_FILL = '#ffe589';
 export const NOTE_TEXT = '#1d1d1d';

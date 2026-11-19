@@ -75,6 +75,8 @@ export const catppuccinMocha: VisionTheme = {
     columnGray: 'rgba(108, 112, 134, 0.12)',
     columnBlue: 'rgba(137, 180, 250, 0.06)',
     columnGreen: 'rgba(166, 227, 161, 0.06)',
+    boardCanvas: '#11111B',
+    boardDot: '#313244',
     // The rainbow of the Catppuccin logo.
   },
   // On a dark page shadows barely show: a faint light ring keeps cards and menus apart from the page.

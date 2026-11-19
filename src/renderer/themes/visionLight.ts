@@ -77,6 +77,9 @@ export const visionLightColors = {
   columnGray: 'rgba(227, 226, 224, 0.22)',
   columnBlue: 'rgba(211, 229, 239, 0.32)',
   columnGreen: 'rgba(219, 237, 219, 0.32)',
+  /** Boards: Freeform's plain canvas with a faint dot grid. */
+  boardCanvas: '#FFFFFF',
+  boardDot: '#CBCBCB',
 };
 
 export const visionLight: VisionTheme = {
