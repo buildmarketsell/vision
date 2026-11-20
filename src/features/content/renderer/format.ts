@@ -15,3 +15,5 @@ export function signed(value: number | null): string | null {
 }
 
 export const shortDate = (ms: number) => new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+/** "Tue, 13 Jan": the heading of a chart tooltip. */
+export const weekdayDate = (ms: number) => new Date(ms).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });

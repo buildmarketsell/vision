@@ -54,6 +54,11 @@ test('content: Content in the menu shows the dashboard; connect YouTube and Inst
     await page.screenshot({ animations: 'disabled', path: 'test-results/content-dashboard.png' });
     await content.locator('.content-chart').first().hover();
     await expect(content.locator('.content-chart-tip')).toBeVisible();
+    await expect(content.locator('.content-chart-pill')).toBeVisible();
+    await youtube.locator('.content-chart').screenshot({ animations: 'disabled', path: 'test-results/content-chart-hover.png' });
+    await youtube.getByRole('tab', { name: 'Views' }).click();
+    await expect(youtube.getByRole('img', { name: /Views: from 800,000 to/ })).toBeVisible();
+    await expect(youtube.locator('.content-tile', { hasText: 'Subscribers' }).locator('.content-spark')).toBeVisible();
     await instagram.scrollIntoViewIfNeeded();
     await page.screenshot({ animations: 'disabled', path: 'test-results/content-instagram.png' });
     await page.setViewportSize({ width: 760, height: 900 });
