@@ -1,0 +1,267 @@
+/*
+ * The board color picker, after beui's motion color picker. The square's black/white/hue gradients, the
+ * rainbow and the thumbs' white rims are fixed on purpose: they are the color model, not the theme.
+ * Only transform and opacity animate.
+ */
+.cp-popover {
+  position: fixed;
+  z-index: 50;
+  padding: var(--space-3);
+  background: var(--color-card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-popover);
+  animation: cp-pop-in var(--duration-base) var(--ease) both;
+}
+.cp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.cp-row {
+  animation: cp-row-in 220ms var(--ease) both;
+  animation-delay: calc(60ms + var(--cp-i) * 35ms);
+}
+.cp-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cp-area,
+.cp-hue {
+  position: relative;
+  touch-action: none;
+  outline: none;
+}
+.cp-area {
+  height: 160px;
+  border-radius: 12px;
+  background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--cp-hue));
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.1);
+  cursor: crosshair;
+}
+.cp-hue {
+  flex: 1;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.1);
+  cursor: pointer;
+}
+.cp-area:focus-visible,
+.cp-hue:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+/* The track is the area the thumb's center can reach; the hue thumb stays 9px inside the rail's ends. */
+.cp-track {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cp-hue .cp-track {
+  inset: 0 9px;
+}
+/* A full-size layer moved by (x, y) × its own size, so the thumb moves with transform only. */
+.cp-thumb {
+  position: absolute;
+  inset: 0;
+  transform: translate(calc(var(--cp-x) * 100%), calc(var(--cp-y) * 100%));
+  transition: transform 90ms var(--ease);
+}
+.cp-thumb::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--cp-color);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.25);
+  transition: transform var(--duration-fast) var(--ease);
+}
+.cp-thumb[data-dragging='true']::before {
+  transform: scale(0.78);
+}
+
+/* The loupe: a drop above the thumb showing the color, leaning with the drag speed. */
+.cp-loupe {
+  position: absolute;
+  left: -20px;
+  top: -60px;
+  width: 40px;
+  height: 40px;
+  opacity: 0;
+  transform: translateY(16px) scale(0.3);
+  transform-origin: 50% 120%;
+  transition:
+    opacity 120ms var(--ease),
+    transform 120ms var(--ease);
+}
+.cp-thumb[data-dragging='true'] .cp-loupe {
+  opacity: 1;
+  transform: rotate(var(--cp-tilt));
+  transition:
+    opacity var(--duration-fast) var(--ease),
+    transform var(--duration-base) var(--ease);
+}
+.cp-loupe::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: var(--cp-color);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+  transform: rotate(-45deg);
+}
+
+.cp-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  transition: transform var(--duration-fast) var(--ease);
+}
+.cp-button:hover {
+  background: var(--color-row-hover);
+  color: var(--color-text);
+}
+.cp-button:active {
+  transform: scale(0.92);
+}
+.cp-format {
+  width: 48px;
+  font-size: var(--size-small);
+  font-weight: 500;
+}
+.cp-format span {
+  animation: cp-swap var(--duration-base) var(--ease) both;
+}
+
+.cp-hex {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--space-3);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--size-base);
+}
+.cp-hex:focus-within,
+.cp-channel input:focus {
+  box-shadow: inset 0 0 0 1px var(--color-accent), 0 0 0 2px var(--color-focus-ring);
+}
+.cp-hex input {
+  min-width: 0;
+  flex: 1;
+  background: none;
+  color: var(--color-text);
+  text-transform: uppercase;
+  outline: none;
+}
+.cp-hex[data-shake='true'] {
+  animation: cp-shake 300ms var(--ease);
+}
+.cp-swatch {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.1);
+}
+
+.cp-channels {
+  display: flex;
+  flex: 1;
+  gap: var(--space-1);
+}
+.cp-channel {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+.cp-channel input {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  background: none;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--size-base);
+  text-align: center;
+  outline: none;
+}
+
+@keyframes cp-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+@keyframes cp-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes cp-swap {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes cp-shake {
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-popover,
+  .cp-row,
+  .cp-format span,
+  .cp-hex[data-shake='true'] {
+    animation: none;
+  }
+  .cp-thumb,
+  .cp-thumb::before,
+  .cp-button {
+    transition: none;
+  }
+  .cp-thumb[data-dragging='true']::before {
+    transform: none;
+  }
+  .cp-loupe {
+    display: none;
+  }
+}

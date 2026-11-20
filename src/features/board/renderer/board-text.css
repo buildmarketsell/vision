@@ -106,9 +106,10 @@
   }
 }
 
-/* Any color: the swatch opens the Mac's color panel. */
+/* Any color: opens VISION's color picker (color-picker.css). */
 .board-custom-color {
   display: flex;
+  width: 100%;
   height: 32px;
   margin-top: 2px;
   align-items: center;
@@ -117,32 +118,31 @@
   border-radius: 8px;
   color: var(--color-text);
   font-size: var(--size-small);
-  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease);
 }
-.board-custom-color:hover {
+.board-custom-color:hover,
+.board-custom-color[aria-expanded='true'] {
   background: var(--color-row-hover);
 }
 .board-custom-color[aria-pressed='true'] {
   background: var(--color-row-selected);
 }
-.board-custom-color:focus-within {
+.board-custom-color:active {
+  transform: scale(0.98);
+}
+.board-custom-color:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: -2px;
 }
-.board-custom-color input {
+.board-custom-chip {
   width: 18px;
   height: 18px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: none;
-  cursor: pointer;
+  flex: none;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
 }
-.board-custom-color input::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-.board-custom-color input::-webkit-color-swatch {
-  border: none;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+@media (prefers-reduced-motion: reduce) {
+  .board-custom-color {
+    transition: none;
+  }
 }
