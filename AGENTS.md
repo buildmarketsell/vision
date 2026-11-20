@@ -121,6 +121,11 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 ## Settings (gear after the Inbox)
 - `src/features/settings/`: the sidebar view for settings, and where Dan will add his other app features (Dan, 2026-11-17). Each new setting or feature gets its own section in `SettingsView.tsx`; state shared with another feature goes in `src/renderer/core`.
 
+## Colors and neon (Dan, 2026-11-20)
+- Settings → Colors: accent (Theme default, 7 presets, any color via the Mac's picker) and the neon around the chat box (follows the accent by default), plus Neon on/off. `src/renderer/core/customColors.ts`, saved in localStorage `vision.colors`.
+- The overrides are set on `<body>`; themes write theirs on `<html>`, so Dan's colors win and survive theme switches. Hover, soft fill and focus ring are mixed from the accent with `color-mix`; text on accent buttons picks white or near-black by contrast (`readableOn`, `src/shared/customColors.ts`, unit tested).
+- Neon: `.neon` ring in `Composer.tsx`, styles in `chat-controls.css`: a rotating conic gradient masked to a 1.5px ring, transform-only animation, faster while Claude works, still under reduced motion. Test: `settingsColors.spec.ts`.
+
 ## Terminal light / dark
 - Sun/moon button in the Claude panel header (Terminal view) switches every terminal; remembered in localStorage (`src/renderer/core/terminalTheme.ts`, shared because Settings sets it too). It sets `body[data-terminal-theme]`, which overrides the `--color-terminal-*` variables (terminal.css), so terminal-colored parts of the chat follow too.
 - Claude Code's own colors follow on their own: with its theme on `auto` it asks the terminal for its background (OSC 11) at start, and xterm.js answers with the current one. Checked 2026-11-17 in Claude's debug log (`detected=light`). A terminal already open keeps Claude's colors until Restart.

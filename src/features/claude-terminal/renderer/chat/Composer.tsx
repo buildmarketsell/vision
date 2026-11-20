@@ -80,7 +80,11 @@ export function Composer({ draft, working, disabled, mode, info, model, effort, 
   };
 
   return (
-    <div className="composer">
+    <div className="composer" data-working={working}>
+      {/* The neon light running around the box (Settings → Colors). */}
+      <span className="neon" aria-hidden>
+        <span className="neon-beam" />
+      </span>
       {slash.open && <ComposerMenu label="Slash commands" items={slash.items} activeIndex={slash.active} onHover={slash.setActive} onPick={slash.pick} />}
       <Thumbnails images={draft.images} onRemove={draft.removeImage} />
       <textarea

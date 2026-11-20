@@ -72,6 +72,70 @@
   border-color: var(--color-composer-border-focus);
 }
 
+/*
+ * Neon (Dan, 2026-11-20): a light runs around the chat box's edge with a soft glow in the neon color
+ * (Settings → Colors). A rotating conic gradient, cut to a thin ring by a mask; only its transform animates.
+ * Faster and brighter while Claude works; a still glow when motion is reduced.
+ */
+body[data-neon='on'] .composer {
+  border-color: color-mix(in srgb, var(--color-neon) 30%, var(--color-composer-border));
+  box-shadow:
+    var(--shadow-control),
+    0 0 18px -4px color-mix(in srgb, var(--color-neon) 35%, transparent);
+}
+
+.neon {
+  display: none;
+}
+
+body[data-neon='on'] .neon {
+  position: absolute;
+  inset: -1px;
+  display: block;
+  padding: 1.5px;
+  overflow: hidden;
+  border-radius: 15px;
+  pointer-events: none;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: 0.75;
+  transition: opacity var(--duration-base) var(--ease);
+}
+
+.neon-beam {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 110%;
+  aspect-ratio: 1;
+  background: conic-gradient(from 0deg, transparent 0turn 0.62turn, var(--color-neon) 0.86turn, color-mix(in srgb, var(--color-neon) 40%, white) 0.9turn, transparent 0.92turn);
+  transform: translate(-50%, -50%);
+  animation: neon-spin 7s linear infinite;
+}
+
+body[data-neon='on'] .composer[data-working='true'] .neon {
+  opacity: 1;
+}
+
+body[data-neon='on'] .composer[data-working='true'] .neon-beam {
+  animation-duration: 2.6s;
+}
+
+@keyframes neon-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-beam {
+    animation: none;
+    background: var(--color-neon);
+    opacity: 0.5;
+  }
+}
+
 .composer textarea {
   resize: none;
   outline: none;
