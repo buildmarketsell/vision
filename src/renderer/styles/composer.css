@@ -77,26 +77,6 @@
   font-weight: 500;
 }
 
-.queue {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2);
-  border-radius: 14px;
-  background: var(--color-sidebar);
-}
-
-.queue-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  height: 32px;
-  padding: 0 var(--space-1) 0 var(--space-3);
-  border-radius: 10px;
-  background: var(--color-card);
-  box-shadow: var(--shadow-control);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .composer-pill:active {
     transform: none;

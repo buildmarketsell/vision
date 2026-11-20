@@ -5,6 +5,7 @@ import { isHtmlFile } from '../../../shared/htmlPreview';
 import { imageExtension, imageUrl } from '../../../shared/markdownImages';
 import { Markdown } from '../../../renderer/components/Markdown';
 import type { TabParams } from '../../../renderer/core/feature';
+import { startTreeDrag } from '../../../renderer/core/treeDrag';
 import { relativeParts, useWorkspace, baseName, parentPath } from '../../../renderer/core/workspaceStore';
 import { reloadFromDisk, useEditor, type Buffer } from './editorStore';
 import { HtmlPreview } from './HtmlPreview';
@@ -104,7 +105,17 @@ function EditorBody({ path, buffer, view, reloadToken }: { path: string; buffer:
   if ((buffer.status === 'binary' || buffer.status === 'tooLarge') && imageExtension(path)) {
     return (
       <div className="image-view">
-        <img src={imageUrl(path)} alt={baseName(path)} />
+        {/* Dragging the picture drags the file itself: Google Docs, Finder and Drive can't open VISION's own image address (Dan, 2026-11-20). */}
+        <img
+          src={imageUrl(path)}
+          alt={baseName(path)}
+          draggable
+          title="Drag to drop this image into another app"
+          onDragStart={(event) => {
+            event.preventDefault();
+            startTreeDrag([path]);
+          }}
+        />
       </div>
     );
   }

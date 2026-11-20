@@ -7,7 +7,6 @@ import type { ChatItem, ChatState } from './chatTypes';
 import { Banners } from './Banners';
 import { Composer } from './Composer';
 import { useDraft } from './useDraft';
-import { QueuedMessages, useMessageQueue } from './QueuedMessages';
 import { WorkingLine, TasksCard } from './LiveCards';
 import { Markdown } from './Markdown';
 import { PermissionCard, QuestionCard } from './RequestCards';
@@ -108,8 +107,6 @@ export function ChatView({ chat }: { chat: ChatSession }) {
   const waiting = state.permissions.length > 0 || state.questions.length > 0;
   const working = state.phase === 'working';
   const draft = useDraft();
-  const ready = state.phase === 'idle' && !waiting;
-  const queue = useMessageQueue(ready, chat.send);
 
   return (
     <div className="flex h-full min-h-0 flex-col" onDragOver={draft.onDragOver} onDrop={draft.onDrop}>
@@ -140,7 +137,6 @@ export function ChatView({ chat }: { chat: ChatSession }) {
         ))}
         {working && !waiting && <WorkingLine />}
         {state.todos.length > 0 && <TasksCard todos={state.todos} />}
-        <QueuedMessages queue={queue.queue} onRemove={queue.remove} />
         <Banners servers={state.info.mcpServers} />
         <Composer
           draft={draft}
@@ -149,7 +145,7 @@ export function ChatView({ chat }: { chat: ChatSession }) {
           mode={chat.mode}
           info={state.info}
           model={chat.model}
-          onSend={(text, images) => (working || queue.queue.length > 0 ? queue.add(text, images) : chat.send(text, images))}
+          onSend={chat.send}
           onModelChange={chat.setModel}
           effort={chat.effort}
           onEffortChange={chat.setEffort}

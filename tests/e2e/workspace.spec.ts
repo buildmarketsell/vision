@@ -220,7 +220,7 @@ test('pastes a screenshot into the chat and sends it', async () => {
   }
 });
 
-test('slash commands, model picker, context meter and message queue', async () => {
+test('slash commands, model picker, context meter, and messages sent while Claude works', async () => {
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
@@ -246,13 +246,14 @@ test('slash commands, model picker, context meter and message queue', async () =
     await page.getByRole('listbox', { name: 'Model' }).getByRole('option', { name: /Haiku/ }).click();
     await expect(page.getByRole('button', { name: 'Haiku' })).toBeVisible();
 
+    // A message sent while Claude works goes to Claude at once (it fits it into the same job), like Claude Code in VS Code.
     await sendMessage(page, 'slow one');
-    await messageBox(page).first().fill('queued follow-up');
+    await expect(page.getByRole('button', { name: 'Stop Claude' })).toBeVisible();
+    await messageBox(page).first().fill('follow-up while working');
+    await page.screenshot({ animations: 'disabled', path: 'test-results/send-mid-task.png' });
     await messageBox(page).first().press('Enter');
-    await expect(page.getByLabel('Queued messages')).toContainText('queued follow-up');
-    await page.screenshot({ animations: 'disabled', path: 'test-results/queue.png' });
-    await page.getByRole('button', { name: 'Stop Claude' }).click();
-    await expect(page.locator('.assistant-text').last()).toContainText('You said: queued follow-up');
+    await expect(page.locator('.user-bubble').last()).toHaveText('follow-up while working');
+    await expect(page.locator('.assistant-text').last()).toContainText('You said: follow-up while working');
     await expect(page.getByLabel('Queued messages')).toHaveCount(0);
   } finally {
     await app.close();

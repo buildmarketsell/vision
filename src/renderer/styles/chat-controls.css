@@ -141,7 +141,7 @@
   transform: scale(0.92);
 }
 
-.send-button[data-queue='true'] {
+.send-button[data-midtask='true'] {
   background: var(--color-row-selected);
   color: var(--color-text);
 }

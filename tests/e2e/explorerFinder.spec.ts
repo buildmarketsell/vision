@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { launch, makeFixture } from './helpers';
+
+const DOT_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
 test('⌘-click picks several files to drag out together, and right-click reveals a file in Finder', async () => {
   const { folder, userData } = makeFixture();
@@ -34,6 +37,15 @@ test('⌘-click picks several files to drag out together, and right-click reveal
     await hello.click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Reveal in Finder' }).click();
     await expect.poll(async () => (await read()).revealed).toEqual([join(folder, 'hello.md')]);
+
+    // Dragging the picture in an image tab drags the file itself, so Google Docs and Finder take it.
+    writeFileSync(join(folder, 'dot.png'), Buffer.from(DOT_PNG, 'base64'));
+    await page.getByRole('button', { name: 'Refresh' }).click();
+    await page.getByRole('treeitem', { name: /dot\.png/ }).click();
+    const picture = page.locator('.image-view img');
+    await expect(picture).toBeVisible({ timeout: 15_000 });
+    await picture.dispatchEvent('dragstart');
+    await expect.poll(async () => (await read()).dragged.at(-1)).toEqual([join(folder, 'dot.png')]);
   } finally {
     await app.close();
   }
