@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Check, ChevronRight, CircleSlash, X } from 'lucide-react';
 import { openFile } from '../../../../renderer/core/dockActions';
 import { useWorkspace } from '../../../../renderer/core/workspaceStore';
+import { afterSingleClick, cancelSingleClick, FileLinkMenu, type FileLinkTarget } from '../../../../renderer/components/FileLinkMenu';
 import type { ToolCall } from './chatTypes';
 import { asArr, asObj, asStr, describeTool, toolFilePath } from './eventParsing';
 
@@ -59,13 +60,29 @@ function ToolLabel({ tool }: { tool: ToolCall }) {
   const label = describeTool(tool.name, tool.input);
   const path = toolFilePath(tool.name, tool.input);
   const name = path?.slice(path.lastIndexOf('/') + 1);
+  const [menu, setMenu] = useState<FileLinkTarget | null>(null);
   if (!path || !name || !folder || !path.startsWith(`${folder}/`) || !label.endsWith(name)) return <>{label}</>;
+  const showMenu = (event: MouseEvent) => {
+    event.preventDefault();
+    cancelSingleClick();
+    // A double-click would otherwise also select the word under it.
+    window.getSelection()?.removeAllRanges();
+    setMenu({ path, isDirectory: false, x: event.clientX, y: event.clientY });
+  };
   return (
     <>
       {label.slice(0, -name.length)}
-      <button type="button" className="file-link" title={`Open ${path.slice(folder.length + 1)}`} onClick={() => openFile(path)}>
+      <button
+        type="button"
+        className="file-link"
+        title={`Open ${path.slice(folder.length + 1)} (double-click for more)`}
+        onClick={(event) => afterSingleClick(event, () => openFile(path))}
+        onDoubleClick={showMenu}
+        onContextMenu={showMenu}
+      >
         {name}
       </button>
+      {menu && <FileLinkMenu target={menu} onClose={() => setMenu(null)} />}
     </>
   );
 }

@@ -3,6 +3,7 @@ import { homedir } from 'node:os';
 import { isAbsolute, join, sep } from 'node:path';
 import type { LocatedPath, Result } from '../../shared/ipc';
 import { fileMention } from '../../shared/fileMentions';
+import { matchesAll, rankHits, searchWords, type SearchHit } from '../../shared/fileSearch';
 import { isInsideFolder } from '../paths';
 
 /** Enough for any real folder; a huge one (a home folder) stops here instead of freezing the app. */
@@ -48,6 +49,28 @@ export async function findFiles(root: string, extension: string): Promise<Result
   const result = await walkFiles(root, (path, isDirectory) => !isDirectory && path.toLowerCase().endsWith(wanted), MAX_RESULTS);
   if (!result.ok) return result;
   return { ok: true, value: result.value.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })) };
+}
+
+/** Enough matches to rank well; the walk stops here on a very broad search like "a". */
+const MAX_SEARCH_MATCHES = 2000;
+
+/** Files and folders under `folder` whose path from the folder contains every word typed, best first. */
+export async function searchFolder(folder: string, query: unknown): Promise<Result<SearchHit[]>> {
+  const words = searchWords(query);
+  if (!words) return { ok: true, value: [] };
+  const folders = new Set<string>();
+  const found = await walkFiles(
+    folder,
+    (path, isDirectory) => {
+      const hit = matchesAll(path.slice(folder.length + 1), words);
+      if (hit && isDirectory) folders.add(path);
+      return hit;
+    },
+    MAX_SEARCH_MATCHES,
+  );
+  if (!found.ok) return found;
+  const hits = found.value.map((path) => ({ path, relative: path.slice(folder.length + 1), isDirectory: folders.has(path) }));
+  return { ok: true, value: rankHits(hits, words) };
 }
 
 async function kindOf(path: string): Promise<LocatedPath | null> {

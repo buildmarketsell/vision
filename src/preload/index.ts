@@ -23,6 +23,7 @@ const api: VisionApi = {
     listDir: (path) => ipcRenderer.invoke(IPC.listDir, path),
     findFiles: (root, extension) => ipcRenderer.invoke(IPC.findFiles, root, extension),
     locate: (mention) => ipcRenderer.invoke(IPC.locate, mention),
+    search: (query) => ipcRenderer.invoke(IPC.search, query),
     startDrag: (paths) => ipcRenderer.send(IPC.startDrag, paths),
     revealInFinder: (path) => ipcRenderer.send(IPC.revealInFinder, path),
     readFile: (path) => ipcRenderer.invoke(IPC.readFile, path),

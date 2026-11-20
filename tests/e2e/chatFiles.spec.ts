@@ -48,6 +48,20 @@ test('a refused tool says why on its row; files, images and folders named in the
     await expect(page.getByRole('treeitem', { name: /^notes/ })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('treeitem', { name: /idea\.txt/ })).toBeVisible();
     await page.screenshot({ animations: 'disabled', path: 'test-results/chat-folder-reveal.png' });
+
+    // Double-click a file name: a menu with Show in Files, which selects it in the tree (to drag it out) without opening another tab.
+    const tabs = await page.locator('.dv-tab').count();
+    await reply.getByRole('button', { name: 'hello.md' }).dblclick();
+    await page.getByRole('menuitem', { name: 'Show in Files' }).click();
+    await expect(page.getByRole('treeitem', { name: /hello\.md/ })).toHaveAttribute('aria-selected', 'true');
+    await page.waitForTimeout(400);
+    expect(await page.locator('.dv-tab').count()).toBe(tabs);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/chat-show-in-files.png' });
+
+    // Same menu on the tool row's file name.
+    await page.locator('.tool-row').getByRole('button', { name: 'idea.txt' }).dblclick();
+    await expect(page.getByRole('menuitem', { name: 'Reveal in Finder' })).toBeVisible();
+    await page.keyboard.press('Escape');
   } finally {
     await app.close();
   }
