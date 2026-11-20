@@ -1,6 +1,8 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react';
-import { ArrowUp, Square, X } from 'lucide-react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { ArrowUp, Square, SquareSlash, X } from 'lucide-react';
 import { PERMISSION_MODES, type ChatImage, type EffortLevel, type PermissionMode } from '../../../../shared/claudeChat';
+import { ActionsMenu } from './ActionsMenu';
+import { MODE_LABELS } from './actions';
 import { ComposerMenu } from './ComposerMenu';
 import { ContextMeter, ModelPicker } from './ComposerControls';
 import type { SessionInfo } from './sessionInfo';
@@ -8,13 +10,6 @@ import type { Draft } from './useDraft';
 import { useSlashMenu } from './useSlashMenu';
 
 const MAX_HEIGHT_PX = 200;
-
-const MODE_LABELS: Record<PermissionMode, string> = {
-  auto: 'Auto (never ask)',
-  default: 'Ask before edits',
-  acceptEdits: 'Edit automatically',
-  plan: 'Plan first',
-};
 
 export function imageUrl(image: ChatImage): string {
   return `data:${image.mediaType};base64,${image.data}`;
@@ -56,6 +51,7 @@ export function Composer({ draft, working, disabled, mode, info, model, effort, 
   const ref = useRef<HTMLTextAreaElement>(null);
   const canSend = !disabled && (draft.text.trim() !== '' || draft.images.length > 0);
   const slash = useSlashMenu(draft.text, info.commands, draft.setText);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   useEffect(() => {
     const area = ref.current;
@@ -99,7 +95,26 @@ export function Composer({ draft, working, disabled, mode, info, model, effort, 
         onPaste={draft.onPaste}
       />
       {draft.error && <div className="caption" role="alert" style={{ color: 'var(--color-danger)' }}>{draft.error}</div>}
+      {actionsOpen && (
+        <ActionsMenu
+          info={info}
+          model={model}
+          mode={mode}
+          effort={effort}
+          draft={draft}
+          onModelChange={onModelChange}
+          onModeChange={onModeChange}
+          onEffortChange={onEffortChange}
+          onClose={() => {
+            setActionsOpen(false);
+            ref.current?.focus();
+          }}
+        />
+      )}
       <div className="flex items-center gap-2">
+        <button className="composer-pill actions-button" aria-label="Actions" aria-expanded={actionsOpen} title="Actions: attach, model, permissions, commands" onClick={() => setActionsOpen(!actionsOpen)}>
+          <SquareSlash size={15} strokeWidth={1.75} />
+        </button>
         <select className="composer-pill" aria-label="Permission mode" value={mode} onChange={(event) => onModeChange(event.target.value as PermissionMode)}>
           {PERMISSION_MODES.map((item) => (
             <option key={item} value={item}>{MODE_LABELS[item]}</option>

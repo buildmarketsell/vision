@@ -44,7 +44,7 @@ interface ModelPickerProps {
 }
 
 /** Effort steps under the model list, like VS Code's picker. Applies to the running chat at once. */
-function EffortControl({ effort, onChange }: { effort: EffortLevel; onChange: (effort: EffortLevel) => void }) {
+export function EffortControl({ effort, onChange }: { effort: EffortLevel; onChange: (effort: EffortLevel) => void }) {
   return (
     <div className="composer-menu-footer">
       <span>Effort</span>

@@ -15,6 +15,8 @@ export interface Draft {
   onPaste: (event: ClipboardEvent) => void;
   onDragOver: (event: DragEvent) => void;
   onDrop: (event: DragEvent) => void;
+  /** Files picked in the actions menu: images are attached, anything else is mentioned by path. */
+  addFiles: (files: File[], mentionOnly?: boolean) => void;
 }
 
 function readAsBase64(file: File): Promise<string> {
@@ -88,11 +90,15 @@ export function useDraft(): Draft {
     // Files from the file tree are mentioned by path; images from Finder are attached.
     const treePaths = draggedTreePaths(files);
     if (treePaths) return treePaths.forEach((path) => setText((current) => appendMention(current, mentionFor(folder, path))));
+    addFiles(files);
+  };
+
+  function addFiles(files: File[], mentionOnly = false) {
     for (const file of files) {
-      if (isImageMediaType(file.type)) void attach(file);
+      if (!mentionOnly && isImageMediaType(file.type)) void attach(file);
       else setText((current) => appendMention(current, mentionFor(folder, window.vision.app.pathForFile(file))));
     }
-  };
+  }
 
   return {
     text,
@@ -107,5 +113,6 @@ export function useDraft(): Draft {
     onPaste,
     onDragOver,
     onDrop,
+    addFiles,
   };
 }

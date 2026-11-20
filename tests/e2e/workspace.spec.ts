@@ -246,6 +246,21 @@ test('slash commands, model picker, context meter, and messages sent while Claud
     await page.getByRole('listbox', { name: 'Model' }).getByRole('option', { name: /Haiku/ }).click();
     await expect(page.getByRole('button', { name: 'Haiku' })).toBeVisible();
 
+    // The "/" button opens the actions menu: filter, then pick with the keyboard or the mouse.
+    await page.getByRole('button', { name: 'Actions' }).click();
+    const actions = page.getByRole('dialog', { name: 'Actions' });
+    await expect(actions.getByRole('textbox', { name: 'Filter actions' })).toBeFocused();
+    await expect(actions.getByText('Context', { exact: true })).toBeVisible();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/actions-menu.png' });
+    await page.keyboard.type('plan');
+    await page.keyboard.press('Enter');
+    await expect(actions).toHaveCount(0);
+    await expect(page.getByRole('combobox', { name: 'Permission mode' })).toHaveValue('plan');
+    await page.getByRole('button', { name: 'Actions' }).click();
+    await actions.getByRole('option', { name: /\/review/ }).click();
+    await expect(messageBox(page).first()).toHaveValue('/review ');
+    await messageBox(page).first().fill('');
+
     // A message sent while Claude works goes to Claude at once (it fits it into the same job), like Claude Code in VS Code.
     await sendMessage(page, 'slow one');
     await expect(page.getByRole('button', { name: 'Stop Claude' })).toBeVisible();
