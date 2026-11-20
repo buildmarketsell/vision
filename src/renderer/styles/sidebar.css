@@ -108,6 +108,7 @@
   flex: 1;
   flex-direction: column;
   gap: 1px;
+  position: relative;
   padding: var(--space-1) var(--space-2) var(--space-2);
   overflow-y: auto;
 }
@@ -128,12 +129,12 @@
     transform var(--duration-fast) var(--ease);
 }
 
-.menu-row:hover {
-  background: var(--color-row-hover);
+.menu-row {
+  position: relative;
 }
-
+/* Hover and selection are the gliding pills behind the rows (GlideHighlight.tsx, styles/glide.css). */
+.menu-row:hover,
 .menu-row[aria-selected='true'] {
-  background: var(--color-row-selected);
   color: var(--color-text);
 }
 

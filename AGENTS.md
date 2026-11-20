@@ -140,6 +140,12 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Safety: the frame is sandboxed without same-origin (its scripts can't reach VISION), and the scheme serves only web file types inside an open folder, never anything hidden (`.env`, `.git`): rules in `src/shared/htmlPreview.ts`, unit tested; the e2e test checks a page can't read `.env`. The scheme is registered in the same `registerSchemesAsPrivileged` call as images (Electron allows one). CSP `frame-src` lists it.
 - Next (not built): a browser tab for local dev servers (`localhost:5173`).
 
+## Motion and scrollbars (Dan, 2026-11-20, after beui.dev's motion components)
+- Feature menu and file tree: hover and selection are pills that glide between rows (`components/GlideHighlight.tsx`, `styles/glide.css`): `HoverGlide` follows the pointer and keyboard focus, `SelectedGlide` follows the selected row. The list needs `position: relative` and the pills come before its rows.
+- File tree (`explorer/renderer/file-tree.css`): new rows fade in 25 ms apart (max 100 ms), a guide line under each open folder, folder icons turn as they open. Selection stays a static background.
+- Scrollbars: no track, thin rounded thumb in the theme's `syntax.scrollbar` colors, shown only while scrolling or pointed at (`core/scrollbars.ts` sets `data-scrolling` / `data-scrollbar-hover`; `styles/scrollbars.css`). Never set `scrollbar-color`/`scrollbar-width`: Chromium then ignores the `::-webkit-scrollbar` styles.
+- All in CSS (transform/opacity, `--ease`), no motion library. Test: `motion.spec.ts`.
+
 ## Boards (Excalidraw)
 - `src/features/board/`: any `.excalidraw` file opens as a board tab; "New Board" in the Files header creates `Untitled board.excalidraw` at the folder's top level. Chosen 2026-11-17 over tldraw, whose SDK needs a licence key outside development; Excalidraw is MIT.
 - Boards view in the menu (`BoardsView.tsx`): every `.excalidraw` file in the folder via `fs.findFiles` (main `findFiles.ts`: skips hidden folders and node_modules, max 500 files / 5000 folders), refreshed when opened or a board changes; New board button.

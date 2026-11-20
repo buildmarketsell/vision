@@ -1,9 +1,11 @@
+import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { PanelLeft } from 'lucide-react';
 import type { SidebarView } from '../core/feature';
 import { allSidebarViews } from '../core/featureIndex';
 import { usePeek } from '../core/usePeek';
 import { useWorkspace } from '../core/workspaceStore';
+import { HoverGlide, SelectedGlide } from './GlideHighlight';
 import { useActiveView } from './SidebarViews';
 
 function MenuRow({ view, active, onSelect }: { view: SidebarView; active: boolean; onSelect: (id: string) => void }) {
@@ -33,6 +35,7 @@ export function FeatureMenu() {
   const views = allSidebarViews();
   const [activeView, selectView] = useActiveView(views);
   const peek = usePeek(collapsed);
+  const list = useRef<HTMLDivElement>(null);
   const label = collapsed ? 'Show menu' : 'Hide menu';
   const row = (view: SidebarView) => <MenuRow key={view.id} view={view} active={view.id === activeView} onSelect={selectView} />;
 
@@ -50,7 +53,9 @@ export function FeatureMenu() {
         onPointerLeave={peek.hideSoon}
       >
         <div className="side-panel-top drag-region h-(--title-bar-height) shrink-0" />
-        <div role="tablist" aria-orientation="vertical" aria-label="Features" className="menu-list">
+        <div ref={list} role="tablist" aria-orientation="vertical" aria-label="Features" className="menu-list">
+          <HoverGlide list={list} rows=".menu-row" />
+          <SelectedGlide list={list} rows=".menu-row[aria-selected='true']" selected={activeView} />
           {views.filter((view) => !view.pinBottom).map(row)}
           <div className="flex-1" />
           {views.filter((view) => view.pinBottom).map(row)}

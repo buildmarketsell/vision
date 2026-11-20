@@ -3,6 +3,8 @@
 @source '../features';
 @import 'dockview-react/dist/styles/dockview.css';
 @import '@xterm/xterm/css/xterm.css';
+@import './styles/scrollbars.css';
+@import './styles/glide.css';
 @import './styles/dock.css';
 @import './styles/terminal.css';
 @import './styles/sidebar.css';

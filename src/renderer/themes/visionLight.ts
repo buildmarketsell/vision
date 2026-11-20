@@ -110,7 +110,7 @@ export const visionLight: VisionTheme = {
     delimiter: '6E6D69',
     selection: '#F26B3A2E',
     indentGuide: '#00000010',
-    scrollbar: '#0000001A',
-    scrollbarHover: '#00000026',
+    scrollbar: '#00000026',
+    scrollbarHover: '#00000040',
   },
 };

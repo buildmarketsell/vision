@@ -64,6 +64,9 @@ export function applyThemeVariables(root: HTMLElement, active: VisionTheme): voi
       root.style.setProperty(`--${prefix}-${kebab}`, String(value));
     }
   }
+  // The editor's scrollbar colors also style every other scrollbar in the app (styles/scrollbars.css).
+  root.style.setProperty('--color-scrollbar', active.syntax.scrollbar);
+  root.style.setProperty('--color-scrollbar-hover', active.syntax.scrollbarHover);
   root.style.setProperty('--font-ui', theme.font.ui);
   root.style.setProperty('--font-mono', theme.font.mono);
   root.style.setProperty('--size-small', theme.font.sizeSmall);

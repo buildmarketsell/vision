@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react';
+import type { CSSProperties, MouseEvent } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { DirEntry } from '../../../shared/ipc';
 import { openFile } from '../../../renderer/core/dockActions';
@@ -8,9 +8,15 @@ import { EntryIcon } from '../../../renderer/components/fileIcons';
 import { NameInput } from './NameInput';
 import { createEntry, renameEntry, trashEntry } from './treeActions';
 import { useTree } from './treeStore';
+import './file-tree.css';
 
 const INDENT_PX = 14;
 const BASE_PADDING_PX = 8;
+/** Half the chevron column: the indent guide runs under the parent's chevron. */
+const CHEVRON_CENTER_PX = 6;
+/** New rows fade in one after another, 25 ms apart, never more than 100 ms late (beui's file tree). */
+const STAGGER_MS = 25;
+const MAX_STAGGER_MS = 100;
 
 export type OpenMenu = (event: MouseEvent, entry: DirEntry | null) => void;
 
@@ -81,7 +87,10 @@ function TreeRow({ entry, depth, onContextMenu }: RowProps) {
           />
         )}
       </span>
-      <EntryIcon name={entry.name} isDirectory={entry.isDirectory} isOpen={isOpen} />
+      {/* Keyed so the folder icon swaps with a small turn when it opens or closes. */}
+      <span key={isOpen ? 'open' : 'closed'} className="tree-icon" data-open={entry.isDirectory ? isOpen : undefined}>
+        <EntryIcon name={entry.name} isDirectory={entry.isDirectory} isOpen={isOpen} />
+      </span>
       {isRenaming ? (
         <NameInput initial={entry.name} onSubmit={(name) => void renameEntry(entry.path, name)} onCancel={() => setEdit(null)} />
       ) : (
@@ -133,10 +142,10 @@ export function TreeChildren({ dir, depth, onContextMenu }: ChildrenProps) {
   }
   const entries = showHidden ? listing.entries : listing.entries.filter((entry) => !entry.isHidden);
   return (
-    <div role="group">
+    <div role="group" className={depth > 0 ? 'tree-group' : undefined} style={{ '--guide-left': `${indent(depth - 1) + CHEVRON_CENTER_PX}px` } as CSSProperties}>
       {creating && <NewEntryRow dir={dir} depth={depth} kind={creating} />}
-      {entries.map((entry) => (
-        <div key={entry.path}>
+      {entries.map((entry, index) => (
+        <div key={entry.path} className="tree-enter" style={{ animationDelay: `${Math.min((index + 1) * STAGGER_MS, MAX_STAGGER_MS)}ms` }}>
           <TreeRow entry={entry} depth={depth} onContextMenu={onContextMenu} />
           {entry.isDirectory && expanded.has(entry.path) && (
             <TreeChildren dir={entry.path} depth={depth + 1} onContextMenu={onContextMenu} />

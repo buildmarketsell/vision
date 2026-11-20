@@ -1,0 +1,33 @@
+/*
+ * The gliding row highlights (components/GlideHighlight.tsx), after beui's animated sidebar and file tree.
+ * Moved with transform only; fades with opacity. A pill that was hidden appears in place, no glide in.
+ */
+.glide-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--radius-row);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform 260ms var(--ease),
+    opacity var(--duration-fast) var(--ease);
+}
+.glide-pill[data-kind='hover'] {
+  background: var(--color-row-hover);
+}
+.glide-pill[data-kind='selected'] {
+  background: var(--color-row-selected);
+}
+.glide-pill[data-shown='true'] {
+  opacity: 1;
+}
+.glide-pill[data-instant='true'] {
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glide-pill {
+    transition: opacity var(--duration-fast) var(--ease);
+  }
+}
