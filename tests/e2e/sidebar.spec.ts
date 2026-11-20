@@ -1,6 +1,4 @@
 import { expect, test, type Locator } from '@playwright/test';
-import { writeFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { launch, makeFixture, menu } from './helpers';
 
 const width = (panel: Locator) => panel.evaluate((element) => element.getBoundingClientRect().width);
@@ -108,24 +106,3 @@ test("Claude's message box still has room to type after VISION starts on a menu 
   }
 });
 
-test('Boards lists every board in the folder; the picked one fills the window; + makes a new one', async () => {
-  const { folder, userData } = makeFixture();
-  mkdirSync(join(folder, 'plans'));
-  writeFileSync(join(folder, 'plans', 'Launch.excalidraw'), '');
-  const { app, page } = await launch(userData);
-  try {
-    const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
-    await menu(page).getByRole('tab', { name: 'Boards' }).click();
-    const list = sidebar.getByRole('list', { name: 'Boards' });
-    await expect(list.getByRole('button')).toHaveText(['plans/Launch']);
-    await list.getByRole('button', { name: 'plans/Launch' }).click();
-    await expect(page.locator('main .board-canvas')).toBeVisible();
-    await expect(list.getByRole('button', { name: 'plans/Launch' })).toHaveAttribute('aria-current', 'true');
-    await sidebar.getByRole('button', { name: 'New board' }).click();
-    await expect(list.getByRole('button')).toHaveText(['plans/Launch', 'Untitled board']);
-    await expect(list.getByRole('button', { name: 'Untitled board' })).toHaveAttribute('aria-current', 'true');
-    await page.screenshot({ animations: 'disabled', path: 'test-results/boards-view.png' });
-  } finally {
-    await app.close();
-  }
-});

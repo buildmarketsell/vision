@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { ClipboardCopy, Copy, Keyboard, Maximize, Menu, Minus, Plus, Redo2, Trash2, Undo2 } from 'lucide-react';
+import { ClipboardCopy, Copy, Keyboard, LayoutGrid, Maximize, Menu, Minus, Plus, Redo2, Trash2, Undo2 } from 'lucide-react';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import { ContextMenu, type ContextMenuItem } from '../../../renderer/components/ContextMenu';
+import { useActiveViewStore } from '../../../renderer/core/activeView';
+import { useOpenBoard } from './boardSelection';
 import { clearBoard, copyAsImage, pressKey, zoomTo, zoomToFit } from './boardActions';
 
 const ICON = { size: 16, strokeWidth: 1.75 };
@@ -11,6 +13,13 @@ interface CornerProps {
   api: ExcalidrawImperativeAPI;
   /** Excalidraw's container element, looked up when a button is pressed. */
   getContainer: () => HTMLElement | null;
+}
+
+/** Back to the Boards home (FigJam's "Back to files"), from the Boards page or a board open in a tab. */
+function showAllBoards(): void {
+  const { browse, location } = useOpenBoard.getState();
+  browse(location);
+  useActiveViewStore.getState().select('boards');
 }
 
 /** "Content Formats" for …/ideas/Content Formats.excalidraw, and the folder it's in. */
@@ -25,6 +34,7 @@ export function BoardTopLeft({ api, getContainer, hasSelection, path }: CornerPr
   const { name, folder } = boardName(path);
   const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
   const items: ContextMenuItem[] = [
+    { label: 'All boards', icon: <LayoutGrid {...ICON} />, onSelect: showAllBoards },
     { label: 'Copy as image', icon: <ClipboardCopy {...ICON} />, onSelect: () => void copyAsImage(api) },
     { label: 'Zoom to fit', icon: <Maximize {...ICON} />, onSelect: () => zoomToFit(api) },
     { label: 'Keyboard shortcuts', icon: <Keyboard {...ICON} />, onSelect: () => pressKey(getContainer(), '?', { shift: true }) },

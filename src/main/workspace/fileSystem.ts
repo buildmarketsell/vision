@@ -140,6 +140,41 @@ export async function createEntry(parentDir: string, name: string, kind: 'file' 
   }
 }
 
+/** Moves `path` into `targetDir` under the same name. Refuses to overwrite or to move a folder into itself. */
+export async function moveEntry(path: string, targetDir: string): Promise<Result<string>> {
+  const target = join(targetDir, basename(path));
+  if (target === path) return { ok: true, value: path };
+  if (targetDir === path || targetDir.startsWith(`${path}/`)) return { ok: false, error: "A folder can't go inside itself." };
+  try {
+    if (!(await stat(targetDir)).isDirectory()) return { ok: false, error: 'That is not a folder.' };
+    const taken = await stat(target).then(
+      () => true,
+      () => false,
+    );
+    if (taken) return { ok: false, error: `"${basename(path)}" already exists there.` };
+    await rename(path, target);
+    return { ok: true, value: target };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/** Last-changed times for the files that can be read; the rest are skipped. */
+export async function modifiedTimes(paths: string[]): Promise<Result<Record<string, number>>> {
+  const times: Record<string, number> = {};
+  await Promise.all(
+    paths.map((path) =>
+      stat(path).then(
+        (info) => {
+          times[path] = info.mtimeMs;
+        },
+        () => undefined,
+      ),
+    ),
+  );
+  return { ok: true, value: times };
+}
+
 export async function renameEntry(path: string, newName: string): Promise<Result<string>> {
   const problem = validateEntryName(newName);
   if (problem) return { ok: false, error: problem };

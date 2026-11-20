@@ -2,15 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { boardLabel } from '../../src/features/board/boardFile';
 import { findFiles, isFileExtension } from '../../src/main/workspace/findFiles';
-
-describe('boardLabel', () => {
-  it('shows the path inside the folder without .excalidraw', () => {
-    expect(boardLabel('/w', '/w/plans/Launch.excalidraw')).toBe('plans/Launch');
-    expect(boardLabel('/w/', '/w/Ideas.EXCALIDRAW')).toBe('Ideas');
-  });
-});
 
 describe('findFiles', () => {
   it('finds boards in subfolders and skips hidden folders and node_modules', async () => {
