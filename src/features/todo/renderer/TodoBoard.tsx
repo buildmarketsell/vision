@@ -81,7 +81,7 @@ export function TodoBoard({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
   const [menu, setMenu] = useState<MenuState>(null);
   const [editing, setEditing] = useState<string | null>(null);
   return (
-    <div className="todo-board">
+    <div className="todo-board page-wide">
       {TODO_COLUMNS.map((column) => (
         <Column
           key={column.status}

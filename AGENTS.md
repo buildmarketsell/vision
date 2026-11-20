@@ -41,6 +41,15 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Nested corners are concentric: inner radius = outer radius minus the inset.
 - Menus and popovers grow from where they were opened (`transform-origin`).
 
+## Page layout (Dan, 2026-11-20: "make some general rules for the future that will ensure everything looks nice")
+Every page that fills the window uses the shared page frame in `styles.css`; never invent a page's own margins, widths or title size. To-do's board once sat 24px from the window edge with the menus hidden while every other page was centered.
+- `.page-column`: centered, `--page-width` 900px, side margin `--page-gutter` (24px on narrow windows up to 96px on wide, like Notion), top `--page-top`. Dashboards add `data-width="wide"` (1200px). VISION's Notion pages use the same tokens.
+- `.page-title`: the one big title (32px, bold). Icon above, controls below, in that order.
+- `.page-wide`: boards and wide tables run to the window's right edge but start exactly under the title.
+- `.page-bleed`: lists whose rows have their own padding bleed into the margin, so row text lines up with the title and only hover backgrounds stick out.
+- Spacing only from the 4/8/12/16/24/32/48 scale (`--space-*`), colors only from theme tokens.
+- Check every new page with the menu and sidebar both open and hidden, at 1440 and 900 wide. `tests/e2e/pageFrame.spec.ts` checks To-do, Content and Settings that way; add each new page to its list.
+
 ## Menu (left) and sidebar (right) (Dan, 2026-11-19)
 - Left: the feature menu (`FeatureMenu.tsx`), Notion-style rows in registry order: Workspace, To-do, Boards, Database, Calendar, Content, Inbox, and Settings pinned at the bottom (`pinBottom`). New features show up here; Dan has many planned. Its button sits right of the traffic lights (76px) and never moves; ⌘\\ does the same. Saved per folder as `menuCollapsed`.
 - Right: the sidebar (`Sidebar.tsx`) shows the picked feature's panel (files for Workspace), folder name on top, Claude button at the bottom, resized from its left edge. Button top right; ⌘⇧\\ and View menu. Saved per folder as `sidebarCollapsed`, width as `sidebarWidth`.
@@ -84,6 +93,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - YouTube: an API key from Dan's Google Cloud project (YouTube Data API v3) + his channel handle; public numbers only (subscribers, total views, videos, latest 12 videos). Watch time would need a Google sign-in with `yt-analytics.readonly`: not built. Instagram: a long-lived token from a Meta app (Instagram API with Instagram login; Business/Creator accounts only); profile, latest posts, 28-day insights. The token is renewed weekly (`refresh_access_token`).
 - Both checked against the platform before saving, so a wrong key never replaces a working one. Secrets encrypted in `userData/content.json` via `src/main/secrets.ts` (shared with Calendar). Main caches 10 minutes (YouTube's free quota).
 - One reading a day per platform is saved (`history`, kept after disconnecting) and draws the growth line and "+N in 7 days"; logic in `src/shared/content.ts` (unit tested). Numbers are formatted in English on purpose (`format.ts`).
+- Charts are bklit's "gradient glow" (Dan, 2026-11-20, bklit.com/recipes): a smooth line (monotone curve, never overshoots a reading; `chartPath.ts`, unit tested) over an accent fill that fades down and out at both sides, no grid; hover shows a dot, a tooltip card and the date as a dark pill. YouTube's chart switches Subscribers / Views. Tiles with history get bklit's "quiet sparkline". Styles in `chart.css`; colors follow the accent.
 - Tests: `VISION_CONTENT_TEST_BASE` points both APIs at `tests/e2e/fixtures/fake-social.ts`; `content.spec.ts`.
 
 ## Workspace panel tabs (Dan, 2026-11-19)

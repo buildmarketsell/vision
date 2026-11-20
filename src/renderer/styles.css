@@ -332,17 +332,44 @@ body:has(.app-shell) {
   }
 }
 
-/* Pages that fill the window from the menu (Settings, Inbox): a centered reading column with a big title, like Notion. */
+/*
+ * The page frame: every page that fills the window (To-do, Content, Settings, VISION's Notion pages) uses it,
+ * so they all start at the same place and breathe the same way whether the menus are open or hidden.
+ * Notion's numbers: a 900px column whose side margin grows from 24px to 96px with the window.
+ */
+:root {
+  --page-width: 900px;
+  --page-width-wide: 1200px;
+  --page-gutter: clamp(24px, 8vw, 96px);
+  --page-top: var(--space-12);
+}
+
 .page-column {
   width: 100%;
-  max-width: 720px;
+  max-width: var(--page-width);
   margin: 0 auto;
-  padding: var(--space-6) var(--space-6) 0;
+  padding: var(--page-top) var(--page-gutter) 0;
+}
+
+/* Dashboards: same frame, more room for tiles and charts. */
+.page-column[data-width='wide'] {
+  max-width: var(--page-width-wide);
+}
+
+/* Lists whose rows have their own 12px padding: the hover background bleeds into the margin so the text lines up with the title, like Notion. */
+.page-bleed {
+  margin: 0 calc(-1 * var(--space-3));
+}
+
+/* Boards and wide tables run to the window's edge but start where the column's text starts. */
+.page-wide {
+  padding-left: max(var(--page-gutter), (100% - var(--page-width)) / 2 + var(--page-gutter));
+  padding-right: var(--page-gutter);
 }
 
 .page-title {
   margin: 0 0 var(--space-6);
-  padding: 0 var(--space-3);
+  line-height: 1.15;
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.02em;

@@ -10,9 +10,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  max-width: 960px;
-  margin: 0 auto;
-  padding: var(--space-8) var(--space-12) var(--space-12);
+  padding-bottom: var(--space-12);
 }
 
 .content-page-head {
@@ -21,10 +19,8 @@
   gap: var(--space-2);
 }
 
-.content-page-title {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.content-page-head .page-title {
+  margin: 0;
 }
 
 .content-overview {
@@ -238,10 +234,6 @@
 }
 
 @media (max-width: 700px) {
-  .content-column {
-    padding: var(--space-6) var(--space-4) var(--space-8);
-  }
-
   .content-overview {
     grid-template-columns: 1fr 1fr;
   }
