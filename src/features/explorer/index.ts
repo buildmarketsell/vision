@@ -4,7 +4,8 @@ import type { Feature } from '../../renderer/core/feature';
 import { WorkspacePanel, WorkspaceTabStrip } from '../../renderer/components/WorkspacePanel';
 import { setRevealHandler } from '../../renderer/core/reveal';
 import { ExplorerView, startCreate } from './renderer/ExplorerView';
-import { revealPath } from './renderer/revealPath';
+import { useFileSearch } from './renderer/FileSearch';
+import { revealPath, showFilesPanel } from './renderer/revealPath';
 
 setRevealHandler((path) => void revealPath(path));
 
@@ -16,5 +17,14 @@ export const explorerFeature: Feature = {
   commands: [
     { id: 'explorer.newFile', title: 'New File', run: () => startCreate('newFile') },
     { id: 'explorer.newFolder', title: 'New Folder', run: () => startCreate('newDir') },
+    {
+      id: 'explorer.search',
+      title: 'Search Files',
+      shortcut: 'Mod+P',
+      run: () => {
+        showFilesPanel();
+        useFileSearch.getState().show();
+      },
+    },
   ],
 };

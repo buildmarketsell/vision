@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, type MouseEvent } from 'react';
-import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, FolderSearch, Pencil, RefreshCw, Shapes, Trash2, X, type LucideIcon } from 'lucide-react';
+import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, FolderSearch, Pencil, RefreshCw, Search, Shapes, Trash2, X, type LucideIcon } from 'lucide-react';
 import type { DirEntry } from '../../../shared/ipc';
 import { ContextMenu, type ContextMenuItem } from '../../../renderer/components/ContextMenu';
 import { runCommand } from '../../../renderer/core/commands';
 import { baseName, parentPath, useWorkspace } from '../../../renderer/core/workspaceStore';
+import { FileSearch, useFileSearch } from './FileSearch';
 import { trashEntry } from './treeActions';
 import { TreeChildren } from './TreeChildren';
 import { useTree } from './treeStore';
@@ -11,7 +12,6 @@ import { useTree } from './treeStore';
 const REFRESH_DELAY_MS = 120;
 const ICON = { size: 15, strokeWidth: 1.5 };
 const HEADER_BUTTON_SIZE = 24;
-
 
 /** Folder that "New File" goes into: the selected folder, the selected file's folder, or the root. */
 function targetFolder(root: string, entry: DirEntry | null): string {
@@ -60,6 +60,7 @@ function ExplorerHeader({ folder, showHidden }: { folder: string; showHidden: bo
     <div className="flex items-center justify-between gap-2 pr-2 pl-3">
       <div className="title min-w-0 truncate" title={folder}>{baseName(folder)}</div>
       <div className="flex items-center">
+        <HeaderButton label="Search files (⌘P)" icon={Search} onClick={() => (useFileSearch.getState().open ? useFileSearch.getState().hide() : useFileSearch.getState().show())} />
         <HeaderButton label="New File" icon={FilePlus} onClick={() => startCreate('newFile')} />
         <HeaderButton label="New Folder" icon={FolderPlus} onClick={() => startCreate('newDir')} />
         <HeaderButton label="New Board" icon={Shapes} onClick={() => runCommand('board.new')} />
@@ -90,10 +91,13 @@ export function ExplorerView() {
   const showHidden = useWorkspace((state) => state.showHidden);
   const expanded = useTree((state) => state.expanded);
   const notice = useTree((state) => state.notice);
+  const searchOpen = useFileSearch((state) => state.open);
+  const searching = useFileSearch((state) => state.open && state.query.trim() !== '');
   const [menu, setMenu] = useState<{ x: number; y: number; entry: DirEntry | null } | null>(null);
 
   useEffect(() => {
     useTree.getState().reset();
+    useFileSearch.getState().hide();
     void useTree.getState().loadDir(folder);
   }, [folder]);
 
@@ -121,7 +125,8 @@ export function ExplorerView() {
           </button>
         </div>
       )}
-      <div role="tree" aria-label="Files" className="min-h-0 flex-1 overflow-y-auto px-1 pb-2" onContextMenu={(event) => openMenu(event, null)}>
+      {searchOpen && <FileSearch />}
+      <div role="tree" aria-label="Files" className="min-h-0 flex-1 overflow-y-auto px-1 pb-2" hidden={searching} onContextMenu={(event) => openMenu(event, null)}>
         <TreeChildren dir={folder} depth={0} onContextMenu={openMenu} />
       </div>
       {menu && <ContextMenu x={menu.x} y={menu.y} items={menuItems(menu.entry)} onClose={closeMenu} />}

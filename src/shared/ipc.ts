@@ -1,6 +1,7 @@
 /** Types shared by the main process, the preload bridge and the renderer. */
 import type { CalendarState, NewEventInput } from './calendar';
 import type { ContentState, Platform } from './content';
+import type { SearchHit } from './fileSearch';
 import type { InboxMessage } from './inbox';
 import type { TodoChange, TodoItem, TodoStatus } from './todos';
 import type { Database } from './databases';
@@ -90,6 +91,8 @@ export interface VisionApi {
     startDrag(paths: string[]): void;
     /** Opens Finder with this file or folder selected. */
     revealInFinder(path: string): void;
+    /** Files and folders in the open folder whose path contains every word of `query`, best first (at most 100). */
+    search(query: string): Promise<Result<SearchHit[]>>;
     /** The file or folder a name or path Claude mentioned points at, inside the open folder, or null. */
     locate(mention: string): Promise<LocatedPath | null>;
     readFile(path: string): Promise<ReadFileResult>;
@@ -201,6 +204,7 @@ export const IPC = {
   listDir: 'fs:listDir',
   findFiles: 'fs:findFiles',
   locate: 'fs:locate',
+  search: 'fs:search',
   startDrag: 'fs:startDrag',
   revealInFinder: 'fs:revealInFinder',
   readFile: 'fs:readFile',

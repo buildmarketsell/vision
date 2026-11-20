@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, type KeyboardEvent, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { convertEmbeds, imageUrl, resolveLocalPath } from '../../shared/markdownImages';
 import { fileMention } from '../../shared/fileMentions';
 import { openFile } from '../core/dockActions';
 import { revealInFiles } from '../core/reveal';
+import { afterSingleClick, cancelSingleClick, FileLinkMenu, type FileLinkTarget } from './FileLinkMenu';
 
 // Web links open in the browser (the main process routes new windows there); file links are caught in Markdown's onClick.
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
@@ -63,20 +64,25 @@ function markFileMentions(root: HTMLElement): void {
     code.classList.add('file-mention');
     code.setAttribute('role', 'button');
     code.setAttribute('tabindex', '0');
-    code.setAttribute('title', 'Open');
+    code.setAttribute('title', 'Open (double-click for more)');
   });
 }
 
-/** Opens the mentioned file in a tab, or shows the folder in the files panel; says so on the mention when it isn't there. */
-async function openMention(code: HTMLElement): Promise<void> {
+/** Finds the mentioned file or folder; marks the mention when it isn't in the folder. */
+async function locateMention(code: HTMLElement) {
   const found = await window.vision.fs.locate(code.textContent ?? '');
-  if (found) {
-    if (found.isDirectory) revealInFiles(found.path);
-    else openFile(found.path);
-    return;
+  if (!found) {
+    code.dataset['missing'] = 'true';
+    code.setAttribute('title', 'Not found in this folder');
   }
-  code.dataset['missing'] = 'true';
-  code.setAttribute('title', 'Not found in this folder');
+  return found;
+}
+
+/** Opens the mentioned file in a tab, or shows the folder in the files panel. */
+async function openMention(code: HTMLElement): Promise<void> {
+  const found = await locateMention(code);
+  if (found?.isDirectory) revealInFiles(found.path);
+  else if (found) openFile(found.path);
 }
 
 /**
@@ -87,6 +93,7 @@ async function openMention(code: HTMLElement): Promise<void> {
 export function Markdown({ text, className = '', baseDir }: { text: string; className?: string; baseDir?: string }) {
   const html = useMemo(() => toHtml(text, baseDir), [text, baseDir]);
   const ref = useRef<HTMLDivElement>(null);
+  const [menu, setMenu] = useState<FileLinkTarget | null>(null);
   useEffect(() => {
     if (!ref.current) return;
     addCopyButtons(ref.current);
@@ -95,7 +102,7 @@ export function Markdown({ text, className = '', baseDir }: { text: string; clas
   const openLocalLink = (event: MouseEvent<HTMLDivElement>) => {
     const mention = (event.target as Element).closest<HTMLElement>('code.file-mention');
     if (mention) {
-      void openMention(mention);
+      afterSingleClick(event, () => void openMention(mention));
       return;
     }
     const href = (event.target as Element).closest('a')?.getAttribute('href');
@@ -110,5 +117,29 @@ export function Markdown({ text, className = '', baseDir }: { text: string; clas
     event.preventDefault();
     void openMention(mention);
   };
-  return <div ref={ref} className={`markdown ${className}`} onClick={openLocalLink} onKeyDown={openMentionWithKeys} dangerouslySetInnerHTML={{ __html: html }} />;
+  /** Double-click or right-click on a file name: Show in Files, Open, Reveal in Finder, Copy Path. */
+  const showMentionMenu = (event: MouseEvent<HTMLDivElement>) => {
+    const mention = (event.target as Element).closest<HTMLElement>('code.file-mention');
+    if (!mention) return;
+    event.preventDefault();
+    cancelSingleClick();
+    // A double-click would otherwise also select the word under it.
+    window.getSelection()?.removeAllRanges();
+    const { clientX: x, clientY: y } = event;
+    void locateMention(mention).then((found) => found && setMenu({ ...found, x, y }));
+  };
+  return (
+    <>
+      <div
+        ref={ref}
+        className={`markdown ${className}`}
+        onClick={openLocalLink}
+        onDoubleClick={showMentionMenu}
+        onContextMenu={showMentionMenu}
+        onKeyDown={openMentionWithKeys}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      {menu && <FileLinkMenu target={menu} onClose={() => setMenu(null)} />}
+    </>
+  );
 }

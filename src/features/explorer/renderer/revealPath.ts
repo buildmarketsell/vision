@@ -3,13 +3,19 @@ import { useWorkspace } from '../../../renderer/core/workspaceStore';
 import { selectWorkspaceTab } from '../../../renderer/components/WorkspacePanel';
 import { useTree } from './treeStore';
 
-/** Opens the files panel, unfolds every folder down to `path`, selects it and scrolls it into view. */
-export async function revealPath(path: string): Promise<void> {
-  const { folder, sidebarCollapsed, toggleSidebar } = useWorkspace.getState();
-  if (!folder || !path.startsWith(`${folder}/`)) return;
+/** Picks the Workspace view and its Files tab, and opens the sidebar if it is hidden. */
+export function showFilesPanel(): void {
+  const { sidebarCollapsed, toggleSidebar } = useWorkspace.getState();
   useActiveViewStore.getState().select('explorer');
   selectWorkspaceTab('files');
   if (sidebarCollapsed) toggleSidebar();
+}
+
+/** Opens the files panel, unfolds every folder down to `path`, selects it and scrolls it into view. */
+export async function revealPath(path: string): Promise<void> {
+  const { folder } = useWorkspace.getState();
+  if (!folder || !path.startsWith(`${folder}/`)) return;
+  showFilesPanel();
 
   const parts = path.slice(folder.length + 1).split('/');
   let dir = folder;
