@@ -4,6 +4,7 @@ import { installKeybindings, registerCommands, runCommand } from './core/command
 import { closeActivePanel } from './core/dockActions';
 import { useWorkspace } from './core/workspaceStore';
 import { FolderMissing, Welcome } from './components/Welcome';
+import { draggedTreePaths } from './core/treeDrag';
 import { Workspace } from './components/Workspace';
 
 function useAppCommands(): void {
@@ -31,7 +32,7 @@ function useFolderDrop() {
   };
   const onDrop = async (event: DragEvent) => {
     const file = event.dataTransfer.files[0];
-    if (!file) return;
+    if (!file || draggedTreePaths(event.dataTransfer.files)) return;
     event.preventDefault();
     const result = await window.vision.app.openFolder(window.vision.app.pathForFile(file));
     if (!result.ok) {

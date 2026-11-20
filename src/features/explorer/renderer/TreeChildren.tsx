@@ -2,7 +2,8 @@ import type { MouseEvent } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { DirEntry } from '../../../shared/ipc';
 import { openFile } from '../../../renderer/core/dockActions';
-import { PATH_DRAG_TYPE, useWorkspace } from '../../../renderer/core/workspaceStore';
+import { useWorkspace } from '../../../renderer/core/workspaceStore';
+import { startTreeDrag } from '../../../renderer/core/treeDrag';
 import { EntryIcon } from '../../../renderer/components/fileIcons';
 import { NameInput } from './NameInput';
 import { createEntry, renameEntry, trashEntry } from './treeActions';
@@ -25,12 +26,16 @@ interface RowProps {
 
 function TreeRow({ entry, depth, onContextMenu }: RowProps) {
   const isOpen = useTree((state) => state.expanded.has(entry.path));
-  const isSelected = useTree((state) => state.selected === entry.path);
+  const isSelected = useTree((state) => state.picked.includes(entry.path));
   const edit = useTree((state) => state.edit);
-  const { select, toggle, setEdit } = useTree.getState();
+  const { select, toggle, togglePicked, setEdit } = useTree.getState();
   const isRenaming = edit?.mode === 'rename' && edit.path === entry.path;
 
-  const activate = () => {
+  const activate = (event: MouseEvent) => {
+    if (event.metaKey) {
+      togglePicked(entry.path);
+      return;
+    }
     select(entry.path);
     if (entry.isDirectory) toggle(entry.path);
     else openFile(entry.path);
@@ -47,13 +52,16 @@ function TreeRow({ entry, depth, onContextMenu }: RowProps) {
       data-path={entry.path}
       draggable
       onDragStart={(event) => {
-        event.dataTransfer.setData(PATH_DRAG_TYPE, entry.path);
-        event.dataTransfer.effectAllowed = 'copy';
+        // A real file drag, so Finder and Google Drive take the files; several if this row is one of the ⌘-picked ones.
+        event.preventDefault();
+        const { picked } = useTree.getState();
+        if (!picked.includes(entry.path)) select(entry.path);
+        startTreeDrag(picked.includes(entry.path) ? picked : [entry.path]);
       }}
       style={{ paddingLeft: indent(depth), opacity: entry.isHidden ? 0.55 : 1 }}
       onClick={activate}
       onContextMenu={(event) => {
-        select(entry.path);
+        if (!useTree.getState().picked.includes(entry.path)) select(entry.path);
         onContextMenu(event, entry);
       }}
       onKeyDown={(event) => {

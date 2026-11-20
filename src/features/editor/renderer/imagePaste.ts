@@ -1,6 +1,6 @@
 import type { editor as MonacoNs, IRange } from 'monaco-editor';
-import { imageExtension, relativeImageLink } from '../../../shared/markdownImages';
-import { parentPath, PATH_DRAG_TYPE, useWorkspace } from '../../../renderer/core/workspaceStore';
+import { relativeImageLink } from '../../../shared/markdownImages';
+import { parentPath, useWorkspace } from '../../../renderer/core/workspaceStore';
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/png': 'png',
@@ -68,22 +68,17 @@ export function enableImagePaste(editor: MonacoNs.IStandaloneCodeEditor, notePat
 
   const onDragOver = (event: DragEvent) => {
     const types = event.dataTransfer?.types ?? [];
-    if (types.includes('Files') || types.includes(PATH_DRAG_TYPE)) event.preventDefault();
+    if (types.includes('Files')) event.preventDefault();
   };
 
   const onDrop = (event: DragEvent) => {
     const files = imageFiles(event.dataTransfer?.files);
-    const treePath = event.dataTransfer?.getData(PATH_DRAG_TYPE) ?? '';
     const range = dropRange(event);
     if (!range) return;
     if (files.length > 0) {
       event.preventDefault();
       event.stopPropagation();
       void insertImages(files, range);
-    } else if (treePath && imageExtension(treePath) && isInOpenFolder(treePath)) {
-      event.preventDefault();
-      event.stopPropagation();
-      insert(editor, range, `![](${relativeImageLink(parentPath(notePath), treePath)})`);
     }
   };
 

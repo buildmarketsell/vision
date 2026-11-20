@@ -85,6 +85,10 @@ export interface VisionApi {
     listDir(path: string): Promise<Result<DirEntry[]>>;
     /** Files ending in `extension` anywhere in the folder, skipping hidden folders and node_modules. */
     findFiles(root: string, extension: string): Promise<Result<string[]>>;
+    /** Starts a real macOS drag of these files or folders (to Finder, Google Drive, any app). */
+    startDrag(paths: string[]): void;
+    /** Opens Finder with this file or folder selected. */
+    revealInFinder(path: string): void;
     /** The file or folder a name or path Claude mentioned points at, inside the open folder, or null. */
     locate(mention: string): Promise<LocatedPath | null>;
     readFile(path: string): Promise<ReadFileResult>;
@@ -186,6 +190,8 @@ export const IPC = {
   listDir: 'fs:listDir',
   findFiles: 'fs:findFiles',
   locate: 'fs:locate',
+  startDrag: 'fs:startDrag',
+  revealInFinder: 'fs:revealInFinder',
   readFile: 'fs:readFile',
   writeFile: 'fs:writeFile',
   saveImage: 'fs:saveImage',
