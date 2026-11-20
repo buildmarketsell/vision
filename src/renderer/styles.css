@@ -5,6 +5,8 @@
 @import '@xterm/xterm/css/xterm.css';
 @import './styles/scrollbars.css';
 @import './styles/glide.css';
+@import './styles/grain.css';
+@import './styles/theme-reveal.css';
 @import './styles/dock.css';
 @import './styles/terminal.css';
 @import './styles/sidebar.css';

@@ -1,0 +1,56 @@
+/*
+ * Grain over both menus (Dan, 2026-11-20, after beui's grain gradient shader): four soft color clouds
+ * drifting slowly (--color-grain1–4: pastel in light themes, faint in dark ones so text stays readable),
+ * with fine film grain on top. CSS only, no WebGL: one moving layer is cheap enough to run all day.
+ */
+.side-panel {
+  isolation: isolate;
+}
+.side-panel::before,
+.side-panel::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+.side-panel::before {
+  inset: -50%;
+  background:
+    radial-gradient(closest-side at 30% 30%, var(--color-grain1), transparent),
+    radial-gradient(closest-side at 70% 38%, var(--color-grain2), transparent),
+    radial-gradient(closest-side at 38% 68%, var(--color-grain3), transparent),
+    radial-gradient(closest-side at 66% 72%, var(--color-grain4), transparent);
+  animation: grain-drift 40s ease-in-out infinite alternate;
+}
+/* Film grain: SVG noise tiled small; soft-light keeps it from muddying the text. */
+.side-panel::after {
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.35;
+}
+html[data-scheme='dark'] .side-panel::after {
+  opacity: 0.22;
+}
+
+@keyframes grain-drift {
+  from {
+    transform: translate(-6%, -4%) rotate(0deg) scale(1);
+  }
+  to {
+    transform: translate(6%, 5%) rotate(25deg) scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-panel::before {
+    animation: none;
+  }
+}
+/* Reduce Transparency makes the menus solid; the grain goes with the glass. */
+@media (prefers-reduced-transparency: reduce) {
+  .side-panel::before,
+  .side-panel::after {
+    display: none;
+  }
+}

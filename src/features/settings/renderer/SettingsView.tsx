@@ -27,7 +27,7 @@ function ThemePicker() {
   return (
     <div role="radiogroup" aria-label="Theme" className="flex flex-col gap-0.5 px-1">
       {THEMES.map((item) => (
-        <button key={item.id} role="radio" aria-checked={item.id === active.id} className="theme-row" onClick={() => setTheme(item.id)}>
+        <button key={item.id} role="radio" aria-checked={item.id === active.id} className="theme-row" onClick={(event) => setTheme(item.id, { x: event.clientX, y: event.clientY })}>
           <Swatch theme={item} />
           <span className="flex-1 truncate text-left">{item.name}</span>
           {item.id === active.id && <Check size={14} strokeWidth={2} color="var(--color-accent)" />}
