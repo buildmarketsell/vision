@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import { CALENDAR_DAYS_AHEAD, toGoogleEvent, toNewEventInput, type CalendarAccount, type CalendarEvent, type CalendarInfo, type CalendarState } from '../../../shared/calendar';
 import { IPC, type Result } from '../../../shared/ipc';
 import { logError } from '../../../main/log';
+import { KeychainUnavailableError } from '../../../main/secrets';
 import { loadConfig, saveConfig } from './calendarConfig';
 import { accessToken, cancelSignIn, forgetAccessToken, GoogleError, signIn, SignInExpiredError } from './googleAuth';
 import { accountEmail, insertEvent, listCalendars, listEvents, toCalendarEvent, toCalendarInfo } from './googleApi';
@@ -22,7 +23,7 @@ let cache: Fetched | null = null;
 
 /** The message to show Dan; anything unexpected is logged (without tokens) and gets a general message. */
 function messageFor(error: unknown): string {
-  if (error instanceof GoogleError || error instanceof SignInExpiredError) return error.message;
+  if (error instanceof GoogleError || error instanceof SignInExpiredError || error instanceof KeychainUnavailableError) return error.message;
   if (error instanceof Error && error.name === 'TimeoutError') return 'Google took too long to answer. Check your internet.';
   logError('Calendar request failed', error instanceof Error ? error.message : 'unknown');
   return 'The calendar could not be read. Check your internet and try again.';

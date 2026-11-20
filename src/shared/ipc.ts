@@ -1,5 +1,6 @@
 /** Types shared by the main process, the preload bridge and the renderer. */
 import type { CalendarState, NewEventInput } from './calendar';
+import type { ContentState, Platform } from './content';
 import type { InboxMessage } from './inbox';
 import type { TodoChange, TodoItem, TodoStatus } from './todos';
 import type { Database } from './databases';
@@ -164,6 +165,16 @@ export interface VisionApi {
     setVisible(calendarKey: string, visible: boolean): Promise<CalendarState>;
     createEvent(input: NewEventInput): Promise<Result<CalendarState>>;
   };
+  content: {
+    /** YouTube and Instagram numbers; `force` skips the 10-minute cache (refresh button). */
+    state(force?: boolean): Promise<ContentState>;
+    /** Checks the key and channel with YouTube, then saves them. A problem comes back as `youtube.error`. */
+    connectYouTube(apiKey: string, channel: string): Promise<ContentState>;
+    /** Checks the token with Instagram, then saves it. A problem comes back as `instagram.error`. */
+    connectInstagram(token: string): Promise<ContentState>;
+    /** Forgets the key or token; the daily history stays. */
+    disconnect(platform: Platform): Promise<ContentState>;
+  };
   chat: {
     start(options: ChatStartOptions): Promise<ChatStartResult>;
     send(id: number, message: ChatOutgoing): void;
@@ -243,4 +254,8 @@ export const IPC = {
   calendarSignOut: 'calendar:signOut',
   calendarSetVisible: 'calendar:setVisible',
   calendarCreateEvent: 'calendar:createEvent',
+  contentState: 'content:state',
+  contentConnectYouTube: 'content:connectYouTube',
+  contentConnectInstagram: 'content:connectInstagram',
+  contentDisconnect: 'content:disconnect',
 } as const;

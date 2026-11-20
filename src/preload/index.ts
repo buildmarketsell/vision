@@ -82,6 +82,12 @@ const api: VisionApi = {
     setVisible: (calendarKey, visible) => ipcRenderer.invoke(IPC.calendarSetVisible, calendarKey, visible),
     createEvent: (input) => ipcRenderer.invoke(IPC.calendarCreateEvent, input),
   },
+  content: {
+    state: (force) => ipcRenderer.invoke(IPC.contentState, force === true),
+    connectYouTube: (apiKey, channel) => ipcRenderer.invoke(IPC.contentConnectYouTube, apiKey, channel),
+    connectInstagram: (token) => ipcRenderer.invoke(IPC.contentConnectInstagram, token),
+    disconnect: (platform) => ipcRenderer.invoke(IPC.contentDisconnect, platform),
+  },
   chat: {
     start: (options) => ipcRenderer.invoke(IPC.chatStart, options),
     send: (id, message) => ipcRenderer.send(IPC.chatSend, id, message),

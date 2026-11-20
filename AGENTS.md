@@ -42,7 +42,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Menus and popovers grow from where they were opened (`transform-origin`).
 
 ## Menu (left) and sidebar (right) (Dan, 2026-11-19)
-- Left: the feature menu (`FeatureMenu.tsx`), Notion-style rows in registry order: Workspace, To-do, Boards, Database, Calendar, Inbox, and Settings pinned at the bottom (`pinBottom`). New features show up here; Dan has many planned. Its button sits right of the traffic lights (76px) and never moves; ⌘\\ does the same. Saved per folder as `menuCollapsed`.
+- Left: the feature menu (`FeatureMenu.tsx`), Notion-style rows in registry order: Workspace, To-do, Boards, Database, Calendar, Content, Inbox, and Settings pinned at the bottom (`pinBottom`). New features show up here; Dan has many planned. Its button sits right of the traffic lights (76px) and never moves; ⌘\\ does the same. Saved per folder as `menuCollapsed`.
 - Right: the sidebar (`Sidebar.tsx`) shows the picked feature's panel (files for Workspace), folder name on top, Claude button at the bottom, resized from its left edge. Button top right; ⌘⇧\\ and View menu. Saved per folder as `sidebarCollapsed`, width as `sidebarWidth`.
 - Each menu item opens its own thing (Dan, 2026-11-19: "each view from the menu should open its thing"): a view's `main` fills the window instead of the panes (which stay alive underneath). Workspace and Claude show the panes; To-do, Boards (the board picked on the right), Database, Calendar (week), Inbox and Settings have pages. A view without `component` has no sidebar panel, so the sidebar steps aside (To-do, Inbox, Settings). Pages without `ownTopBar` get an empty 36px top row for the lights and buttons.
 - The two panel buttons are portaled to the end of `<body>`: Electron applies drag areas in page order, so a page's draggable top row placed after a button swallowed its clicks in the real window (Dan couldn't open the menu on the Inbox page, 2026-11-19). Tests can't click through drag areas; `sidebar.spec.ts` checks the order instead.
@@ -78,6 +78,13 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Popovers on a page go through `createPortal(…, document.body)`: dock panes clip fixed-position children.
 - While the browser sign-in is open, the view shows "Waiting for Google…" with Cancel (3-minute limit). Before this, a sign-in Google blocked left every button silently disabled and Dan thought Save was broken (2026-11-19). Disabled buttons now look disabled (styles.css).
 - Tests: `VISION_GOOGLE_TEST_BASE` points sign-in and the API at `tests/e2e/fixtures/fake-google.ts`, which also stands in for the browser.
+
+## Content (`src/features/content/`)
+- Menu item for Dan's content work (Dan, 2026-11-20: "we're going to add a lot of stuff there"). First part: a dashboard of YouTube and Instagram numbers (`ContentPage.tsx`), full page, no sidebar panel. New content tools go on this page or as sections next to it.
+- YouTube: an API key from Dan's Google Cloud project (YouTube Data API v3) + his channel handle; public numbers only (subscribers, total views, videos, latest 12 videos). Watch time would need a Google sign-in with `yt-analytics.readonly`: not built. Instagram: a long-lived token from a Meta app (Instagram API with Instagram login; Business/Creator accounts only); profile, latest posts, 28-day insights. The token is renewed weekly (`refresh_access_token`).
+- Both checked against the platform before saving, so a wrong key never replaces a working one. Secrets encrypted in `userData/content.json` via `src/main/secrets.ts` (shared with Calendar). Main caches 10 minutes (YouTube's free quota).
+- One reading a day per platform is saved (`history`, kept after disconnecting) and draws the growth line and "+N in 7 days"; logic in `src/shared/content.ts` (unit tested). Numbers are formatted in English on purpose (`format.ts`).
+- Tests: `VISION_CONTENT_TEST_BASE` points both APIs at `tests/e2e/fixtures/fake-social.ts`; `content.spec.ts`.
 
 ## Workspace panel tabs (Dan, 2026-11-19)
 - The Workspace sidebar has VS Code-style tabs in its top row (`WorkspacePanel.tsx`, `header` on the view): Files, Claude, Calendar, from features' `workspaceTabs` in registry order. Files shows the folder name and its action buttons below the tabs. Calendar here is the quick "what's next" list (`CalendarView`), not the week page. Replaced the short-lived Usage button.
