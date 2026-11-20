@@ -358,6 +358,17 @@ test('the Claude view shows usage on top and reopens past chats', async () => {
     await expect(tabs).toHaveCount(3);
     expect(await tabs.evaluateAll((elements) => elements.map((element) => element.getAttribute('aria-label')))).toEqual(['Files', 'Claude', 'Calendar']);
     await page.screenshot({ animations: 'disabled', path: 'test-results/workspace-tabs.png' });
+
+    // With the menu hidden in a wide window, the new-chat screen sits in the same centered column as the message box.
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.keyboard.press('Meta+\\');
+    const empty = page.locator('.chat-empty');
+    await expect(empty.getByText('Old launch plan')).toBeVisible({ timeout: 15_000 });
+    const emptyBox = await empty.boundingBox();
+    const dockBox = await page.locator('.chat-dock').boundingBox();
+    expect(emptyBox && dockBox && Math.abs(emptyBox.x - dockBox.x) < 2 && Math.abs(emptyBox.width - dockBox.width) < 2).toBe(true);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/chat-empty-wide.png' });
+    await page.keyboard.press('Meta+\\');
     await tabs.nth(1).click();
     const view = sidebar.getByRole('tabpanel', { name: 'Claude' });
     const usage = view.getByRole('region', { name: 'Usage' });

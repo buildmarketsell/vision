@@ -25,8 +25,8 @@ function EmptyState({ onOpen }: { onOpen: (sessionId: string) => void }) {
     void window.vision.chat.list().then(setPast);
   }, []);
   return (
-    <div className="flex flex-col gap-6 px-6 py-8">
-      <div className="flex flex-col items-start gap-2">
+    <div className="chat-empty">
+      <div className="flex flex-col items-start gap-2 px-2">
         <ClaudeLogo size={28} />
         <div className="display">What should we work on?</div>
         <div className="caption">Claude works in {baseName(folder)}. Drop a file from the sidebar to mention it.</div>
