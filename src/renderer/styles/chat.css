@@ -240,3 +240,68 @@
   color: var(--color-accent-hover);
   background: var(--color-warning-soft);
 }
+
+/*
+ * Copy buttons, like VS Code: a faint icon that shows when the pointer is over its code block or reply,
+ * and stays while focused or just after copying (the check mark).
+ */
+.copy-button {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-row);
+  color: var(--color-text-faint);
+  opacity: 0;
+  transition:
+    opacity var(--duration-fast) var(--ease),
+    background-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.copy-button:hover {
+  background: var(--color-row-hover);
+  color: var(--color-text);
+}
+
+.copy-button:active {
+  transform: scale(0.94);
+  transition-duration: 0ms;
+}
+
+.copy-button:focus-visible,
+.copy-button[data-state='copied'],
+.copy-button[data-state='failed'],
+.code-wrap:hover .copy-button,
+.assistant-text:hover > .copy-reply {
+  opacity: 1;
+}
+
+.copy-button[data-state='copied'] {
+  color: var(--color-success);
+}
+
+.copy-button[data-state='failed'] {
+  color: var(--color-danger);
+}
+
+.code-wrap {
+  position: relative;
+}
+
+.copy-code {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  background: var(--color-code-background);
+}
+
+.copy-reply {
+  margin: var(--space-1) 0 0 calc(var(--space-1) * -1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-button {
+    transition: none;
+  }
+}

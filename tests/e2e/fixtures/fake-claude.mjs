@@ -90,6 +90,7 @@ if (!process.argv.includes('-p')) {
       if (text.includes('edit')) askTool('Write', { file_path: `${process.cwd()}/notes.txt`, content: 'hello\n' }, (answer) => reply(answer.behavior === 'allow' ? 'I wrote **notes.txt**.' : 'Okay, I left it.'));
       else if (text.includes('ask')) askTool('AskUserQuestion', { questions: [{ question: 'Red or Blue?', header: 'Color', multiSelect: false, options: [{ label: 'Red', description: '' }, { label: 'Blue', description: '' }] }] }, (answer) => reply(`You picked ${answer.updatedInput.answers['Red or Blue?']}.`));
       else if (text.includes('blocked')) blockedTurn(reply);
+      else if (text.includes('snippet')) reply('Paste this where the quote goes.\n\n```html\n<p class="quote">Hi</p>\n```\n\nThat is all.');
       else if (!text.includes('slow')) reply(`Hello from fake Claude. You said: ${text}`);
     }
   });

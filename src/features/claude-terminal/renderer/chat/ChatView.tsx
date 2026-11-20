@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ClipboardEvent } from 'react';
 import type { PastConversation } from '../../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../../renderer/components/ClaudeLogo';
+import { CopyButton } from '../../../../renderer/components/CopyButton';
 import { baseName, useWorkspace } from '../../../../renderer/core/workspaceStore';
 import type { ChatItem, ChatState } from './chatTypes';
 import { Banners } from './Banners';
@@ -13,7 +14,7 @@ import { PermissionCard, QuestionCard } from './RequestCards';
 import { ToolRow } from './ToolRow';
 import type { ChatSession } from './useChatSession';
 import { timeAgo } from '../timeAgo';
-import { textForDocument } from './copyText';
+import { isLastTextOfAnswer, textForDocument } from './copyText';
 
 const STICK_TO_BOTTOM_PX = 80;
 
@@ -48,7 +49,7 @@ function EmptyState({ onOpen }: { onOpen: (sessionId: string) => void }) {
   );
 }
 
-function Item({ item, state }: { item: ChatItem; state: ChatState }) {
+function Item({ item, state, lastOfAnswer }: { item: ChatItem; state: ChatState; lastOfAnswer: boolean }) {
   const folder = useWorkspace((current) => current.folder);
   if (item.kind === 'user') {
     return (
@@ -58,7 +59,14 @@ function Item({ item, state }: { item: ChatItem; state: ChatState }) {
       </div>
     );
   }
-  if (item.kind === 'text') return <div className={item.streaming ? 'assistant-text streaming' : 'assistant-text'}><Markdown text={item.text} baseDir={folder} /></div>;
+  if (item.kind === 'text') {
+    return (
+      <div className={item.streaming ? 'assistant-text streaming' : 'assistant-text'} data-reply={item.key}>
+        <Markdown text={item.text} baseDir={folder} />
+        {!item.streaming && lastOfAnswer && <CopyButton className="copy-reply" label="Copy reply" getText={() => replyText(item.key)} />}
+      </div>
+    );
+  }
   if (item.kind === 'notice') return <div className="notice" data-tone={item.tone}>{item.text}</div>;
   const tool = state.tools[item.toolId];
   return tool && tool.name !== 'AskUserQuestion' ? <ToolRow tool={tool} /> : null;
@@ -80,6 +88,12 @@ function useStickToBottom(dependency: unknown) {
 }
 
 /** Copies chat text without its styling (so Google Docs or Word use their own font and sizes) and with one empty line between paragraphs. */
+/** A reply as it reads on screen, cleaned for a document (one empty line between paragraphs), without the code blocks' buttons. */
+function replyText(key: string): string {
+  const markdown = document.querySelector(`[data-reply="${CSS.escape(key)}"] .markdown`);
+  return markdown instanceof HTMLElement ? textForDocument(markdown.innerText) : '';
+}
+
 function copyAsPlainText(event: ClipboardEvent) {
   const text = window.getSelection()?.toString();
   if (!text) return;
@@ -104,7 +118,7 @@ export function ChatView({ chat }: { chat: ChatSession }) {
           <EmptyState onOpen={(sessionId) => chat.open(sessionId)} />
         ) : (
           <div className="chat-column">
-            {state.items.map((item) => <Item key={item.key} item={item} state={state} />)}
+            {state.items.map((item, index) => <Item key={item.key} item={item} state={state} lastOfAnswer={isLastTextOfAnswer(state.items, index)} />)}
           </div>
         )}
       </div>

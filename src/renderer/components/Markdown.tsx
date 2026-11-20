@@ -5,6 +5,7 @@ import { convertEmbeds, imageUrl, resolveLocalPath } from '../../shared/markdown
 import { fileMention } from '../../shared/fileMentions';
 import { openFile } from '../core/dockActions';
 import { revealInFiles } from '../core/reveal';
+import { COPY_FEEDBACK_MS } from './CopyButton';
 import { afterSingleClick, cancelSingleClick, FileLinkMenu, type FileLinkTarget } from './FileLinkMenu';
 
 // Web links open in the browser (the main process routes new windows there); file links are caught in Markdown's onClick.
@@ -32,10 +33,21 @@ function toHtml(text: string, baseDir: string | undefined): string {
   return DOMPurify.sanitize(marked.parse(source, { async: false }), { ALLOWED_URI_REGEXP: ALLOWED_URI });
 }
 
-const COPY_LABEL = 'Copy';
-const COPY_FEEDBACK_MS = 1500;
+// Lucide's copy and check icons as markup: code blocks are built outside React.
+const SVG = (shape: string) =>
+  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${shape}</svg>`;
+const COPY_ICON = SVG('<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>');
+const CHECK_ICON = SVG('<path d="M20 6 9 17l-5-5"/>');
 
-/** Wraps each code block with a Copy button that copies the whole block, like VS Code. */
+function setCopyState(button: HTMLButtonElement, state: 'idle' | 'copied' | 'failed'): void {
+  const label = state === 'copied' ? 'Copied' : state === 'failed' ? 'Could not copy' : 'Copy code';
+  button.dataset['state'] = state;
+  button.title = label;
+  button.setAttribute('aria-label', label);
+  button.innerHTML = state === 'copied' ? CHECK_ICON : COPY_ICON;
+}
+
+/** Puts a small copy icon in each code block's top-right corner, like VS Code; it shows on hover. */
 function addCopyButtons(root: HTMLElement): void {
   root.querySelectorAll('pre').forEach((pre) => {
     if (pre.parentElement?.classList.contains('code-wrap')) return;
@@ -44,14 +56,16 @@ function addCopyButtons(root: HTMLElement): void {
     pre.replaceWith(wrap);
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'copy-code';
-    button.textContent = COPY_LABEL;
+    button.className = 'copy-button copy-code';
+    setCopyState(button, 'idle');
+    let timer: ReturnType<typeof setTimeout> | undefined;
     button.addEventListener('click', () => {
       navigator.clipboard.writeText(pre.textContent ?? '').then(
-        () => (button.textContent = 'Copied'),
-        () => (button.textContent = 'Copy failed'),
+        () => setCopyState(button, 'copied'),
+        () => setCopyState(button, 'failed'),
       );
-      setTimeout(() => (button.textContent = COPY_LABEL), COPY_FEEDBACK_MS);
+      clearTimeout(timer);
+      timer = setTimeout(() => setCopyState(button, 'idle'), COPY_FEEDBACK_MS);
     });
     wrap.append(pre, button);
   });
