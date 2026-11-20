@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Check, ChevronRight, CircleSlash, X } from 'lucide-react';
+import { openFile } from '../../../../renderer/core/dockActions';
+import { useWorkspace } from '../../../../renderer/core/workspaceStore';
 import type { ToolCall } from './chatTypes';
-import { asArr, asObj, asStr, describeTool } from './eventParsing';
+import { asArr, asObj, asStr, describeTool, toolFilePath } from './eventParsing';
 
 const MAX_PREVIEW_LINES = 60;
 
@@ -38,7 +40,7 @@ export function ToolDetail({ tool, showResult = true }: { tool: ToolCall; showRe
       {command && <pre className="code-block">$ {command}</pre>}
       {isEdit && editPairs(tool).map((pair, index) => <Diff key={index} {...pair} />)}
       {!command && !isEdit && <pre className="code-block">{JSON.stringify(tool.input, null, 2)}</pre>}
-      {showResult && tool.result && !isEdit && <pre className="code-block muted">{lines(tool.result).join('\n')}</pre>}
+      {showResult && tool.result && !isEdit && <pre className={tool.status === 'done' ? 'code-block muted' : 'code-block muted wrap'}>{lines(tool.result).join('\n')}</pre>}
       {showResult && tool.result && isEdit && tool.status === 'error' && <pre className="code-block muted">{tool.result}</pre>}
     </div>
   );
@@ -51,18 +53,44 @@ function StatusIcon({ status }: { status: ToolCall['status'] }) {
   return <X size={13} strokeWidth={2} color="var(--color-danger)" aria-label="Failed" />;
 }
 
-/** One line per tool call ("Read app.ts", "Ran npm test"); tap to see the details. */
+/** "Edited page.html" with the file name as a link that opens the file, when it is inside the open folder. */
+function ToolLabel({ tool }: { tool: ToolCall }) {
+  const folder = useWorkspace((state) => state.folder);
+  const label = describeTool(tool.name, tool.input);
+  const path = toolFilePath(tool.name, tool.input);
+  const name = path?.slice(path.lastIndexOf('/') + 1);
+  if (!path || !name || !folder || !path.startsWith(`${folder}/`) || !label.endsWith(name)) return <>{label}</>;
+  return (
+    <>
+      {label.slice(0, -name.length)}
+      <button type="button" className="file-link" title={`Open ${path.slice(folder.length + 1)}`} onClick={() => openFile(path)}>
+        {name}
+      </button>
+    </>
+  );
+}
+
+/** One line per tool call ("Read app.ts", "Ran npm test"); tap to see the details. A refused one says why underneath. */
 export function ToolRow({ tool }: { tool: ToolCall }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="tool-row">
-      <button className="row w-full text-left" aria-expanded={open} onClick={() => setOpen(!open)}>
+      {/* The whole line toggles for the mouse; the arrow button is the way in for the keyboard. */}
+      <div className="row w-full cursor-pointer" onClick={(event) => {
+          if (!(event.target as Element).closest('.file-link')) setOpen(!open);
+        }}
+      >
         <span className="flex w-4 justify-center">
           <StatusIcon status={tool.status} />
         </span>
-        <span className="min-w-0 flex-1 truncate text-(--color-text-muted)">{describeTool(tool.name, tool.input)}</span>
-        <ChevronRight className="chevron shrink-0" size={13} strokeWidth={1.75} color="var(--color-text-faint)" style={{ transform: open ? 'rotate(90deg)' : undefined }} />
-      </button>
+        <span className="min-w-0 flex-1 truncate text-(--color-text-muted)">
+          <ToolLabel tool={tool} />
+        </span>
+        <button type="button" className="tool-toggle" aria-expanded={open} aria-label={open ? 'Hide details' : 'Show details'}>
+          <ChevronRight className="chevron" size={13} strokeWidth={1.75} color="var(--color-text-faint)" style={{ transform: open ? 'rotate(90deg)' : undefined }} />
+        </button>
+      </div>
+      {tool.blockedReason && <div className="tool-blocked caption">{tool.blockedReason}</div>}
       {open && (
         <div className="enter pt-1 pb-2 pl-8">
           <ToolDetail tool={tool} />

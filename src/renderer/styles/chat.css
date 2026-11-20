@@ -155,6 +155,11 @@
   color: var(--color-text-muted);
 }
 
+/* Error and refusal messages are sentences: wrap them instead of scrolling sideways. */
+.code-block.wrap {
+  white-space: pre-wrap;
+}
+
 .diff-added {
   background: var(--color-diff-added-background);
   color: var(--color-success);
@@ -169,15 +174,61 @@
   height: 26px;
 }
 
+/* Short lines ("Stopped.") sit centered; long ones (an error) read as a left-aligned box, never a stretched pill. */
 .notice {
   align-self: center;
   font-size: var(--size-small);
+  line-height: 1.5;
   color: var(--color-text-muted);
   padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-control);
   background: var(--color-row-hover);
-  max-width: 90%;
-  text-align: center;
+  max-width: 100%;
+  text-align: left;
+  user-select: text;
+}
+
+/* A file name in a tool row ("Edited page.html"): opens the file. */
+.file-link {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border);
+  text-underline-offset: 3px;
+  border-radius: 3px;
+}
+
+.file-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.tool-toggle {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--space-1);
+  border-radius: var(--radius-row);
+}
+
+/* Why Claude Code refused a tool, under its row, in the label's column. */
+.tool-blocked {
+  padding: 0 var(--space-2) var(--space-1) var(--space-8);
+}
+
+/* File names Claude writes as `code` in a reply: click to open. */
+.markdown code.file-mention {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+
+.markdown code.file-mention:hover {
+  text-decoration-color: currentColor;
+}
+
+.markdown code.file-mention[data-missing] {
+  cursor: default;
+  text-decoration: line-through;
+  color: var(--color-text-faint);
 }
 
 .notice[data-tone='error'] {

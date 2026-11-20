@@ -99,7 +99,7 @@ test('asks before a file change and answers questions', async () => {
     await page.screenshot({ animations: 'disabled', path: 'test-results/permission.png' });
     await card.getByRole('button', { name: 'Allow' }).click();
     await expect(page.locator('.assistant-text').last()).toContainText('I wrote notes.txt.');
-    await expect(page.getByRole('button', { name: /Wrote notes\.txt/ })).toBeVisible();
+    await expect(page.locator('.tool-row', { hasText: 'Wrote notes.txt' }).getByRole('button', { name: 'notes.txt' })).toBeVisible();
 
     await sendMessage(page, 'ask me');
     const question = page.getByRole('dialog', { name: 'Claude has a question' });
