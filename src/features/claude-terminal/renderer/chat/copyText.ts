@@ -1,3 +1,5 @@
+import type { ChatItem } from './chatTypes';
+
 /**
  * Text copied from the chat, ready for a document: each paragraph break becomes exactly one empty line.
  * A browser selection puts two or more empty lines between blocks (paragraphs, lists, headings), and Google Docs
@@ -9,4 +11,14 @@ export function textForDocument(selected: string): string {
     .replace(/[ \t ]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+/** True for the last piece of Claude's text before your next message: the copy icon goes there only, not between tool steps. */
+export function isLastTextOfAnswer(items: ChatItem[], index: number): boolean {
+  if (items[index]?.kind !== 'text') return false;
+  for (const later of items.slice(index + 1)) {
+    if (later.kind === 'user') return true;
+    if (later.kind === 'text') return false;
+  }
+  return true;
 }

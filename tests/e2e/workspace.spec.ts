@@ -30,6 +30,28 @@ test('opens a folder, edits and saves a file, and chats with Claude', async () =
     expect(copied.types).toEqual(['text/plain']);
     expect(copied.text).toContain('Hello from fake Claude. You said: hi there');
 
+    // Copy icons like VS Code: one in each code block's corner and one under the reply, both quiet until hovered.
+    // The clipboard is recorded in the page, so the test never touches the Mac's real clipboard.
+    await page.evaluate(() => {
+      const copies: string[] = [];
+      Object.assign(window, { copies });
+      navigator.clipboard.writeText = async (value: string) => void copies.push(value);
+    });
+    await sendMessage(page, 'show me a snippet');
+    const snippet = page.locator('.assistant-text').last();
+    await expect(snippet.locator('pre')).toContainText('<p class="quote">Hi</p>');
+    const codeCopy = snippet.getByRole('button', { name: 'Copy code' });
+    await expect(codeCopy).toHaveCSS('opacity', '0');
+    await snippet.locator('.code-wrap').hover();
+    await expect(codeCopy).toHaveCSS('opacity', '1');
+    await page.screenshot({ animations: 'disabled', path: 'test-results/chat-copy-code.png' });
+    await codeCopy.click();
+    await expect(snippet.getByRole('button', { name: 'Copied' })).toBeVisible();
+    await snippet.getByRole('button', { name: 'Copy reply' }).click();
+    const copies = await page.evaluate(() => (window as unknown as { copies: string[] }).copies);
+    expect(copies[0]).toBe('<p class="quote">Hi</p>\n');
+    expect(copies[1]).toBe('Paste this where the quote goes.\n\n<p class="quote">Hi</p>\n\nThat is all.');
+
     await page.getByRole('treeitem', { name: /hello\.md/ }).click();
     await expect(page.locator('.markdown-document h1')).toHaveText('Hello', { timeout: 15_000 });
     await page.screenshot({ animations: 'disabled', path: 'test-results/markdown-preview.png' });
