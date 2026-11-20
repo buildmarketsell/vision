@@ -69,9 +69,9 @@ export function ContentPage() {
   const { state, busy, failed, run } = useContent();
   return (
     <div className="content-page">
-      <div className="content-column">
+      <div className="content-column page-column" data-width="wide">
         <header className="content-page-head">
-          <h1 className="content-page-title">Content</h1>
+          <h1 className="page-title">Content</h1>
           <span className="flex-1" />
           <button className="icon-button" title="Refresh numbers" aria-label="Refresh numbers" disabled={busy !== null} onClick={() => run('refresh', window.vision.content.state(true))}>
             <RotateCw size={14} strokeWidth={1.5} className={busy === 'refresh' ? 'content-spinning' : undefined} />

@@ -1,0 +1,176 @@
+/* Gradient glow charts (after bklit.com/recipes): no grid, an accent fill that melts into the page. */
+
+.glow-stop-top {
+  stop-color: var(--color-accent);
+  stop-opacity: 0.34;
+}
+
+.glow-stop-bottom {
+  stop-color: var(--color-accent);
+  stop-opacity: 0;
+}
+
+.glow-line {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-opacity: 0.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Both ends fade out, so the chart has no hard edges. */
+.glow-fade {
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
+.content-spark {
+  display: block;
+  width: 100%;
+  height: 32px;
+  margin-top: var(--space-2);
+}
+
+.content-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.content-chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.content-chart-range {
+  font-size: var(--size-small);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.content-chart-switch {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.content-chart-switch button {
+  padding: var(--space-1) 0;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  box-shadow: inset 0 -2px 0 transparent;
+}
+
+.content-chart-switch button[aria-selected='true'] {
+  color: var(--color-text);
+  box-shadow: inset 0 -2px 0 var(--color-text);
+}
+
+.content-chart-switch button:active {
+  opacity: 0.7;
+}
+
+.content-chart-plot {
+  position: relative;
+  height: 200px;
+  /* Room for the date labels and the tooltip, so neither spills past the page. */
+  margin: 0 var(--space-6) 32px;
+  cursor: crosshair;
+}
+
+.content-chart-plot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.content-chart-cross {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-composer-border);
+  pointer-events: none;
+}
+
+.content-chart-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 6px var(--color-accent-soft), 0 0 14px var(--color-accent);
+  pointer-events: none;
+}
+
+.content-chart-tip {
+  position: absolute;
+  top: 0;
+  min-width: 160px;
+  border-radius: 10px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-popover);
+  transform: translateX(var(--space-3));
+  white-space: nowrap;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.content-chart-tip-left {
+  transform: translateX(calc(-100% - var(--space-3)));
+}
+
+.content-chart-tip-date {
+  padding: var(--space-2) var(--space-3);
+  font-weight: 500;
+  box-shadow: inset 0 -1px 0 var(--color-border);
+}
+
+.content-chart-tip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.content-chart-tip-row strong {
+  margin-left: auto;
+  padding-left: var(--space-4);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.content-chart-tip-key {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.content-chart-axis {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  font-size: var(--size-small);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.content-chart-axis span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  line-height: 24px;
+}
+
+.content-chart-axis .content-chart-pill {
+  padding: 0 var(--space-2);
+  border-radius: 12px;
+  background: var(--color-text);
+  color: var(--color-card);
+  font-weight: 500;
+}

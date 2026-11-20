@@ -1,29 +1,35 @@
 import { Camera, ExternalLink, Eye, Heart, MessageCircle, PlaySquare } from 'lucide-react';
 import { growth, platformName, type AccountStats, type Platform, type PlatformState, type PostStat, type Snapshot } from '../../../shared/content';
 import { ConnectForm } from './ConnectForm';
-import { GrowthChart } from './GrowthChart';
+import { Sparkline } from './GlowArea';
+import { GrowthChart, type ChartMetric } from './GrowthChart';
 import { shortDate, shortNumber, signed } from './format';
 
 const ICON = { size: 14, strokeWidth: 1.75 };
 
-function Tile({ label, value, change }: { label: string; value: number | null; change?: string | null }) {
+const followers = (snapshot: Snapshot) => snapshot.followers;
+const totalViews = (snapshot: Snapshot) => snapshot.totalViews;
+const trend = (history: Snapshot[], pick: ChartMetric['pick']) => history.flatMap((item) => pick(item) ?? []);
+
+function Tile({ label, value, change, values }: { label: string; value: number | null; change?: string | null; values?: number[] }) {
   return (
     <div className="content-tile">
       <span className="content-tile-label">{label}</span>
       <span className="content-tile-value">{shortNumber(value)}</span>
       {change && <span className="content-tile-change">{change}</span>}
+      {values && <Sparkline values={values} />}
     </div>
   );
 }
 
 function tilesFor(platform: Platform, stats: AccountStats, history: Snapshot[]) {
-  const followerChange = signed(growth(history, 7, (item) => item.followers));
+  const followerChange = signed(growth(history, 7, followers));
   if (platform === 'youtube') {
-    const viewChange = signed(growth(history, 28, (item) => item.totalViews));
+    const viewChange = signed(growth(history, 28, totalViews));
     return (
       <>
-        <Tile label="Subscribers" value={stats.followers} change={followerChange && `${followerChange} in 7 days`} />
-        <Tile label="Total views" value={stats.totalViews} change={viewChange && `${viewChange} in 28 days`} />
+        <Tile label="Subscribers" value={stats.followers} change={followerChange && `${followerChange} in 7 days`} values={trend(history, followers)} />
+        <Tile label="Total views" value={stats.totalViews} change={viewChange && `${viewChange} in 28 days`} values={trend(history, totalViews)} />
         <Tile label="Videos" value={stats.posts} />
       </>
     );
@@ -31,7 +37,7 @@ function tilesFor(platform: Platform, stats: AccountStats, history: Snapshot[]) 
   const period = stats.last28Days;
   return (
     <>
-      <Tile label="Followers" value={stats.followers} change={followerChange && `${followerChange} in 7 days`} />
+      <Tile label="Followers" value={stats.followers} change={followerChange && `${followerChange} in 7 days`} values={trend(history, followers)} />
       <Tile label="Views, 28 days" value={period?.views ?? null} />
       <Tile label="Reach, 28 days" value={period?.reach ?? null} />
       <Tile label="Profile visits, 28 days" value={period?.profileViews ?? null} />
@@ -54,6 +60,9 @@ function PostCard({ post }: { post: PostStat }) {
     </a>
   );
 }
+
+const YOUTUBE_CHART: ChartMetric[] = [{ label: 'Subscribers', pick: followers }, { label: 'Views', pick: totalViews }];
+const INSTAGRAM_CHART: ChartMetric[] = [{ label: 'Followers', pick: followers }];
 
 /** One platform on the dashboard: its connect form, or its numbers, growth line and latest posts. */
 export function PlatformSection({ platform, state, busy, onConnect, onDisconnect }: {
@@ -88,7 +97,7 @@ export function PlatformSection({ platform, state, busy, onConnect, onDisconnect
       {state.connected && stats && (
         <>
           <div className="content-tiles">{tilesFor(platform, stats, state.history)}</div>
-          <GrowthChart label={platform === 'youtube' ? 'Subscribers' : 'Followers'} history={state.history} />
+          <GrowthChart metrics={platform === 'youtube' ? YOUTUBE_CHART : INSTAGRAM_CHART} history={state.history} />
           {stats.recent.length > 0 && (
             <>
               <h3 className="section-label">{platform === 'youtube' ? 'Latest videos' : 'Latest posts'}</h3>

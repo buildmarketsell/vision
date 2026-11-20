@@ -29,9 +29,9 @@ export function TodoPanel() {
   const open = todos?.filter((todo) => todo.status !== 'done').length ?? 0;
   return (
     <div className="todo-page">
-      <div className="todo-page-head" data-layout={layout}>
+      <div className="todo-page-head page-column">
         <SquareCheckBig size={30} strokeWidth={1.5} className="todo-page-icon" aria-hidden />
-        <h1 className="todo-page-title">To-do</h1>
+        <h1 className="page-title">To-do</h1>
         <div className="flex items-center gap-3">
           <LayoutSwitch />
           <span className="caption">{open === 1 ? '1 open' : `${open} open`}</span>
@@ -39,7 +39,7 @@ export function TodoPanel() {
       </div>
       {error && <div className="todo-error" role="alert">{error}</div>}
       {todos === null && !error && <div className="spinner mx-auto mt-6" aria-label="Loading to-dos" />}
-      {todos && (layout === 'board' ? <TodoBoard todos={todos} run={run} /> : <div className="todo-page-body"><TodoList todos={todos} run={run} /></div>)}
+      {todos && (layout === 'board' ? <TodoBoard todos={todos} run={run} /> : <div className="todo-page-body page-column"><TodoList todos={todos} run={run} /></div>)}
     </div>
   );
 }

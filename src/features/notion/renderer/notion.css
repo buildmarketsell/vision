@@ -340,12 +340,12 @@ button.notion-crumb:hover {
   background: var(--color-row-hover);
 }
 
-/* The page column: Notion's 708px of text with wide side margins. */
+/* The page column: the shared page frame (styles.css). */
 .notion-page {
   position: relative;
-  max-width: 900px;
+  max-width: var(--page-width);
   margin: 0 auto;
-  padding: var(--space-12) clamp(24px, 8vw, 96px) 0;
+  padding: var(--page-top) var(--page-gutter) 0;
 }
 
 .notion-page[data-has-cover='true'] {

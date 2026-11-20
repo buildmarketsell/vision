@@ -10,9 +10,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  max-width: 960px;
-  margin: 0 auto;
-  padding: var(--space-8) var(--space-12) var(--space-12);
+  padding-bottom: var(--space-12);
 }
 
 .content-page-head {
@@ -21,10 +19,8 @@
   gap: var(--space-2);
 }
 
-.content-page-title {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.content-page-head .page-title {
+  margin: 0;
 }
 
 .content-overview {
@@ -169,101 +165,6 @@
   animation: spin 0.8s linear infinite;
 }
 
-/* Growth line */
-
-.content-chart {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.content-chart-head {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 500;
-}
-
-.content-chart-range {
-  font-size: var(--size-small);
-  font-weight: 400;
-  color: var(--color-text-muted);
-}
-
-.content-chart-plot {
-  position: relative;
-  height: 140px;
-  /* Room for the axis numbers, so they never sit on the line. */
-  margin-left: 48px;
-}
-
-.content-chart-plot svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  cursor: crosshair;
-}
-
-.content-chart-line {
-  fill: none;
-  stroke: var(--color-accent);
-  stroke-width: 2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-.content-chart-base {
-  stroke: var(--color-border);
-  stroke-width: 1;
-}
-
-.content-chart-cross {
-  stroke: var(--color-composer-border);
-  stroke-width: 1;
-}
-
-.content-chart-dot {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  margin: -5px 0 0 -5px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  box-shadow: 0 0 0 2px var(--color-card);
-  pointer-events: none;
-}
-
-.content-chart-tip {
-  position: absolute;
-  top: -8px;
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-row);
-  background: var(--color-card);
-  box-shadow: var(--shadow-popover);
-  transform: translate(-50%, -100%);
-  white-space: nowrap;
-  pointer-events: none;
-  font-variant-numeric: tabular-nums;
-}
-
-.content-chart-axis {
-  position: absolute;
-  right: calc(100% + var(--space-2));
-  font-size: var(--size-small);
-  color: var(--color-text-faint);
-  pointer-events: none;
-}
-
-.content-chart-axis-top {
-  top: 4px;
-}
-
-.content-chart-axis-bottom {
-  bottom: 4px;
-}
-
 .content-section .section-label {
   padding: 0;
 }
@@ -333,20 +234,12 @@
 }
 
 @media (max-width: 700px) {
-  .content-column {
-    padding: var(--space-6) var(--space-4) var(--space-8);
-  }
-
   .content-overview {
     grid-template-columns: 1fr 1fr;
   }
 
   .content-hero {
     grid-column: 1 / -1;
-  }
-
-  .content-chart-plot {
-    margin-left: 40px;
   }
 }
 
