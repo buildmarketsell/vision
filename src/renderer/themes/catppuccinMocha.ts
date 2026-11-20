@@ -100,7 +100,7 @@ export const catppuccinMocha: VisionTheme = {
     delimiter: '9399B2',
     selection: '#9399B240',
     indentGuide: '#CDD6F414',
-    scrollbar: '#CDD6F41F',
-    scrollbarHover: '#CDD6F433',
+    scrollbar: '#CDD6F42E',
+    scrollbarHover: '#CDD6F452',
   },
 };

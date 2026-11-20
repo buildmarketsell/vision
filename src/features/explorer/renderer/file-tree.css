@@ -1,0 +1,87 @@
+/*
+ * The file tree, after beui's file tree: a hover pill gliding between rows (glide.css), rows fading in
+ * one after another when a folder opens, a guide line under each open folder, and folder icons that
+ * turn as they open. Only transform and opacity animate.
+ */
+.file-tree {
+  position: relative;
+}
+.file-tree .row {
+  position: relative;
+}
+/* The gliding pill replaces each row's own hover background. */
+.file-tree .row:hover {
+  background: transparent;
+}
+.file-tree .row[data-selected='true'] {
+  background: var(--color-row-selected);
+}
+.file-tree .row:active {
+  background: var(--color-row-pressed);
+}
+.file-tree .tree-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.file-tree .row:hover .tree-icon svg {
+  stroke: var(--color-text);
+}
+.tree-icon[data-open='true'] {
+  animation: tree-icon-open var(--duration-base) var(--ease) both;
+}
+.tree-icon[data-open='false'] {
+  animation: tree-icon-close var(--duration-base) var(--ease) both;
+}
+
+.tree-enter {
+  animation: tree-row-in 220ms var(--ease) both;
+}
+
+.tree-group {
+  position: relative;
+}
+.tree-group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--guide-left);
+  width: 1px;
+  background: var(--color-border);
+  transform-origin: top;
+  animation: tree-guide-in 300ms var(--ease) both;
+  pointer-events: none;
+}
+
+@keyframes tree-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes tree-guide-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+}
+@keyframes tree-icon-open {
+  from {
+    opacity: 0;
+    transform: scale(0.75) rotate(-8deg);
+  }
+}
+@keyframes tree-icon-close {
+  from {
+    opacity: 0;
+    transform: scale(0.75) rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tree-enter,
+  .tree-group::before,
+  .tree-icon[data-open] {
+    animation: none;
+  }
+}

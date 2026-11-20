@@ -1,0 +1,28 @@
+/*
+ * Every scrollbar in the app (Monaco and the terminal draw their own): no track, a thin rounded thumb
+ * in the theme's scrollbar color, shown only while scrolling or pointing at it (core/scrollbars.ts).
+ * The 10px gutter stays, so text never shifts when the thumb appears.
+ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  min-height: 32px;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: transparent padding-box;
+}
+[data-scrolling]::-webkit-scrollbar-thumb {
+  background-color: var(--color-scrollbar);
+}
+/* Pointing at the bar: a little wider and stronger, so it's easy to grab. */
+[data-scrollbar-hover]::-webkit-scrollbar-thumb {
+  border-width: 2px;
+  background-color: var(--color-scrollbar-hover);
+}

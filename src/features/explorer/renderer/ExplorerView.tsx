@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState, type MouseEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
 import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, FolderSearch, Pencil, RefreshCw, Search, Shapes, Trash2, X, type LucideIcon } from 'lucide-react';
 import type { DirEntry } from '../../../shared/ipc';
 import { ContextMenu, type ContextMenuItem } from '../../../renderer/components/ContextMenu';
+import { HoverGlide } from '../../../renderer/components/GlideHighlight';
 import { runCommand } from '../../../renderer/core/commands';
 import { baseName, parentPath, useWorkspace } from '../../../renderer/core/workspaceStore';
 import { FileSearch, useFileSearch } from './FileSearch';
@@ -113,6 +114,7 @@ export function ExplorerView() {
     setMenu({ x: event.clientX, y: event.clientY, entry });
   }, []);
   const closeMenu = useCallback(() => setMenu(null), []);
+  const tree = useRef<HTMLDivElement>(null);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -126,7 +128,8 @@ export function ExplorerView() {
         </div>
       )}
       {searchOpen && <FileSearch />}
-      <div role="tree" aria-label="Files" className="min-h-0 flex-1 overflow-y-auto px-1 pb-2" hidden={searching} onContextMenu={(event) => openMenu(event, null)}>
+      <div ref={tree} role="tree" aria-label="Files" className="file-tree min-h-0 flex-1 overflow-y-auto px-1 pb-2" hidden={searching} onContextMenu={(event) => openMenu(event, null)}>
+        <HoverGlide list={tree} rows=".row" />
         <TreeChildren dir={folder} depth={0} onContextMenu={openMenu} />
       </div>
       {menu && <ContextMenu x={menu.x} y={menu.y} items={menuItems(menu.entry)} onClose={closeMenu} />}
