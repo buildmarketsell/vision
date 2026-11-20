@@ -5,6 +5,7 @@ import { onWindowClosed, windowContextFor, type WindowContext } from '../windows
 import { IMAGE_EXTENSIONS, MAX_IMAGE_BYTES, MAX_PASTED_VIDEO_BYTES, videoExtension } from '../../shared/markdownImages';
 import { createEntry, listDirectory, moveToTrash, readTextFile, renameEntry, saveImageNextTo, saveVideoNextTo, writeTextFile } from './fileSystem';
 import { findFiles, isFileExtension, locatePath } from './findFiles';
+import { registerFinderHandlers } from './finderHandlers';
 import { FolderWatcher } from './watcher';
 
 const watchers = new Map<WindowContext, FolderWatcher>();
@@ -112,6 +113,7 @@ export function registerFsHandlers(): void {
   registerReadHandlers();
   registerWriteHandlers();
   registerDialogHandlers();
+  registerFinderHandlers();
   ipcMain.on(IPC.watch, (event, paths: unknown) => {
     if (!Array.isArray(paths)) return;
     const context = windowContextFor(event.sender);

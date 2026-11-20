@@ -77,7 +77,7 @@ export const catppuccinMocha: VisionTheme = {
     columnGreen: 'rgba(166, 227, 161, 0.06)',
     boardCanvas: '#11111B',
     boardDot: '#313244',
-    glass: 'rgba(24, 24, 37, 0.3)',
+    glass: 'rgba(24, 24, 37, 0.18)',
     glassFloating: 'rgba(30, 30, 46, 0.72)',
     glassEdge: 'rgba(205, 214, 244, 0.1)',
     // The rainbow of the Catppuccin logo.

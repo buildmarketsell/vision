@@ -120,7 +120,8 @@ export function createWindow(folder: string | null, bounds: WindowBounds | null 
     trafficLightPosition: { x: 16, y: 12 },
     backgroundColor: BACKGROUND_COLOR,
     vibrancy: 'sidebar',
-    visualEffectState: 'followWindow',
+    // 'active': the menus stay frosted glass when VISION isn't the front app ('followWindow' turned them flat gray; Dan, 2026-11-20).
+    visualEffectState: 'active',
     webPreferences: {
       preload: join(app.getAppPath(), 'out/preload/index.cjs'),
       contextIsolation: true,

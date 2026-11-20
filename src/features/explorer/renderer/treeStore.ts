@@ -16,6 +16,8 @@ interface TreeState {
   listings: Record<string, DirListing>;
   expanded: Set<string>;
   selected: string | null;
+  /** Rows picked with ⌘-click, for dragging several files at once. Always includes `selected`. */
+  picked: string[];
   edit: TreeEdit;
   notice: string | null;
   loadDir: (dir: string) => Promise<void>;
@@ -26,6 +28,8 @@ interface TreeState {
   /** Lists the root and every open folder again. */
   refresh: (root: string) => Promise<void>;
   select: (path: string | null) => void;
+  /** ⌘-click: adds the row to the picked rows, or takes it out. */
+  togglePicked: (path: string) => void;
   setEdit: (edit: TreeEdit) => void;
   setNotice: (notice: string | null) => void;
   reset: () => void;
@@ -35,6 +39,7 @@ export const useTree = create<TreeState>((set, get) => ({
   listings: {},
   expanded: new Set(),
   selected: null,
+  picked: [],
   edit: null,
   notice: null,
 
@@ -75,8 +80,13 @@ export const useTree = create<TreeState>((set, get) => ({
     await Promise.all([root, ...get().expanded].map((dir) => get().loadDir(dir)));
   },
 
-  select: (path) => set({ selected: path }),
+  select: (path) => set({ selected: path, picked: path ? [path] : [] }),
+  togglePicked: (path) =>
+    set((state) => {
+      const picked = state.picked.includes(path) ? state.picked.filter((item) => item !== path) : [...state.picked, path];
+      return { picked, selected: picked.at(-1) ?? null };
+    }),
   setEdit: (edit) => set({ edit }),
   setNotice: (notice) => set({ notice }),
-  reset: () => set({ listings: {}, expanded: new Set(), selected: null, edit: null, notice: null }),
+  reset: () => set({ listings: {}, expanded: new Set(), selected: null, picked: [], edit: null, notice: null }),
 }));

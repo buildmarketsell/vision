@@ -1,6 +1,7 @@
 import { useState, type ClipboardEvent, type DragEvent } from 'react';
 import { isImageMediaType, MAX_IMAGE_BYTES, MAX_IMAGES_PER_MESSAGE, type ChatImage } from '../../../../shared/claudeChat';
-import { PATH_DRAG_TYPE, relativeParts, useWorkspace } from '../../../../renderer/core/workspaceStore';
+import { relativeParts, useWorkspace } from '../../../../renderer/core/workspaceStore';
+import { draggedTreePaths } from '../../../../renderer/core/treeDrag';
 
 const ERROR_VISIBLE_MS = 4000;
 
@@ -73,19 +74,20 @@ export function useDraft(): Draft {
 
   const onDragOver = (event: DragEvent) => {
     const types = event.dataTransfer.types;
-    if (!types.includes(PATH_DRAG_TYPE) && !types.includes('Files')) return;
+    if (!types.includes('Files')) return;
     event.preventDefault();
     event.stopPropagation();
     event.dataTransfer.dropEffect = 'copy';
   };
 
   const onDrop = (event: DragEvent) => {
-    const treePath = event.dataTransfer.getData(PATH_DRAG_TYPE);
     const files = [...event.dataTransfer.files];
-    if (!treePath && files.length === 0) return;
+    if (files.length === 0) return;
     event.preventDefault();
     event.stopPropagation();
-    if (treePath) return setText((current) => appendMention(current, mentionFor(folder, treePath)));
+    // Files from the file tree are mentioned by path; images from Finder are attached.
+    const treePaths = draggedTreePaths(files);
+    if (treePaths) return treePaths.forEach((path) => setText((current) => appendMention(current, mentionFor(folder, path))));
     for (const file of files) {
       if (isImageMediaType(file.type)) void attach(file);
       else setText((current) => appendMention(current, mentionFor(folder, window.vision.app.pathForFile(file))));

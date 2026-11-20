@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type MouseEvent } from 'react';
-import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, Pencil, RefreshCw, Shapes, Trash2, X, type LucideIcon } from 'lucide-react';
+import { ChevronsDownUp, Eye, EyeOff, FilePlus, FolderPlus, FolderSearch, Pencil, RefreshCw, Shapes, Trash2, X, type LucideIcon } from 'lucide-react';
 import type { DirEntry } from '../../../shared/ipc';
 import { ContextMenu, type ContextMenuItem } from '../../../renderer/components/ContextMenu';
 import { runCommand } from '../../../renderer/core/commands';
@@ -79,6 +79,7 @@ function menuItems(entry: DirEntry | null): ContextMenuItem[] {
   if (!entry) return items;
   return [
     ...items,
+    { label: 'Reveal in Finder', icon: <FolderSearch {...ICON} />, onSelect: () => window.vision.fs.revealInFinder(entry.path) },
     { label: 'Rename', icon: <Pencil {...ICON} />, onSelect: () => useTree.getState().setEdit({ mode: 'rename', path: entry.path, name: entry.name }) },
     { label: 'Move to Trash', icon: <Trash2 {...ICON} />, danger: true, onSelect: () => void trashEntry(entry.path) },
   ];

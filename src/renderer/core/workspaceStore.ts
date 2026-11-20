@@ -39,9 +39,6 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
     set((state) => ({ watchedByFeature: { ...state.watchedByFeature, [featureId]: paths } })),
 }));
 
-/** Drag type for a file path from the tree (e.g. dropped in Claude's message box as an @mention). */
-export const PATH_DRAG_TYPE = 'application/x-vision-path';
-
 /** The file or folder name at the end of a path. */
 export function baseName(path: string): string {
   const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;

@@ -265,7 +265,7 @@ test('themes: switch to Catppuccin Mocha in Settings, and keep it after a restar
     // The page is painted; the window behind the menus is see-through for macOS's glass, tinted per theme.
     await expect(page.locator('.app-shell > main').first()).toHaveCSS('background-color', 'rgb(30, 30, 46)');
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-    await expect(menu(page)).toHaveCSS('background-color', 'rgba(24, 24, 37, 0.3)');
+    await expect(menu(page)).toHaveCSS('background-color', 'rgba(24, 24, 37, 0.18)');
     await page.screenshot({ animations: 'disabled', path: 'test-results/theme-mocha.png' });
     await menu(page).getByRole('tab', { name: 'Workspace' }).click();
     await page.getByRole('tab', { name: 'Terminal' }).click();
