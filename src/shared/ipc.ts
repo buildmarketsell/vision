@@ -8,6 +8,12 @@ import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions,
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
+/** Where a path Claude mentioned leads (see `fs.locate`). */
+export interface LocatedPath {
+  path: string;
+  isDirectory: boolean;
+}
+
 export interface DirEntry {
   name: string;
   path: string;
@@ -79,8 +85,8 @@ export interface VisionApi {
     listDir(path: string): Promise<Result<DirEntry[]>>;
     /** Files ending in `extension` anywhere in the folder, skipping hidden folders and node_modules. */
     findFiles(root: string, extension: string): Promise<Result<string[]>>;
-    /** The file a name or path Claude mentioned points at, inside the open folder, or null. */
-    locate(mention: string): Promise<string | null>;
+    /** The file or folder a name or path Claude mentioned points at, inside the open folder, or null. */
+    locate(mention: string): Promise<LocatedPath | null>;
     readFile(path: string): Promise<ReadFileResult>;
     writeFile(path: string, content: string): Promise<Result<void>>;
     /** Saves image bytes in the `images/` folder next to a note; returns the new file's path. */

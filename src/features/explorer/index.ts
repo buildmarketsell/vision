@@ -2,7 +2,11 @@ import { createElement } from 'react';
 import { Files } from 'lucide-react';
 import type { Feature } from '../../renderer/core/feature';
 import { WorkspacePanel, WorkspaceTabStrip } from '../../renderer/components/WorkspacePanel';
+import { setRevealHandler } from '../../renderer/core/reveal';
 import { ExplorerView, startCreate } from './renderer/ExplorerView';
+import { revealPath } from './renderer/revealPath';
+
+setRevealHandler((path) => void revealPath(path));
 
 export const explorerFeature: Feature = {
   id: 'explorer',

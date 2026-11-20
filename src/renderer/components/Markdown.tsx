@@ -4,6 +4,7 @@ import DOMPurify from 'dompurify';
 import { convertEmbeds, imageUrl, resolveLocalPath } from '../../shared/markdownImages';
 import { fileMention } from '../../shared/fileMentions';
 import { openFile } from '../core/dockActions';
+import { revealInFiles } from '../core/reveal';
 
 // Web links open in the browser (the main process routes new windows there); file links are caught in Markdown's onClick.
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
@@ -55,22 +56,23 @@ function addCopyButtons(root: HTMLElement): void {
   });
 }
 
-/** Inline code that names a file (`outputs/page.html`) becomes a button that opens it. */
+/** Inline code that names a file or folder (`outputs/page.html`, `outputs/images/`) becomes a button that opens or reveals it. */
 function markFileMentions(root: HTMLElement): void {
   root.querySelectorAll(':not(pre) > code').forEach((code) => {
     if (code.classList.contains('file-mention') || !fileMention(code.textContent ?? '')) return;
     code.classList.add('file-mention');
     code.setAttribute('role', 'button');
     code.setAttribute('tabindex', '0');
-    code.setAttribute('title', 'Open file');
+    code.setAttribute('title', 'Open');
   });
 }
 
-/** Finds the mentioned file in the folder and opens it in a tab; says so on the mention when it isn't there. */
+/** Opens the mentioned file in a tab, or shows the folder in the files panel; says so on the mention when it isn't there. */
 async function openMention(code: HTMLElement): Promise<void> {
-  const path = await window.vision.fs.locate(code.textContent ?? '');
-  if (path) {
-    openFile(path);
+  const found = await window.vision.fs.locate(code.textContent ?? '');
+  if (found) {
+    if (found.isDirectory) revealInFiles(found.path);
+    else openFile(found.path);
     return;
   }
   code.dataset['missing'] = 'true';

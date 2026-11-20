@@ -25,6 +25,11 @@ const useWorkspaceTab = create<{ stored: string | null; select: (id: string) => 
   },
 }));
 
+/** Switches the Workspace panel to a tab (e.g. Files, when the chat reveals a folder). */
+export function selectWorkspaceTab(id: string): void {
+  useWorkspaceTab.getState().select(id);
+}
+
 function useActiveTab(): [string, (id: string) => void] {
   const { stored, select } = useWorkspaceTab();
   const tabs = allWorkspaceTabs();

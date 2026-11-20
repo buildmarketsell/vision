@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { fileMention } from '../../src/shared/fileMentions';
-import { locateFile } from '../../src/main/workspace/findFiles';
+import { locatePath } from '../../src/main/workspace/findFiles';
 
 describe('fileMention', () => {
   it('accepts file names and paths, with spaces and emoji, and drops line numbers', () => {
@@ -12,6 +12,7 @@ describe('fileMention', () => {
     expect(fileMention('src/app.ts:42')).toBe('src/app.ts');
     expect(fileMention('src/app.ts#L42-L51')).toBe('src/app.ts');
     expect(fileMention('~/Documents/notes.md')).toBe('~/Documents/notes.md');
+    expect(fileMention('👤 CLIENTS/kilo/outputs/images/')).toBe('👤 CLIENTS/kilo/outputs/images/');
   });
 
   it('rejects code, commands, links and numbers', () => {
@@ -21,7 +22,7 @@ describe('fileMention', () => {
   });
 });
 
-describe('locateFile', () => {
+describe('locatePath', () => {
   const folder = mkdtempSync(join(tmpdir(), 'vision-locate-'));
   mkdirSync(join(folder, '👤 CLIENTS', 'outputs'), { recursive: true });
   mkdirSync(join(folder, '.hidden'));
@@ -30,17 +31,24 @@ describe('locateFile', () => {
   const block = join(folder, '👤 CLIENTS', 'outputs', 'block.html');
 
   it('finds a file by path from the folder, absolute path, or bare name', async () => {
-    expect(await locateFile(folder, '👤 CLIENTS/outputs/block.html')).toBe(block);
-    expect(await locateFile(folder, block)).toBe(block);
-    expect(await locateFile(folder, 'block.html')).toBe(block);
-    expect(await locateFile(folder, 'outputs/block.html:3')).toBe(block);
+    const file = { path: block, isDirectory: false };
+    expect(await locatePath(folder, '👤 CLIENTS/outputs/block.html')).toEqual(file);
+    expect(await locatePath(folder, block)).toEqual(file);
+    expect(await locatePath(folder, 'block.html')).toEqual(file);
+    expect(await locatePath(folder, 'outputs/block.html:3')).toEqual(file);
+  });
+
+  it('finds folders, by path or by their last part', async () => {
+    const outputs = { path: join(folder, '👤 CLIENTS', 'outputs'), isDirectory: true };
+    expect(await locatePath(folder, '👤 CLIENTS/outputs/')).toEqual(outputs);
+    expect(await locatePath(folder, 'outputs/')).toEqual(outputs);
   });
 
   it('never leaves the folder or looks in hidden folders', async () => {
-    expect(await locateFile(folder, '/etc/hosts.txt')).toBeNull();
-    expect(await locateFile(folder, '../outside.md')).toBeNull();
-    expect(await locateFile(folder, 'secret.md')).toBeNull();
-    expect(await locateFile(folder, 'missing.html')).toBeNull();
-    expect(await locateFile(folder, 42)).toBeNull();
+    expect(await locatePath(folder, '/etc/hosts.txt')).toBeNull();
+    expect(await locatePath(folder, '../outside.md')).toBeNull();
+    expect(await locatePath(folder, 'secret.md')).toBeNull();
+    expect(await locatePath(folder, 'missing.html')).toBeNull();
+    expect(await locatePath(folder, 42)).toBeNull();
   });
 });
