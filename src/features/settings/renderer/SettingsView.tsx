@@ -2,6 +2,8 @@ import { Check } from 'lucide-react';
 import { useAppTheme } from '../../../renderer/core/appTheme';
 import { useTerminalTheme, type TerminalAppearance } from '../../../renderer/core/terminalTheme';
 import { THEMES, type VisionTheme } from '../../../renderer/themes';
+import { ColorSettings } from './ColorSettings';
+import './settings.css';
 
 const APPEARANCES: { value: TerminalAppearance; label: string }[] = [
   { value: 'dark', label: 'Dark' },
@@ -42,6 +44,8 @@ export function SettingsView() {
     <div className="flex flex-col">
       <div className="section-label">Theme</div>
       <ThemePicker />
+      <div className="section-label">Colors</div>
+      <ColorSettings />
       <div className="section-label">Terminal</div>
       <div className="flex items-center gap-2 px-3 py-1">
         <span className="flex-1">Appearance</span>
