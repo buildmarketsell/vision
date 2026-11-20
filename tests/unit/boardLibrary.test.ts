@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { boardFolders, breadcrumb, copyName, editedLabel, folderView, nameOf, recentBoards } from '../../src/features/board/boardLibrary';
+import { boardFolders, breadcrumb, copyName, editedLabel, folderIn, folderView, nameOf, recentBoards } from '../../src/features/board/boardLibrary';
 
 const ROOT = '/w';
 const BOARDS = ['/w/Ideas.excalidraw', '/w/reels/Hooks.excalidraw', '/w/reels/old/Draft.excalidraw', '/w/clients/kilo/Ads.excalidraw', '/w/b.excalidraw'];
@@ -40,6 +40,14 @@ describe('board library', () => {
     expect(editedLabel(now - 5 * 3_600_000, now)).toBe('Edited 5 hours ago');
     expect(editedLabel(now - 324 * 86_400_000, now)).toBe('Edited 10 months ago');
     expect(editedLabel(now + 5000, now)).toBe('Edited just now');
+  });
+
+  it('falls back to Recents for a place outside the open folder', () => {
+    expect(folderIn(ROOT, '/w/reels')).toBe('/w/reels');
+    expect(folderIn(ROOT, ROOT)).toBe(ROOT);
+    expect(folderIn(ROOT, '/other/ideas')).toBeNull();
+    expect(folderIn(ROOT, '/wx')).toBeNull();
+    expect(folderIn(ROOT, 'recents')).toBeNull();
   });
 
   it('builds the breadcrumb from the root down', () => {

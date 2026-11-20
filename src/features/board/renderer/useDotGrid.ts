@@ -16,6 +16,7 @@ function drawDots(canvas: HTMLCanvasElement, grid: DotGrid, color: string): void
   }
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   context.clearRect(0, 0, width, height);
+  if (!color) return;
   context.fillStyle = color;
   const { gap, radius } = grid;
   // Start two gaps before the anchor so the first row and column are a kept ("coarse") dot.
@@ -44,11 +45,12 @@ function drawDots(canvas: HTMLCanvasElement, grid: DotGrid, color: string): void
  * Draws the dot grid on a canvas behind Excalidraw, in step with its scroll and zoom.
  * A canvas (not a CSS pattern) keeps every dot round and sharp at any zoom, as in FigJam.
  */
-export function useDotGrid(api: ExcalidrawImperativeAPI | null, dots: RefObject<HTMLCanvasElement | null>, scheme: string) {
+export function useDotGrid(api: ExcalidrawImperativeAPI | null, dots: RefObject<HTMLCanvasElement | null>, themeId: string) {
   useEffect(() => {
     const canvas = dots.current;
     if (!api || !canvas) return;
-    const color = getComputedStyle(canvas).getPropertyValue('--color-board-dot').trim() || '#cbcbcb';
+    // Read once per theme (the effect re-runs on every theme switch), not on every frame.
+    const color = getComputedStyle(canvas).getPropertyValue('--color-board-dot').trim();
     let frame = 0;
     const draw = () => {
       frame = 0;
@@ -67,5 +69,5 @@ export function useDotGrid(api: ExcalidrawImperativeAPI | null, dots: RefObject<
       resize.disconnect();
       unsubscribe();
     };
-  }, [api, dots, scheme]);
+  }, [api, dots, themeId]);
 }

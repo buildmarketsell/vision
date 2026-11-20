@@ -19,7 +19,7 @@
   margin-right: var(--space-1);
 }
 .boards-breadcrumb button {
-  padding: 2px var(--space-2);
+  padding: var(--space-1) var(--space-2);
   margin-left: calc(-1 * var(--space-2));
   border-radius: var(--radius-row);
   color: inherit;

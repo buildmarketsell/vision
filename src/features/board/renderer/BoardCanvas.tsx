@@ -4,6 +4,7 @@ import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/t
 import '@excalidraw/excalidraw/index.css';
 import './board.css';
 import { useAppTheme } from '../../../renderer/core/appTheme';
+import { trackWrite } from '../../../renderer/core/pendingWrites';
 import { isBoardEmbeddable } from '../boardEmbeds';
 import { parseBoardText, type BoardScene } from '../boardFile';
 import { CANVAS_BACKGROUND, DEFAULT_STYLE } from '../boardStyle';
@@ -45,11 +46,13 @@ function restoreScene(scene: BoardScene | null): Restored {
   return restore(scene as Parameters<typeof restore>[0], null, null);
 }
 
-/** Changes whenever something saved in the file changes: shapes, pasted files, or the style for new shapes. */
+/**
+ * Changes whenever something saved in the file changes: shapes, pasted files, or the settings the file keeps
+ * (new-shape style, grid…). The settings part is Excalidraw's own saved form, so nothing it saves is missed.
+ */
 function contentKey(api: ExcalidrawImperativeAPI): string {
-  const state = api.getAppState();
-  const current = Object.entries(state).filter(([key]) => key.startsWith('currentItem'));
-  return `${hashElementsVersion(api.getSceneElementsIncludingDeleted())}|${Object.keys(api.getFiles()).length}|${JSON.stringify(current)}`;
+  const settings = serializeAsJSON([], api.getAppState(), {}, 'local');
+  return `${hashElementsVersion(api.getSceneElementsIncludingDeleted())}|${Object.keys(api.getFiles()).length}|${settings}`;
 }
 
 function isTyping(target: EventTarget | null): boolean {
@@ -72,7 +75,8 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
   const wrapper = useRef<HTMLDivElement>(null);
   const dots = useRef<HTMLCanvasElement>(null);
   const chrome = useBoardChrome(api);
-  useDotGrid(api, dots, scheme);
+  const themeId = useAppTheme((state) => state.active.id);
+  useDotGrid(api, dots, themeId);
   useSmoothZoom(api, wrapper);
   // Text in a Mac font needs Excalidraw to know that font before the first draw.
   const macFonts = useMacFonts();
@@ -90,7 +94,7 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
       const text = serializeAsJSON(api.getSceneElements(), api.getAppState(), api.getFiles(), 'local');
       if (text === lastSaved.current) return;
       lastSaved.current = text;
-      void window.vision.fs.writeFile(path, text).then((result) => setSaveError(result.ok ? null : result.error));
+      void trackWrite(window.vision.fs.writeFile(path, text)).then((result) => setSaveError(result.ok ? null : result.error));
     };
     // onChange also fires on every scroll, zoom and pointer move: only a real edit schedules a save,
     // so panning a board full of images never re-writes its (large) file.

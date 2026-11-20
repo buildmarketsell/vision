@@ -1,7 +1,7 @@
 import { Clock, Folder, FolderOpen, Plus } from 'lucide-react';
 import { useActiveViewStore } from '../../../renderer/core/activeView';
 import { useWorkspace } from '../../../renderer/core/workspaceStore';
-import { boardFolders, nameOf } from '../boardLibrary';
+import { boardFolders, folderIn, nameOf } from '../boardLibrary';
 import { useOpenBoard } from './boardSelection';
 import { makeBoardFile } from './createBoard';
 import { useBoardLibrary } from './useBoardLibrary';
@@ -17,9 +17,9 @@ export function BoardsView() {
   const boardOpen = useOpenBoard((state) => state.path !== null);
   const location = useOpenBoard((state) => state.location);
   const { browse, open } = useOpenBoard.getState();
-  const current = (place: string) => !boardOpen && location === place;
+  const current = (place: string) => !boardOpen && (folderIn(root, location) ?? 'recents') === place;
   const newBoard = async () => {
-    const path = await makeBoardFile(location === 'recents' ? root : location);
+    const path = await makeBoardFile(folderIn(root, location) ?? root);
     if (path) open(path);
   };
 

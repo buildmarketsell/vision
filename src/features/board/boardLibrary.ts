@@ -5,6 +5,14 @@
 
 import { BOARD_EXTENSION } from './boardFile';
 
+/** Where the Boards home is: every board by last edit ("recents"), or one folder (its path). */
+export type BoardsLocation = 'recents' | string;
+
+/** The folder to show for `location` in workspace `root`, or null for Recents (also when it's from another workspace). */
+export function folderIn(root: string, location: BoardsLocation): string | null {
+  return location !== 'recents' && (location === root || location.startsWith(`${root}/`)) ? location : null;
+}
+
 export interface LibraryFolder {
   path: string;
   name: string;

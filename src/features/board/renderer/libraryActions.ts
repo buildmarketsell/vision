@@ -1,3 +1,4 @@
+import { unsavedTabInside, withTabsClosed } from '../../../renderer/core/fileTabs';
 import type { Result } from '../../../shared/ipc';
 import { BOARD_EXTENSION, parseBoardText } from '../boardFile';
 import { boardEmbed } from '../boardEmbeds';
@@ -27,7 +28,9 @@ export async function newFolder(dir: string): Promise<Result<string>> {
 export async function renameItem(path: string, name: string, isBoard: boolean): Outcome {
   const clean = name.trim();
   if (!clean || clean === nameOf(path)) return null;
-  return problem(await window.vision.fs.rename(path, isBoard ? `${clean}${BOARD_EXTENSION}` : clean));
+  const unsaved = unsavedTabInside(path);
+  if (unsaved) return `Save or close "${unsaved}" first.`;
+  return problem(await withTabsClosed(path, () => window.vision.fs.rename(path, isBoard ? `${clean}${BOARD_EXTENSION}` : clean)));
 }
 
 /** "Copy of X" next to the original; returns its path or an error. */
@@ -41,12 +44,16 @@ export async function duplicateBoard(path: string): Promise<Result<string>> {
   return written.ok ? created : written;
 }
 
-/** True when the board plays videos saved next to it: those links would break if it moved alone. */
+/**
+ * True when the board plays videos saved next to it: those links would break if it moved alone.
+ * A board that can't be read (over the size limit, say) counts as having them, so it never moves blind.
+ */
 async function hasLocalVideos(path: string): Promise<boolean> {
   const file = await window.vision.fs.readFile(path);
-  if (file.kind !== 'text') return false;
+  if (file.kind !== 'text') return true;
   const parsed = parseBoardText(file.content);
-  if (parsed.kind !== 'scene') return false;
+  if (parsed.kind === 'empty') return false;
+  if (parsed.kind !== 'scene') return true;
   return parsed.scene.elements.some((element) => {
     const link = (element as { link?: unknown }).link;
     return typeof link === 'string' && boardEmbed(link).kind === 'video';
@@ -55,15 +62,20 @@ async function hasLocalVideos(path: string): Promise<boolean> {
 
 export async function moveItem(path: string, targetDir: string, isBoard: boolean): Outcome {
   if (dirOf(path) === targetDir) return null;
-  if (isBoard && (await hasLocalVideos(path))) {
-    return `"${nameOf(path)}" plays videos saved next to it. Move it in Finder together with its videos folder.`;
-  }
-  return problem(await window.vision.fs.move(path, targetDir));
+  const unsaved = unsavedTabInside(path);
+  if (unsaved) return `Save or close "${unsaved}" first.`;
+  return withTabsClosed(path, async () => {
+    // Checked after the tabs closed, so a video pasted just before is already saved in the file.
+    if (isBoard && (await hasLocalVideos(path))) {
+      return { ok: false, error: `"${nameOf(path)}" may play videos saved next to it. Move it in Finder together with its videos folder.` };
+    }
+    return window.vision.fs.move(path, targetDir);
+  }).then(problem);
 }
 
 /** Asks first (macOS dialog), then moves it to the Trash, where Finder can put it back. */
 export async function trashItem(path: string): Outcome {
   const label = nameOf(path);
   if (!(await window.vision.fs.confirmTrash(label))) return null;
-  return problem(await window.vision.fs.trash(path));
+  return problem(await withTabsClosed(path, () => window.vision.fs.trash(path)));
 }

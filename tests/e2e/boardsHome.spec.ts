@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { existsSync, mkdirSync, utimesSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { launch, makeFixture, menu } from './helpers';
 
@@ -67,6 +67,43 @@ test('Boards home: recents with previews, folders, rename, move, and back from a
     await main.getByRole('button', { name: 'New board' }).click();
     await expect(page.locator('main .board-canvas')).toBeVisible();
     await expect.poll(() => existsSync(join(folder, 'Reels', 'Untitled board.excalidraw'))).toBe(true);
+  } finally {
+    await app.close();
+  }
+});
+
+test('Boards home: renaming a board open in a tab moves the tab with it; its edits never bring the old file back', async () => {
+  const { folder, userData } = makeFixture();
+  writeFileSync(join(folder, 'Plan.excalidraw'), RECTANGLE);
+  const { app, page } = await launch(userData);
+  try {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    await page.getByRole('treeitem', { name: /Plan\.excalidraw/ }).click();
+    await expect(page.locator('.board-canvas canvas.interactive')).toBeVisible({ timeout: 15_000 });
+
+    await menu(page).getByRole('tab', { name: 'Boards' }).click();
+    const main = page.locator('main');
+    await main.getByRole('button', { name: 'More for Plan' }).click();
+    await page.getByRole('menuitem', { name: 'Rename' }).click();
+    const nameField = main.getByRole('textbox', { name: 'Name' });
+    await nameField.fill('Roadmap');
+    await nameField.press('Enter');
+    await expect.poll(() => existsSync(join(folder, 'Roadmap.excalidraw'))).toBe(true);
+
+    // Back in the tab (now Roadmap), draw a rectangle: it saves to Roadmap, and Plan stays gone.
+    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
+    await expect(page.getByRole('tab', { name: /Roadmap\.excalidraw/ })).toBeVisible();
+    const canvas = page.locator('.board-canvas canvas.interactive');
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('The board canvas has no size');
+    await page.getByRole('button', { name: 'Rectangle' }).click();
+    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.7, { steps: 6 });
+    await page.mouse.up();
+    await expect.poll(() => (JSON.parse(readFileSync(join(folder, 'Roadmap.excalidraw'), 'utf8')) as { elements: unknown[] }).elements.length).toBe(2);
+    await page.waitForTimeout(800);
+    expect(existsSync(join(folder, 'Plan.excalidraw'))).toBe(false);
   } finally {
     await app.close();
   }

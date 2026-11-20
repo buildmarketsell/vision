@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronRight, Copy, Folder, FolderInput, FolderPlus, Home, Pencil, Plus, SquareArrowOutUpRight, Trash2 } from 'lucide-react';
 import { ContextMenu, type ContextMenuItem } from '../../../renderer/components/ContextMenu';
 import { useAppTheme } from '../../../renderer/core/appTheme';
 import { useWorkspace } from '../../../renderer/core/workspaceStore';
 import { isBoardFile } from '../boardFile';
-import { boardFolders, breadcrumb, folderView, nameOf, recentBoards } from '../boardLibrary';
+import { boardFolders, breadcrumb, folderIn, folderView, nameOf, recentBoards } from '../boardLibrary';
 import { BoardCard, DRAG_TYPE, FolderCard } from './BoardCard';
 import { useOpenBoard } from './boardSelection';
 import { makeBoardFile } from './createBoard';
@@ -24,12 +24,17 @@ export function BoardsHome() {
   const root = useWorkspace((state) => state.folder);
   const location = useOpenBoard((state) => state.location);
   const { open, browse } = useOpenBoard.getState();
-  const folder = location === 'recents' ? null : location;
+  const folder = folderIn(root, location);
   const library = useBoardLibrary(root, folder, true);
   const dark = useAppTheme((state) => state.active.scheme) === 'dark';
   const [menu, setMenu] = useState<Menu | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // The folder was renamed or deleted (in Finder, by Claude): back to Recents instead of an empty page.
+  useEffect(() => {
+    if (library.locationMissing) useOpenBoard.getState().browse('recents');
+  }, [library.locationMissing]);
 
   const boards = library.boards ?? [];
   const view = folder ? folderView(folder, boards, library.emptyFolders) : { folders: [], boards: recentBoards(boards, library.times) };
