@@ -53,13 +53,26 @@ test('boards: text in any Mac font, at any size, in any color', async () => {
     await size.press('Enter');
     await expect(size).toHaveValue('57');
 
-    // The color input opens the Mac's color panel; here its result is set directly.
-    await page.getByLabel('Custom color').evaluate((input: HTMLInputElement) => {
-      input.value = '#12ab9f';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    // VISION's own picker: dragging the square previews and saves on release; a typed hex saves on Enter.
+    await page.getByRole('button', { name: /Custom color/ }).click();
+    const area = page.getByRole('slider', { name: 'Saturation and brightness' });
+    const areaBox = await area.boundingBox();
+    if (!areaBox) throw new Error('The color square has no size');
+    await page.mouse.move(areaBox.x + areaBox.width * 0.2, areaBox.y + areaBox.height * 0.2);
+    await page.mouse.down();
+    await page.mouse.move(areaBox.x + areaBox.width - 2, areaBox.y + 2, { steps: 4 });
+    await page.screenshot({ path: 'test-results/board-color-picker.png' });
+    await page.mouse.up();
+    await expect.poll(() => savedText(file)?.strokeColor).toMatch(/^#f[0-9a-f]{5}$/);
+    const hex = page.getByLabel('Hex color');
+    await hex.fill('12ab9f');
+    await hex.press('Enter');
     await expect.poll(() => savedText(file)?.strokeColor).toBe('#12ab9f');
+    await hex.fill('nope');
+    await hex.press('Enter');
+    await expect(hex).toHaveValue('12AB9F');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog', { name: 'Color picker' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Font', exact: true })).toHaveText('Georgia');
     // The text's box grows with it, so nothing is cut off.
     await expect.poll(() => savedText(file)?.height ?? 0).toBeGreaterThan(57);
