@@ -1,5 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
-import { ArrowUp, ListPlus, Square, X } from 'lucide-react';
+import { ArrowUp, Square, X } from 'lucide-react';
 import { PERMISSION_MODES, type ChatImage, type EffortLevel, type PermissionMode } from '../../../../shared/claudeChat';
 import { ComposerMenu } from './ComposerMenu';
 import { ContextMeter, ModelPicker } from './ComposerControls';
@@ -43,7 +43,7 @@ interface ComposerProps {
   mode: PermissionMode;
   info: SessionInfo;
   model: string;
-  /** Sends now, or queues while Claude is working. */
+  /** Sends now. While Claude works, it reads the message at its next step and fits it into the same job, like Claude Code in VS Code (Dan, 2026-11-20). */
   onSend: (text: string, images: ChatImage[]) => void;
   onStop: () => void;
   onModeChange: (mode: PermissionMode) => void;
@@ -105,8 +105,8 @@ export function Composer({ draft, working, disabled, mode, info, model, effort, 
         <span className="flex-1" />
         <ContextMeter info={info} />
         {working && canSend && (
-          <button className="send-button" data-queue="true" aria-label="Queue message" title="Queue (Enter): sends when Claude is done" onClick={send}>
-            <ListPlus size={15} strokeWidth={2.25} />
+          <button className="send-button" data-midtask="true" aria-label="Send message" title="Send (Enter): Claude reads it at its next step" onClick={send}>
+            <ArrowUp size={16} strokeWidth={2.25} />
           </button>
         )}
         {working ? (
