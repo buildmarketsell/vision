@@ -1,8 +1,8 @@
-import { app, safeStorage } from 'electron';
+import { app } from 'electron';
 import { readFileSync } from 'node:fs';
-import { rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { GoogleError, type GoogleClient } from './googleAuth';
+import { decryptSecret as decrypt, encryptSecret as encrypt, writePrivateJson } from '../../../main/secrets';
+import type { GoogleClient } from './googleAuth';
 
 /** What is saved in userData/calendar.json. The client secret and sign-ins are encrypted with the macOS Keychain. */
 export interface CalendarConfig {
@@ -19,20 +19,6 @@ let config: CalendarConfig | null = null;
 let writing: Promise<void> = Promise.resolve();
 
 const configPath = () => join(app.getPath('userData'), 'calendar.json');
-
-function encrypt(value: string): string {
-  if (!safeStorage.isEncryptionAvailable()) throw new GoogleError('This Mac cannot keep the sign-in safe right now (Keychain unavailable).');
-  return safeStorage.encryptString(value).toString('base64');
-}
-
-function decrypt(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  try {
-    return safeStorage.decryptString(Buffer.from(value, 'base64'));
-  } catch {
-    return null;
-  }
-}
 
 function parse(raw: unknown): CalendarConfig {
   if (!isObj(raw)) return { client: null, accounts: [], visibility: {} };
@@ -63,9 +49,6 @@ export function saveConfig(next: CalendarConfig): Promise<void> {
     visibility: next.visibility,
   };
   config = next;
-  writing = writing.then(async () => {
-    await writeFile(`${configPath()}.tmp`, JSON.stringify(onDisk, null, 2), { encoding: 'utf8', mode: 0o600 });
-    await rename(`${configPath()}.tmp`, configPath());
-  });
+  writing = writing.then(() => writePrivateJson(configPath(), onDisk));
   return writing;
 }
