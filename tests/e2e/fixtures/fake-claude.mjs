@@ -44,7 +44,7 @@ if (!process.argv.includes('-p')) {
       { type: 'tool_result', tool_use_id: 'read_1', content: 'An idea' },
       { type: 'tool_result', tool_use_id: 'bash_1', content: reason, is_error: true },
     ] } });
-    done('Your note is `hello.md`. I could not find `gone.html`.');
+    done('Your note is `hello.md`, the photo is `dot.png` and the rest is in `notes/`. I could not find `gone.html`.');
   };
   createInterface({ input: process.stdin }).on('line', (line) => {
     const message = JSON.parse(line);

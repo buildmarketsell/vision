@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import type { IDockviewPanelProps } from 'dockview-react';
 import { ChevronRight, Code, Eye, RotateCw } from 'lucide-react';
 import { isHtmlFile } from '../../../shared/htmlPreview';
+import { imageExtension, imageUrl } from '../../../shared/markdownImages';
 import { Markdown } from '../../../renderer/components/Markdown';
 import type { TabParams } from '../../../renderer/core/feature';
 import { relativeParts, useWorkspace, baseName, parentPath } from '../../../renderer/core/workspaceStore';
@@ -100,6 +101,13 @@ function formatSize(bytes: number): string {
 
 function EditorBody({ path, buffer, view, reloadToken }: { path: string; buffer: Buffer | undefined; view: View; reloadToken: number }) {
   if (!buffer || buffer.status === 'loading') return <Message title="Opening…" action={<div className="spinner" />} />;
+  if ((buffer.status === 'binary' || buffer.status === 'tooLarge') && imageExtension(path)) {
+    return (
+      <div className="image-view">
+        <img src={imageUrl(path)} alt={baseName(path)} />
+      </div>
+    );
+  }
   if (buffer.status === 'binary') return <Message title="This file can't be shown as text." detail="Images, PDFs and other file types get their own viewers in a later version." />;
   if (buffer.status === 'tooLarge') return <Message title={`This file is too large to edit (${formatSize(buffer.sizeBytes)}).`} detail="Files up to 5 MB open in the editor." />;
   if (buffer.status === 'error') {

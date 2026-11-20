@@ -1,7 +1,7 @@
 import { readdir, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { isAbsolute, join, sep } from 'node:path';
-import type { Result } from '../../shared/ipc';
+import type { LocatedPath, Result } from '../../shared/ipc';
 import { fileMention } from '../../shared/fileMentions';
 import { isInsideFolder } from '../paths';
 
@@ -15,8 +15,8 @@ export function isFileExtension(value: unknown): value is string {
   return typeof value === 'string' && /^\.[a-z0-9]{1,16}$/i.test(value);
 }
 
-/** Files under `root` that `matches` accepts, shallowest folders first, skipping hidden folders and node_modules. */
-async function walkFiles(root: string, matches: (path: string) => boolean, maxResults: number): Promise<Result<string[]>> {
+/** Files (and folders, if `matches` takes them) under `root`, shallowest first, skipping hidden folders and node_modules. */
+async function walkFiles(root: string, matches: (path: string, isDirectory: boolean) => boolean, maxResults: number): Promise<Result<string[]>> {
   const found: string[] = [];
   const queue = [root];
   let visited = 0;
@@ -34,8 +34,9 @@ async function walkFiles(root: string, matches: (path: string) => boolean, maxRe
     for (const dirent of dirents) {
       if (dirent.name.startsWith('.')) continue;
       const path = join(dir, dirent.name);
-      if (dirent.isDirectory() && !SKIPPED_FOLDERS.has(dirent.name)) queue.push(path);
-      else if (dirent.isFile() && matches(path) && found.length < maxResults) found.push(path);
+      const isDirectory = dirent.isDirectory() && !SKIPPED_FOLDERS.has(dirent.name);
+      if (isDirectory) queue.push(path);
+      if ((isDirectory || dirent.isFile()) && matches(path, isDirectory) && found.length < maxResults) found.push(path);
     }
   }
   return { ok: true, value: found };
@@ -44,27 +45,35 @@ async function walkFiles(root: string, matches: (path: string) => boolean, maxRe
 /** Every file under `root` ending in `extension`, sorted. */
 export async function findFiles(root: string, extension: string): Promise<Result<string[]>> {
   const wanted = extension.toLowerCase();
-  const result = await walkFiles(root, (path) => path.toLowerCase().endsWith(wanted), MAX_RESULTS);
+  const result = await walkFiles(root, (path, isDirectory) => !isDirectory && path.toLowerCase().endsWith(wanted), MAX_RESULTS);
   if (!result.ok) return result;
   return { ok: true, value: result.value.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })) };
 }
 
-async function isFile(path: string): Promise<boolean> {
-  return stat(path).then((info) => info.isFile(), () => false);
+async function kindOf(path: string): Promise<LocatedPath | null> {
+  return stat(path).then(
+    (info) => (info.isFile() || info.isDirectory() ? { path, isDirectory: info.isDirectory() } : null),
+    () => null,
+  );
 }
 
 /**
- * The file a chat mention points at, inside `folder`: an absolute or `~/` path, a path from the folder,
- * or (Claude often writes just the name) the shallowest file whose path ends with the mention.
+ * The file or folder a chat mention points at, inside `folder`: an absolute or `~/` path, a path from the folder,
+ * or (Claude often writes just the name) the shallowest entry whose path ends with the mention.
  */
-export async function locateFile(folder: string, text: unknown): Promise<string | null> {
+export async function locatePath(folder: string, text: unknown): Promise<LocatedPath | null> {
   const mention = typeof text === 'string' ? fileMention(text) : null;
   if (!mention) return null;
-  const expanded = mention.startsWith('~/') ? join(homedir(), mention.slice(2)) : mention;
-  if (isAbsolute(expanded)) return isInsideFolder(folder, expanded) && (await isFile(expanded)) ? expanded : null;
+  const trimmed = mention.length > 1 ? mention.replace(/\/+$/, '') : mention;
+  const expanded = trimmed.startsWith('~/') ? join(homedir(), trimmed.slice(2)) : trimmed;
+  if (isAbsolute(expanded)) return isInsideFolder(folder, expanded) ? kindOf(expanded) : null;
   const fromFolder = join(folder, expanded);
-  if (isInsideFolder(folder, fromFolder) && (await isFile(fromFolder))) return fromFolder;
+  if (isInsideFolder(folder, fromFolder)) {
+    const direct = await kindOf(fromFolder);
+    if (direct) return direct;
+  }
   const tail = `${sep}${expanded.replace(/^\.\//, '')}`;
-  const found = await walkFiles(folder, (path) => path.endsWith(tail), 1);
-  return found.ok ? (found.value[0] ?? null) : null;
+  const wantsFolder = mention.endsWith('/');
+  const found = await walkFiles(folder, (path, isDirectory) => path.endsWith(tail) && (isDirectory || !wantsFolder), 1);
+  return found.ok && found.value[0] ? kindOf(found.value[0]) : null;
 }
