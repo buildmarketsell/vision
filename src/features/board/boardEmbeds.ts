@@ -11,6 +11,8 @@ export type BoardEmbed =
   | { kind: 'default' };
 
 const RE_TWEET = /^https?:\/\/(?:www\.)?(?:twitter|x)\.com\/[^/]+\/status\/(\d+)/i;
+/** Posts, reels and IGTV; share links can carry the account name first (`instagram.com/name/reel/…`). */
+const RE_INSTAGRAM = /^https?:\/\/(?:www\.)?instagram\.com\/(?:[\w.]+\/)?(p|reels?|tv)\/([\w-]+)/i;
 const RE_REDDIT_POST = /^https?:\/\/(?:www\.)?reddit\.com(\/r\/[\w-]+\/comments\/[\w-]+(?:\/[\w-]*)?)/i;
 
 function isWebLink(link: string): boolean {
@@ -33,6 +35,12 @@ export function boardEmbed(link: string): BoardEmbed {
   // which VISION's security policy blocks. Their official embed pages work as plain frames.
   const tweet = RE_TWEET.exec(link);
   if (tweet) return { kind: 'frame', src: `https://platform.twitter.com/embed/Tweet.html?id=${tweet[1]}&dnt=true` };
+  // Instagram's own page asks to log in inside a frame; its embed page shows the post or reel itself.
+  const instagram = RE_INSTAGRAM.exec(link);
+  if (instagram) {
+    const kind = instagram[1]?.toLowerCase().startsWith('reel') ? 'reel' : instagram[1]?.toLowerCase();
+    return { kind: 'frame', src: `https://www.instagram.com/${kind}/${instagram[2]}/embed/` };
+  }
   const reddit = RE_REDDIT_POST.exec(link);
   if (reddit) return { kind: 'frame', src: `https://embed.reddit.com${reddit[1]}` };
   return { kind: 'default' };

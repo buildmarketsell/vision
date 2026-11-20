@@ -3,7 +3,7 @@ import { IPC, type Result } from '../../shared/ipc';
 import { isInsideFolder } from '../paths';
 import { onWindowClosed, windowContextFor, type WindowContext } from '../windows';
 import { IMAGE_EXTENSIONS, MAX_IMAGE_BYTES, MAX_PASTED_VIDEO_BYTES, videoExtension } from '../../shared/markdownImages';
-import { createEntry, listDirectory, moveToTrash, readTextFile, renameEntry, saveImageNextTo, saveVideoNextTo, writeTextFile } from './fileSystem';
+import { createEntry, listDirectory, modifiedTimes, moveEntry, moveToTrash, readTextFile, renameEntry, saveImageNextTo, saveVideoNextTo, writeTextFile } from './fileSystem';
 import { findFiles, isFileExtension, locatePath, searchFolder } from './findFiles';
 import { registerFinderHandlers } from './finderHandlers';
 import { FolderWatcher } from './watcher';
@@ -58,6 +58,9 @@ function registerReadHandlers(): void {
     const folder = windowContextFor(event.sender)?.folder;
     return folder ? locatePath(folder, mention) : null;
   });
+  ipcMain.handle(IPC.modifiedTimes, (event, paths: unknown) =>
+    Array.isArray(paths) && paths.length <= 1000 && guardPaths(event, paths) ? modifiedTimes(paths as string[]) : OUTSIDE,
+  );
   ipcMain.handle(IPC.readFile, (event, path: unknown) =>
     guardPaths(event, [path]) ? readTextFile(path as string) : { kind: 'error', message: OUTSIDE.error },
   );
@@ -95,6 +98,11 @@ function registerWriteHandlers(): void {
     const context = guardPaths(event, [path]);
     if (!context || !isText(newName) || path === context.folder) return OUTSIDE;
     return renameEntry(path as string, newName);
+  });
+  ipcMain.handle(IPC.move, (event, path: unknown, targetDir: unknown) => {
+    const context = guardPaths(event, [path, targetDir]);
+    if (!context || path === context.folder) return OUTSIDE;
+    return moveEntry(path as string, targetDir as string);
   });
   ipcMain.handle(IPC.trash, (event, path: unknown) => {
     const context = guardPaths(event, [path]);

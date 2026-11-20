@@ -1,7 +1,7 @@
 import { shell } from 'electron';
 import { constants } from 'node:fs';
-import { copyFile, open, readdir, readFile, mkdir, rename, stat, writeFile } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { copyFile, link, open, readdir, readFile, mkdir, rename, rmdir, stat, unlink, writeFile } from 'node:fs/promises';
+import { basename, dirname, join, resolve } from 'node:path';
 import { BINARY_SNIFF_BYTES, MAX_EDITABLE_FILE_BYTES } from '../../shared/app';
 import { IMAGES_FOLDER, pastedImageName, VIDEOS_FOLDER } from '../../shared/markdownImages';
 import type { DirEntry, ReadFileResult, Result } from '../../shared/ipc';
@@ -138,6 +138,55 @@ export async function createEntry(parentDir: string, name: string, kind: 'file' 
   } catch (error) {
     return fail(error);
   }
+}
+
+/**
+ * Moves `path` into `targetDir` under the same name. Never overwrites, even if something appears there meanwhile:
+ * a file is hard-linked first (which fails if the name is taken) and only then unlinked; a folder gets its
+ * new place made first (which fails if taken) and is renamed onto that empty folder.
+ */
+export async function moveEntry(path: string, targetDir: string): Promise<Result<string>> {
+  const from = resolve(path);
+  const into = resolve(targetDir);
+  const target = join(into, basename(from));
+  if (target === from) return { ok: true, value: from };
+  if (into === from || into.startsWith(`${from}/`)) return { ok: false, error: "A folder can't go inside itself." };
+  try {
+    if (!(await stat(into)).isDirectory()) return { ok: false, error: 'That is not a folder.' };
+    if ((await stat(from)).isDirectory()) {
+      await mkdir(target);
+      // Don't leave the new empty folder behind if the move itself fails.
+      await rename(from, target).catch(async (error: unknown) => {
+        await rmdir(target).catch(() => undefined);
+        throw error;
+      });
+    } else {
+      await link(from, target);
+      await unlink(from);
+    }
+    return { ok: true, value: target };
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'EEXIST') {
+      return { ok: false, error: `"${basename(from)}" already exists there.` };
+    }
+    return fail(error);
+  }
+}
+
+/** Last-changed times for the files that can be read; the rest are skipped. */
+export async function modifiedTimes(paths: string[]): Promise<Result<Record<string, number>>> {
+  const times: Record<string, number> = {};
+  await Promise.all(
+    paths.map((path) =>
+      stat(path).then(
+        (info) => {
+          times[path] = info.mtimeMs;
+        },
+        () => undefined,
+      ),
+    ),
+  );
+  return { ok: true, value: times };
 }
 
 export async function renameEntry(path: string, newName: string): Promise<Result<string>> {

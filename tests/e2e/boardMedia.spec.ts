@@ -49,6 +49,10 @@ test('boards: pasted links become embeds and dropped videos play on the board', 
     await pasteText(page, 'https://x.com/someone/status/1859000000000000000');
     await expect(page.locator('iframe[src^="https://platform.twitter.com/embed/Tweet.html?id=1859000000000000000"]')).toHaveCount(1);
 
+    // An Instagram reel link copied from the app plays from Instagram's embed page, not its login wall.
+    await pasteText(page, 'https://www.instagram.com/reel/C5d8q0nRlnS/?igsh=abc');
+    await expect(page.locator('iframe[src="https://www.instagram.com/reel/C5d8q0nRlnS/embed/"]')).toHaveCount(1);
+
     // A dropped video is copied into videos/ next to the board and plays in place.
     const bytes = [...readFileSync(join(import.meta.dirname, 'fixtures', 'clip.webm'))];
     await page.evaluate(

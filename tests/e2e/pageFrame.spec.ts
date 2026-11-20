@@ -38,7 +38,7 @@ async function openPage(page: Page, name: string, menuOpen: boolean) {
   }, { intervals: [50] }).toBe(true);
 }
 
-test('page frame: To-do, Content and Settings are centered with the title at the same inset, menu open or hidden', async () => {
+test('page frame: To-do, Content, Settings and the Boards home are centered with the title at the same inset, menu open or hidden', async () => {
   const { userData } = makeFixture();
   const { app, page } = await launch(userData);
   try {
@@ -46,7 +46,7 @@ test('page frame: To-do, Content and Settings are centered with the title at the
       await page.setViewportSize({ width, height: 900 });
       for (const menuOpen of [true, false]) {
         const state = `${width}px, menu ${menuOpen ? 'open' : 'hidden'}`;
-        for (const name of ['To-do', 'Content', 'Settings']) {
+        for (const name of ['To-do', 'Content', 'Settings', 'Boards']) {
           await openPage(page, name, menuOpen);
           const { area, title, column } = await frame(page);
           expect(column, `${name}, ${state}: the title must be a .page-title inside a .page-column`).not.toBeNull();

@@ -1,4 +1,4 @@
-/* Boards panel: Notion-style rows, one per board file. */
+/* Boards panel: Notion-style rows for Recents and each folder. */
 .boards-list {
   min-height: 0;
   flex: 1;
@@ -37,18 +37,6 @@
 .boards-row:active {
   transform: scale(0.98);
   transition-duration: 0ms;
-}
-
-.boards-empty {
-  margin: var(--space-2) var(--space-3);
-  padding: var(--space-2);
-  border-radius: var(--radius-row);
-  color: var(--color-text-muted);
-  text-align: left;
-}
-
-.boards-empty:hover {
-  background: var(--color-row-hover);
 }
 
 .boards-error {

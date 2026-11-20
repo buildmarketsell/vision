@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Excalidraw, restore, serializeAsJSON } from '@excalidraw/excalidraw';
+import { Excalidraw, hashElementsVersion, restore, serializeAsJSON } from '@excalidraw/excalidraw';
 import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import '@excalidraw/excalidraw/index.css';
 import './board.css';
 import { useAppTheme } from '../../../renderer/core/appTheme';
+import { trackWrite } from '../../../renderer/core/pendingWrites';
 import { isBoardEmbeddable } from '../boardEmbeds';
 import { parseBoardText, type BoardScene } from '../boardFile';
 import { CANVAS_BACKGROUND, DEFAULT_STYLE } from '../boardStyle';
@@ -15,14 +16,19 @@ import { watchBoard } from './boardWatch';
 import { StylePanel } from './StylePanel';
 import { useBoardChrome } from './useBoardChrome';
 import { useDotGrid } from './useDotGrid';
+import { useSmoothZoom } from './useSmoothZoom';
 import { useMacFonts } from './macFonts';
 
 // Fonts are copied next to the page at install time (scripts/postinstall.mjs), so boards work offline.
 window.EXCALIDRAW_ASSET_PATH = new URL('excalidraw/', window.location.href).href;
+// A trackpad sends more scroll events than the screen has frames; draw the board once per frame, not once per event.
+window.EXCALIDRAW_THROTTLE_RENDER = true;
 
 const SAVE_DELAY_MS = 300;
 /** Below this width the style panel shows only while drawing or with something selected. */
 const ROOMY_WIDTH = 900;
+/** Below this width the zoom buttons would sit under the toolbar; pinch and the menu's "Zoom to fit" still work. */
+const ZOOM_BUTTONS_WIDTH = 760;
 const STYLELESS_TOOLS = new Set(['selection', 'hand', 'eraser', 'laser']);
 
 /** The tldraw feel for new shapes: its default style, round corners, real arrowheads, its canvas color. */
@@ -38,6 +44,15 @@ type Restored = ReturnType<typeof restore>;
 function restoreScene(scene: BoardScene | null): Restored {
   // restore() checks and repairs every element, so a hand-edited file can't break the canvas.
   return restore(scene as Parameters<typeof restore>[0], null, null);
+}
+
+/**
+ * Changes whenever something saved in the file changes: shapes, pasted files, or the settings the file keeps
+ * (new-shape style, grid…). The settings part is Excalidraw's own saved form, so nothing it saves is missed.
+ */
+function contentKey(api: ExcalidrawImperativeAPI): string {
+  const settings = serializeAsJSON([], api.getAppState(), {}, 'local');
+  return `${hashElementsVersion(api.getSceneElementsIncludingDeleted())}|${Object.keys(api.getFiles()).length}|${settings}`;
 }
 
 function isTyping(target: EventTarget | null): boolean {
@@ -58,8 +73,11 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
   const lastSaved = useRef(initialText);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapper = useRef<HTMLDivElement>(null);
+  const dots = useRef<HTMLCanvasElement>(null);
   const chrome = useBoardChrome(api);
-  useDotGrid(api, wrapper);
+  const themeId = useAppTheme((state) => state.active.id);
+  useDotGrid(api, dots, themeId);
+  useSmoothZoom(api, wrapper);
   // Text in a Mac font needs Excalidraw to know that font before the first draw.
   const macFonts = useMacFonts();
   const container = () => wrapper.current?.querySelector<HTMLElement>('.excalidraw') ?? null;
@@ -76,9 +94,15 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
       const text = serializeAsJSON(api.getSceneElements(), api.getAppState(), api.getFiles(), 'local');
       if (text === lastSaved.current) return;
       lastSaved.current = text;
-      void window.vision.fs.writeFile(path, text).then((result) => setSaveError(result.ok ? null : result.error));
+      void trackWrite(window.vision.fs.writeFile(path, text)).then((result) => setSaveError(result.ok ? null : result.error));
     };
+    // onChange also fires on every scroll, zoom and pointer move: only a real edit schedules a save,
+    // so panning a board full of images never re-writes its (large) file.
+    let lastContent = contentKey(api);
     const unsubscribeChange = api.onChange(() => {
+      const content = contentKey(api);
+      if (content === lastContent) return;
+      lastContent = content;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(save, SAVE_DELAY_MS);
     });
@@ -103,6 +127,22 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
       }
     };
   }, [api, path]);
+
+  // Built once per board and theme: the toolbar and zoom label change on every zoom step,
+  // and re-rendering Excalidraw with them would redraw the whole board each frame.
+  const board = useMemo(
+    () => (
+      <Excalidraw
+        excalidrawAPI={setApi}
+        initialData={initialData}
+        theme={scheme}
+        validateEmbeddable={isBoardEmbeddable}
+        renderEmbeddable={(element) => renderBoardEmbed(path, element)}
+        UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false, toggleTheme: false } }}
+      />
+    ),
+    [initialData, scheme, path],
+  );
 
   const addNote = useCallback(() => {
     if (api) addStickyNote(api, container(), chrome.style);
@@ -158,25 +198,19 @@ export default function BoardCanvas({ path, initialText, initialScene }: BoardCa
           }
         }}
       >
+        <canvas ref={dots} className="board-dots" aria-hidden="true" />
         {macFonts === null ? (
           <div className="spinner absolute top-1/2 left-1/2" aria-label="Loading board" />
         ) : (
-          <Excalidraw
-            excalidrawAPI={setApi}
-            initialData={initialData}
-            theme={scheme}
-            validateEmbeddable={isBoardEmbeddable}
-            renderEmbeddable={(element) => renderBoardEmbed(path, element)}
-            UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false, toggleTheme: false } }}
-          />
+          board
         )}
         {api && (
           <>
-            <BoardTopLeft api={api} getContainer={container} hasSelection={chrome.hasSelection} />
+            <BoardTopLeft api={api} getContainer={container} hasSelection={chrome.hasSelection} path={path} />
             {(chrome.width >= ROOMY_WIDTH || chrome.hasSelection || !STYLELESS_TOOLS.has(chrome.tool)) && (
               <StylePanel style={chrome.style} onChange={(style, final) => applyStyle(api, style, final)} />
             )}
-            <BoardZoom api={api} zoom={chrome.zoom} />
+            {chrome.width >= ZOOM_BUTTONS_WIDTH && <BoardZoom api={api} zoom={chrome.zoom} />}
             <BoardToolbar activeTool={chrome.tool} onPickTool={(type) => api.setActiveTool({ type } as Parameters<typeof api.setActiveTool>[0])} onAddNote={addNote} />
           </>
         )}

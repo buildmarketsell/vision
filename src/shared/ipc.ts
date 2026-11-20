@@ -104,6 +104,10 @@ export interface VisionApi {
     createFile(parentDir: string, name: string): Promise<Result<string>>;
     createDir(parentDir: string, name: string): Promise<Result<string>>;
     rename(path: string, newName: string): Promise<Result<string>>;
+    /** Moves a file or folder into another folder, keeping its name; returns its new path. Never overwrites. */
+    move(path: string, targetDir: string): Promise<Result<string>>;
+    /** When each file was last changed (ms since 1970); files that can't be read are left out. */
+    modifiedTimes(paths: string[]): Promise<Result<Record<string, number>>>;
     trash(path: string): Promise<Result<void>>;
     confirmTrash(name: string): Promise<boolean>;
     confirmDiscard(name: string): Promise<boolean>;
@@ -214,6 +218,8 @@ export const IPC = {
   createFile: 'fs:createFile',
   createDir: 'fs:createDir',
   rename: 'fs:rename',
+  move: 'fs:move',
+  modifiedTimes: 'fs:modifiedTimes',
   trash: 'fs:trash',
   confirmTrash: 'fs:confirmTrash',
   confirmDiscard: 'fs:confirmDiscard',
