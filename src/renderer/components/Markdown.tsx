@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { convertEmbeds, imageUrl, resolveLocalPath } from '../../shared/markdownImages';
+import { fileMention } from '../../shared/fileMentions';
 import { openFile } from '../core/dockActions';
 
 // Web links open in the browser (the main process routes new windows there); file links are caught in Markdown's onClick.
@@ -54,6 +55,28 @@ function addCopyButtons(root: HTMLElement): void {
   });
 }
 
+/** Inline code that names a file (`outputs/page.html`) becomes a button that opens it. */
+function markFileMentions(root: HTMLElement): void {
+  root.querySelectorAll(':not(pre) > code').forEach((code) => {
+    if (code.classList.contains('file-mention') || !fileMention(code.textContent ?? '')) return;
+    code.classList.add('file-mention');
+    code.setAttribute('role', 'button');
+    code.setAttribute('tabindex', '0');
+    code.setAttribute('title', 'Open file');
+  });
+}
+
+/** Finds the mentioned file in the folder and opens it in a tab; says so on the mention when it isn't there. */
+async function openMention(code: HTMLElement): Promise<void> {
+  const path = await window.vision.fs.locate(code.textContent ?? '');
+  if (path) {
+    openFile(path);
+    return;
+  }
+  code.dataset['missing'] = 'true';
+  code.setAttribute('title', 'Not found in this folder');
+}
+
 /**
  * Markdown as formatted text: Claude's replies and the .md preview. HTML in the source is sanitized.
  * With `baseDir` (the note's folder, or Claude's working folder), relative images and Obsidian
@@ -63,14 +86,27 @@ export function Markdown({ text, className = '', baseDir }: { text: string; clas
   const html = useMemo(() => toHtml(text, baseDir), [text, baseDir]);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (ref.current) addCopyButtons(ref.current);
-  }, [html]);
+    if (!ref.current) return;
+    addCopyButtons(ref.current);
+    if (baseDir) markFileMentions(ref.current);
+  }, [html, baseDir]);
   const openLocalLink = (event: MouseEvent<HTMLDivElement>) => {
+    const mention = (event.target as Element).closest<HTMLElement>('code.file-mention');
+    if (mention) {
+      void openMention(mention);
+      return;
+    }
     const href = (event.target as Element).closest('a')?.getAttribute('href');
     const path = baseDir && href ? resolveLocalPath(baseDir, href) : null;
     if (!path) return;
     event.preventDefault();
     openFile(path);
   };
-  return <div ref={ref} className={`markdown ${className}`} onClick={openLocalLink} dangerouslySetInnerHTML={{ __html: html }} />;
+  const openMentionWithKeys = (event: KeyboardEvent<HTMLDivElement>) => {
+    const mention = (event.target as Element).closest<HTMLElement>('code.file-mention');
+    if (!mention || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    void openMention(mention);
+  };
+  return <div ref={ref} className={`markdown ${className}`} onClick={openLocalLink} onKeyDown={openMentionWithKeys} dangerouslySetInnerHTML={{ __html: html }} />;
 }

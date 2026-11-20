@@ -26,14 +26,28 @@ function setTool(state: ChatState, tool: ToolCall): ChatState {
   return { ...state, tools: { ...state.tools, [tool.id]: tool } };
 }
 
+const MAX_REASON_LENGTH = 80;
+
+/** A short "why" for a refused tool: auto mode's category ("Reason: [Undermining Oversight]"), else Claude Code's own reason. */
+export function blockedReason(event: Obj): string {
+  const who = event['decision_reason_type'] === 'classifier' ? 'Blocked by auto mode' : 'Blocked by Claude Code';
+  const category = /Reason: \[([^\]]{1,60})\]/.exec(asStr(event['message']) ?? '')?.[1];
+  const reason = category ?? asStr(event['decision_reason'])?.trim();
+  if (!reason) return who;
+  return `${who}: ${reason.length > MAX_REASON_LENGTH ? `${reason.slice(0, MAX_REASON_LENGTH - 1)}…` : reason}`;
+}
+
 function reduceSystem(state: ChatState, event: Obj): ChatState {
   switch (event['subtype']) {
     case 'init':
       return { ...state, sessionId: asStr(event['session_id']) ?? state.sessionId, model: asStr(event['model']) ?? state.model };
     case 'status':
       return event['status'] === 'requesting' ? { ...state, phase: 'working' } : state;
-    case 'permission_denied':
-      return withItem(state, { kind: 'notice', text: asStr(event['message']) ?? 'Permission denied.', tone: 'warning' });
+    case 'permission_denied': {
+      const tool = state.tools[asStr(event['tool_use_id']) ?? ''];
+      if (!tool) return withItem(state, { kind: 'notice', text: 'Claude Code blocked an action.', tone: 'warning' });
+      return setTool(state, { ...tool, status: 'denied', blockedReason: blockedReason(event) });
+    }
     default:
       return state;
   }

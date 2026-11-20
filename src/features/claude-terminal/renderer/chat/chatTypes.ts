@@ -10,6 +10,8 @@ export interface ToolCall {
   input: Record<string, unknown>;
   status: ToolStatus;
   result: string | null;
+  /** Why Claude Code refused to run it (auto mode's safety check, a rule, a hook). */
+  blockedReason?: string;
 }
 
 export type ChatItem =

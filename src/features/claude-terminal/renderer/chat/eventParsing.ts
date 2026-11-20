@@ -52,6 +52,13 @@ export function parseTodos(input: Obj): Todo[] | null {
   });
 }
 
+const FILE_TOOLS = new Set(['Read', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
+
+/** The file a Read, Write or Edit worked on, or null for other tools. */
+export function toolFilePath(name: string, input: Obj): string | null {
+  return FILE_TOOLS.has(name) ? (asStr(input['file_path']) ?? asStr(input['notebook_path'])) : null;
+}
+
 /** A one-line description of a tool call, used in the chat and the live card. */
 export function describeTool(name: string, input: Obj): string {
   const path = asStr(input['file_path']) ?? asStr(input['path']) ?? asStr(input['notebook_path']);

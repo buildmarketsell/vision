@@ -31,6 +31,21 @@ if (!process.argv.includes('-p')) {
     pending = { requestId: `req_${turn}`, toolId: `tool_${turn}`, onAnswer };
     out({ type: 'control_request', request_id: pending.requestId, request: { subtype: 'can_use_tool', tool_name: name, input, tool_use_id: `tool_${turn}` } });
   };
+  // A Read that worked, then a command auto mode refused, like a real auto-mode session.
+  const blockedTurn = (done) => {
+    const id = `msg_${++turn}`;
+    const reason = 'Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Undermining Oversight]. If you have other tasks that do not depend on this action, continue working on those.';
+    out({ type: 'assistant', message: { id, content: [
+      { type: 'tool_use', id: 'read_1', name: 'Read', input: { file_path: `${process.cwd()}/notes/idea.txt` } },
+      { type: 'tool_use', id: 'bash_1', name: 'Bash', input: { command: 'python3 -m http.server 8765', description: 'Serve the block locally for screenshots' } },
+    ] } });
+    out({ type: 'system', subtype: 'permission_denied', tool_name: 'Bash', tool_use_id: 'bash_1', decision_reason_type: 'classifier', message: reason });
+    out({ type: 'user', message: { content: [
+      { type: 'tool_result', tool_use_id: 'read_1', content: 'An idea' },
+      { type: 'tool_result', tool_use_id: 'bash_1', content: reason, is_error: true },
+    ] } });
+    done('Your note is `hello.md`. I could not find `gone.html`.');
+  };
   createInterface({ input: process.stdin }).on('line', (line) => {
     const message = JSON.parse(line);
     if (message.type === 'control_request' && message.request.subtype === 'initialize') {
@@ -74,6 +89,7 @@ if (!process.argv.includes('-p')) {
       out({ type: 'system', subtype: 'status', status: 'requesting' });
       if (text.includes('edit')) askTool('Write', { file_path: `${process.cwd()}/notes.txt`, content: 'hello\n' }, (answer) => reply(answer.behavior === 'allow' ? 'I wrote **notes.txt**.' : 'Okay, I left it.'));
       else if (text.includes('ask')) askTool('AskUserQuestion', { questions: [{ question: 'Red or Blue?', header: 'Color', multiSelect: false, options: [{ label: 'Red', description: '' }, { label: 'Blue', description: '' }] }] }, (answer) => reply(`You picked ${answer.updatedInput.answers['Red or Blue?']}.`));
+      else if (text.includes('blocked')) blockedTurn(reply);
       else if (!text.includes('slow')) reply(`Hello from fake Claude. You said: ${text}`);
     }
   });
