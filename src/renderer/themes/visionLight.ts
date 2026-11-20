@@ -84,6 +84,11 @@ export const visionLightColors = {
   glass: 'rgba(247, 247, 245, 0.08)',
   glassFloating: 'rgba(250, 250, 249, 0.72)',
   glassEdge: 'rgba(255, 255, 255, 0.6)',
+  /** Grain over both menus (after beui's grain gradient): four soft color clouds; pastel in light themes. */
+  grain1: 'rgba(255, 214, 232, 0.75)',
+  grain2: 'rgba(201, 228, 255, 0.75)',
+  grain3: 'rgba(255, 243, 196, 0.7)',
+  grain4: 'rgba(217, 201, 255, 0.7)',
 };
 
 export const visionLight: VisionTheme = {

@@ -144,6 +144,8 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - Feature menu and file tree: hover and selection are pills that glide between rows (`components/GlideHighlight.tsx`, `styles/glide.css`): `HoverGlide` follows the pointer and keyboard focus, `SelectedGlide` follows the selected row. The list needs `position: relative` and the pills come before its rows.
 - File tree (`explorer/renderer/file-tree.css`): new rows fade in 25 ms apart (max 100 ms), a guide line under each open folder, folder icons turn as they open. Selection stays a static background.
 - Scrollbars: no track, thin rounded thumb in the theme's `syntax.scrollbar` colors, shown only while scrolling or pointed at (`core/scrollbars.ts` sets `data-scrolling` / `data-scrollbar-hover`; `styles/scrollbars.css`). Never set `scrollbar-color`/`scrollbar-width`: Chromium then ignores the `::-webkit-scrollbar` styles.
+- Theme switch: beui's circle blur via the View Transitions API (`revealTheme` in `core/appTheme.ts`, `styles/theme-reveal.css`): the new theme grows from the click, 700 ms, blur 8px → 0. Instant under reduced motion.
+- Grain on both menus (`styles/grain.css`, after beui's grain gradient shader, done in CSS instead of WebGL so it can run all day): four drifting color clouds from `--color-grain1…4` (pastel in light themes, faint in dark so text stays readable) plus SVG film grain. Hidden with Reduce Transparency. Every theme needs the four grain colors.
 - All in CSS (transform/opacity, `--ease`), no motion library. Test: `motion.spec.ts`.
 
 ## Boards (Excalidraw)

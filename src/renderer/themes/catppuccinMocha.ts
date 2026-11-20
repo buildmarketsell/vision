@@ -80,6 +80,11 @@ export const catppuccinMocha: VisionTheme = {
     glass: 'rgba(24, 24, 37, 0.18)',
     glassFloating: 'rgba(30, 30, 46, 0.72)',
     glassEdge: 'rgba(205, 214, 244, 0.1)',
+    // Kept faint so menu text stays easy to read on top.
+    grain1: 'rgba(115, 0, 255, 0.2)',
+    grain2: 'rgba(235, 168, 255, 0.1)',
+    grain3: 'rgba(0, 191, 255, 0.13)',
+    grain4: 'rgba(42, 0, 255, 0.2)',
     // The rainbow of the Catppuccin logo.
   },
   // On a dark page shadows barely show: a faint light ring keeps cards and menus apart from the page.

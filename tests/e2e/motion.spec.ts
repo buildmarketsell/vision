@@ -13,7 +13,14 @@ test('menu and file tree: highlights glide between rows; scrollbars show only wh
   try {
     await page.setViewportSize({ width: 1440, height: 900 });
     await menu(page).getByRole('tab', { name: 'Settings' }).click();
+    // Grain on both menus: pastel in the light theme, faint in the dark one.
+    const grain = () => page.locator('.feature-menu').evaluate((element) => getComputedStyle(element, '::before').backgroundImage);
+    expect(await grain()).toContain('radial-gradient');
+    await page.screenshot({ animations: 'disabled', path: 'test-results/grain-light.png' });
     await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: /Catppuccin/ }).click();
+    await expect.poll(() => page.evaluate(() => 'themeReveal' in document.documentElement.dataset)).toBe(false);
+    expect(await grain()).toContain('rgba(115, 0, 255, 0.2)');
+    await page.screenshot({ animations: 'disabled', path: 'test-results/grain-dark.png' });
 
     // The selected pill sits under the picked menu row, and moves when another is picked.
     const selected = page.locator(pill('selected', '.menu-list'));
