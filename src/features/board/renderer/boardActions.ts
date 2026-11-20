@@ -1,13 +1,12 @@
 import { CaptureUpdateAction, convertToExcalidrawElements, exportToClipboard, newElementWith, restoreElements } from '@excalidraw/excalidraw';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
+import { zoomAround } from '../boardZoom';
 import { NOTE_TEXT, noteFill, styleToCurrentItem, styleToFields, type BoardStyle } from '../boardStyle';
 
 type Api = ExcalidrawImperativeAPI;
 type Zoom = AppState['zoom']['value'];
 
-const MIN_ZOOM = 0.1;
-const MAX_ZOOM = 8;
 const NOTE_SIZE = 200;
 
 /**
@@ -109,18 +108,9 @@ export function addStickyNote(api: Api, container: HTMLElement | null, style: Bo
 
 /** Zooms around the middle of the view. */
 export function zoomTo(api: Api, nextZoom: number): void {
-  const state = api.getAppState();
-  const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, nextZoom));
-  const old = state.zoom.value;
-  const halfWidth = state.width / 2;
-  const halfHeight = state.height / 2;
-  api.updateScene({
-    appState: {
-      zoom: { value: next as Zoom },
-      scrollX: state.scrollX + halfWidth / next - halfWidth / old,
-      scrollY: state.scrollY + halfHeight / next - halfHeight / old,
-    },
-  });
+  const { scrollX, scrollY, zoom, width, height } = api.getAppState();
+  const view = zoomAround({ scrollX, scrollY, zoom: zoom.value }, nextZoom, width / 2, height / 2);
+  api.updateScene({ appState: { zoom: { value: view.zoom as Zoom }, scrollX: view.scrollX, scrollY: view.scrollY } });
 }
 
 export function zoomToFit(api: Api): void {

@@ -21,6 +21,14 @@ describe('isBoardEmbeddable', () => {
 });
 
 describe('boardEmbed', () => {
+  it('shows Instagram posts and reels through their embed page, whatever share link was copied', () => {
+    const reel = { kind: 'frame', src: 'https://www.instagram.com/reel/DAbc-12_x/embed/' };
+    expect(boardEmbed('https://www.instagram.com/reel/DAbc-12_x/?igsh=MWQ1ZGUxMzBkMA==')).toEqual(reel);
+    expect(boardEmbed('https://instagram.com/reels/DAbc-12_x/')).toEqual(reel);
+    expect(boardEmbed('https://www.instagram.com/some.creator/reel/DAbc-12_x/')).toEqual(reel);
+    expect(boardEmbed('https://www.instagram.com/p/C9xyz/')).toEqual({ kind: 'frame', src: 'https://www.instagram.com/p/C9xyz/embed/' });
+  });
+
   it('plays saved videos natively', () => {
     expect(boardEmbed('videos/a.webm')).toEqual({ kind: 'video', link: 'videos/a.webm' });
   });
@@ -38,6 +46,7 @@ describe('boardEmbed', () => {
 
   it("leaves YouTube and plain websites to Excalidraw", () => {
     expect(boardEmbed('https://youtu.be/abc')).toEqual({ kind: 'default' });
+    expect(boardEmbed('https://www.instagram.com/accounts/login/')).toEqual({ kind: 'default' });
     expect(boardEmbed('https://example.com')).toEqual({ kind: 'default' });
   });
 });

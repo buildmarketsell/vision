@@ -13,8 +13,16 @@ interface CornerProps {
   getContainer: () => HTMLElement | null;
 }
 
-/** Top left, as in tldraw: the menu, then undo, redo, delete and duplicate. */
-export function BoardTopLeft({ api, getContainer, hasSelection }: CornerProps & { hasSelection: boolean }) {
+/** "Content Formats" for …/ideas/Content Formats.excalidraw, and the folder it's in. */
+function boardName(path: string): { name: string; folder: string } {
+  const parts = path.split('/');
+  const file = parts.pop() ?? '';
+  return { name: file.replace(/\.excalidraw$/, ''), folder: parts.pop() ?? '' };
+}
+
+/** Top left, as in FigJam: a card with the menu and the board's name, then undo, redo, delete and duplicate. */
+export function BoardTopLeft({ api, getContainer, hasSelection, path }: CornerProps & { hasSelection: boolean; path: string }) {
+  const { name, folder } = boardName(path);
   const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
   const items: ContextMenuItem[] = [
     { label: 'Copy as image', icon: <ClipboardCopy {...ICON} />, onSelect: () => void copyAsImage(api) },
@@ -25,7 +33,7 @@ export function BoardTopLeft({ api, getContainer, hasSelection }: CornerProps & 
   return (
     <div className="board-panel board-top-left">
       <button
-        className="board-button"
+        className="board-button board-menu-button"
         aria-label="Board menu"
         aria-expanded={menuAt !== null}
         onClick={(event) => {
@@ -35,6 +43,10 @@ export function BoardTopLeft({ api, getContainer, hasSelection }: CornerProps & 
       >
         <Menu {...ICON} />
       </button>
+      <div className="board-title">
+        <div className="board-title-name">{name}</div>
+        {folder && <div className="board-title-folder">{folder}</div>}
+      </div>
       <div className="board-vertical-divider" />
       <button className="board-button" title="Undo — ⌘Z" aria-label="Undo" onClick={() => pressKey(getContainer(), 'z', { meta: true })}>
         <Undo2 {...ICON} />
@@ -53,7 +65,7 @@ export function BoardTopLeft({ api, getContainer, hasSelection }: CornerProps & 
   );
 }
 
-/** Bottom left: zoom out, the zoom level (click for 100%), zoom in, zoom to fit. */
+/** Bottom right, as in FigJam: zoom out, the zoom level (click for 100%), zoom in, zoom to fit. */
 export function BoardZoom({ api, zoom }: { api: ExcalidrawImperativeAPI; zoom: number }) {
   return (
     <div className="board-panel board-zoom">
