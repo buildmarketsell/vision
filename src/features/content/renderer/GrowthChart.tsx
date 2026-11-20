@@ -1,4 +1,4 @@
-import { useState, type PointerEvent } from 'react';
+import { useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type { Snapshot } from '../../../shared/content';
 import { GlowArea } from './GlowArea';
 import { axisTicks, chartPoints } from './chartPath';
@@ -44,13 +44,22 @@ export function GrowthChart({ metrics, history }: { metrics: ChartMetric[]; hist
     setHover(Math.round(ratio * (readings.length - 1)));
   };
 
+  // Left and right arrows walk the readings, so the numbers can be read without a mouse.
+  const step = (event: KeyboardEvent<HTMLDivElement>) => {
+    const move = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
+    if (move === undefined) return;
+    event.preventDefault();
+    const from = hover ?? (move > 0 ? -1 : readings.length);
+    setHover(Math.min(readings.length - 1, Math.max(0, from + move)));
+  };
+
   return (
     <figure className="content-chart">
       <figcaption className="content-chart-head">
         {metrics.length > 1 ? (
-          <div className="content-chart-switch" role="tablist" aria-label="Chart">
+          <div className="segmented" role="radiogroup" aria-label="Chart">
             {metrics.map((item, index) => (
-              <button key={item.label} role="tab" aria-selected={index === picked} onClick={() => { setPicked(index); setHover(null); }}>
+              <button key={item.label} role="radio" aria-checked={index === picked} data-active={index === picked} onClick={() => { setPicked(index); setHover(null); }}>
                 {item.label}
               </button>
             ))}
@@ -67,7 +76,7 @@ export function GrowthChart({ metrics, history }: { metrics: ChartMetric[]; hist
       {readings.length < 2 ? (
         <p className="content-note">The growth line starts tomorrow: VISION saves one reading a day while it is open.</p>
       ) : (
-        <div className="content-chart-plot" onPointerMove={track} onPointerLeave={() => setHover(null)}>
+        <div className="content-chart-plot" tabIndex={0} aria-label={`${metric.label} by day: use the arrow keys to read each day`} onPointerMove={track} onPointerLeave={() => setHover(null)} onKeyDown={step} onBlur={() => setHover(null)}>
           <svg className="glow-fade" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" role="img" aria-label={`${metric.label}: from ${fullNumber(values[0] ?? 0)} to ${fullNumber(values[values.length - 1] ?? 0)}`}>
             <GlowArea points={points} floor={HEIGHT} />
           </svg>

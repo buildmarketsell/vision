@@ -178,7 +178,7 @@
 }
 
 /* The page column already sets the top and sides; the list only needs room to end. */
-.todo-page-body {
+.todo-page-body.page-column {
   padding-top: 0;
   padding-bottom: var(--space-12);
 }

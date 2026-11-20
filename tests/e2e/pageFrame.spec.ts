@@ -28,8 +28,14 @@ async function openPage(page: Page, name: string, menuOpen: boolean) {
   await menu(page).getByRole('tab', { name }).click();
   await setMenu(menuOpen);
   await expect(page.locator('main .page-title')).toBeVisible();
-  // The menu slides; measure once it has settled.
-  await page.waitForTimeout(400);
+  // The menu slides: measure once the page area has stopped moving.
+  let last = NaN;
+  await expect.poll(async () => {
+    const { area } = await frame(page);
+    const settled = area.left === last;
+    last = area.left;
+    return settled;
+  }, { intervals: [50] }).toBe(true);
 }
 
 test('page frame: To-do, Content and Settings are centered with the title at the same inset, menu open or hidden', async () => {

@@ -47,6 +47,7 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - `.page-title`: the one big title (32px, bold). Icon above, controls below, in that order.
 - `.page-wide`: boards and wide tables run to the window's right edge but start exactly under the title.
 - `.page-bleed`: lists whose rows have their own padding bleed into the margin, so row text lines up with the title and only hover backgrounds stick out.
+- A page's own rule that changes the frame's padding or margin uses a compound selector (`.content-column.page-column`), so it wins whatever order the CSS files load in.
 - Spacing only from the 4/8/12/16/24/32/48 scale (`--space-*`), colors only from theme tokens.
 - Check every new page with the menu and sidebar both open and hidden, at 1440 and 900 wide. `tests/e2e/pageFrame.spec.ts` checks To-do, Content and Settings that way; add each new page to its list.
 
@@ -93,7 +94,7 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - YouTube: an API key from Dan's Google Cloud project (YouTube Data API v3) + his channel handle; public numbers only (subscribers, total views, videos, latest 12 videos). Watch time would need a Google sign-in with `yt-analytics.readonly`: not built. Instagram: a long-lived token from a Meta app (Instagram API with Instagram login; Business/Creator accounts only); profile, latest posts, 28-day insights. The token is renewed weekly (`refresh_access_token`).
 - Both checked against the platform before saving, so a wrong key never replaces a working one. Secrets encrypted in `userData/content.json` via `src/main/secrets.ts` (shared with Calendar). Main caches 10 minutes (YouTube's free quota).
 - One reading a day per platform is saved (`history`, kept after disconnecting) and draws the growth line and "+N in 7 days"; logic in `src/shared/content.ts` (unit tested). Numbers are formatted in English on purpose (`format.ts`).
-- Charts are bklit's "gradient glow" (Dan, 2026-11-20, bklit.com/recipes): a smooth line (monotone curve, never overshoots a reading; `chartPath.ts`, unit tested) over an accent fill that fades down and out at both sides, no grid; hover shows a dot, a tooltip card and the date as a dark pill. YouTube's chart switches Subscribers / Views. Tiles with history get bklit's "quiet sparkline". Styles in `chart.css`; colors follow the accent.
+- Charts are bklit's "gradient glow" (Dan, 2026-11-20, bklit.com/recipes): a smooth line (monotone curve, never overshoots a reading; `chartPath.ts`, unit tested) over an accent fill that fades down and out at both sides, no grid; hover shows a dot, a tooltip card and the date as a dark pill. YouTube's chart switches Subscribers / Views (the shared `.segmented` switch). Focus the chart and use ← → to read each day. Tiles with history get bklit's "quiet sparkline". Styles in `chart.css`; colors follow the accent.
 - Tests: `VISION_CONTENT_TEST_BASE` points both APIs at `tests/e2e/fixtures/fake-social.ts`; `content.spec.ts`.
 
 ## Workspace panel tabs (Dan, 2026-11-19)
@@ -183,6 +184,7 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - `build/icon.icns` (eye under an arc, after Dan's reference, 2026-11-19), drawn by `scripts/make_icon.py`. To change it: edit the script, make `build/icon.png`, rebuild the `.icns` with `sips` + `iconutil`, then `npm run dist`.
 
 ## Gotchas
+- `fileSearch.spec.ts` (⌘P focus) fails in the full e2e run but passes alone; it already did before 2026-11-20. Not fixed yet.
 - Automated runs (tests, screenshots) must set `VISION_HEADLESS=1`: windows render but never show and there is no Dock icon, so nothing pops up on Dan's screen. The e2e tests already do.
 - Tabs with `renderer: 'always'` (Claude, editors) draw on dockview's overlay layer, not inside the pane; style `.dv-render-overlay` too (its corners are rounded in styles.css).
 - Tailwind scans `src/features` through `@source` in `styles.css`; keep that line or feature styles vanish.
