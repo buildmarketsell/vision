@@ -287,7 +287,7 @@ main > .calendar-page {
   box-shadow:
     inset 3px 0 0 var(--event-color),
     inset 0 0 0 1px color-mix(in srgb, var(--event-color) 22%, transparent);
-  transition: background-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+  transition: transform var(--duration-fast) var(--ease);
 }
 
 .week-event[data-planned]:hover {
@@ -314,8 +314,9 @@ main > .calendar-page {
   color: var(--event-color);
 }
 
-/* A block VISION planned that has already passed: kept as a record, quieter. */
-.week-event[data-past-plan='true'] {
+/* A block VISION planned that has already passed: kept as a record (that time counts as worked), quieter. */
+.week-event[data-past-plan='true'],
+.week-event[data-planned][data-past='true'] {
   opacity: 0.6;
 }
 

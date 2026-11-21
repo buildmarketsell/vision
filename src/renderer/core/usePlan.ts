@@ -5,7 +5,9 @@ import type { PlanState } from '../../shared/plan';
 export function usePlan(): PlanState | null {
   const [plan, setPlan] = useState<PlanState | null>(null);
   useEffect(() => {
-    window.vision.plan.state().then(setPlan, () => setPlan(null));
+    // The first answer can arrive after a newer plan was broadcast; keep whichever was made last.
+    const newest = (next: PlanState) => setPlan((current) => (current && (current.plannedAt ?? 0) > (next.plannedAt ?? 0) ? current : next));
+    window.vision.plan.state().then(newest, () => setPlan(null));
     return window.vision.plan.onChange(setPlan);
   }, []);
   return plan;

@@ -1,16 +1,17 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { autoSchedule, type PlanTask } from '../../../shared/autoSchedule';
+import { autoSchedule } from '../../../shared/autoSchedule';
 import type { CalendarEvent } from '../../../shared/calendar';
 import { IPC } from '../../../shared/ipc';
-import { DEFAULT_PLAN_SETTINGS, normalizePlanSettings, PLAN_DAYS, type PlanBlock, type PlanSettings, type PlanState } from '../../../shared/plan';
+import { DEFAULT_PLAN_SETTINGS, normalizePlanSettings, PLAN_DAYS, type PlanBlock, type PlanRisk, type PlanState } from '../../../shared/plan';
+import { planProgress } from '../../../shared/planProgress';
 import { logError } from '../../../main/log';
 import { writePrivateJson } from '../../../main/secrets';
 import { todoList } from '../../../main/todoList';
 import { eventsForPlan, forgetCachedWeeks, onCalendarChanged } from './calendarStore';
 import { GoogleError, SignInExpiredError } from './googleAuth';
-import { mirrorToGoogle } from './planSync';
+import { canReach, mirrorToGoogle } from './planSync';
 
 const DAY_MS = 24 * 60 * 60_000;
 /** Time moves on and Google changes outside VISION, so the plan is redone this often even when nothing in VISION changed. */
@@ -18,10 +19,14 @@ const REPLAN_MS = 10 * 60_000;
 /** Typing a to-do sends a change per edit; plan once it settles. */
 const SETTLE_MS = 1_500;
 
-/** What's saved in userData/plan.json: the settings, the last plan (so a block in progress stays put after a restart), and which Google calendar holds VISION's blocks. */
+/**
+ * What's saved in userData/plan.json: the settings, the coming blocks (so one in progress stays put after a restart),
+ * past blocks (time already worked), and which Google calendar holds VISION's blocks.
+ */
 interface Saved {
-  settings: PlanSettings;
+  settings: PlanState['settings'];
   blocks: PlanBlock[];
+  past: PlanBlock[];
   mirroredTo: string | null;
 }
 
@@ -30,24 +35,32 @@ let state: PlanState | null = null;
 let running: Promise<void> | null = null;
 let again = false;
 let settleTimer: ReturnType<typeof setTimeout> | null = null;
+let writing: Promise<void> = Promise.resolve();
 
 const filePath = () => join(app.getPath('userData'), 'plan.json');
+
+const isBlock = (value: unknown): value is PlanBlock => {
+  const block = value as Partial<PlanBlock> | null;
+  return typeof block?.taskId === 'string' && typeof block.title === 'string' && typeof block.start === 'number' && typeof block.end === 'number' && (block.hours === 'work' || block.hours === 'personal');
+};
+const blocksIn = (raw: unknown) => (Array.isArray(raw) ? raw.filter(isBlock) : []);
 
 function loadSaved(): Saved {
   if (saved) return saved;
   try {
     const raw = JSON.parse(readFileSync(filePath(), 'utf8')) as Record<string, unknown>;
-    const blocks = Array.isArray(raw['blocks']) ? (raw['blocks'] as PlanBlock[]).filter((block) => typeof block?.taskId === 'string' && typeof block.start === 'number' && typeof block.end === 'number') : [];
-    saved = { settings: normalizePlanSettings(raw['settings']), blocks, mirroredTo: typeof raw['mirroredTo'] === 'string' ? raw['mirroredTo'] : null };
+    saved = { settings: normalizePlanSettings(raw['settings']), blocks: blocksIn(raw['blocks']), past: blocksIn(raw['past']), mirroredTo: typeof raw['mirroredTo'] === 'string' ? raw['mirroredTo'] : null };
   } catch {
-    saved = { settings: DEFAULT_PLAN_SETTINGS, blocks: [], mirroredTo: null };
+    saved = { settings: DEFAULT_PLAN_SETTINGS, blocks: [], past: [], mirroredTo: null };
   }
   return saved;
 }
 
-function persist(next: Saved): void {
+/** Saves one write at a time, so two saves close together never share the temp file. */
+function persist(change: Partial<Saved>): void {
+  const next = { ...loadSaved(), ...change };
   saved = next;
-  writePrivateJson(filePath(), next).catch((error: unknown) => logError('Could not save plan.json', error));
+  writing = writing.then(() => writePrivateJson(filePath(), next)).catch((error: unknown) => logError('Could not save plan.json', error));
 }
 
 function broadcast(next: PlanState): void {
@@ -65,60 +78,66 @@ function messageFor(error: unknown): string {
 
 const takesTime = (event: CalendarEvent) => !event.allDay && !event.free && !event.taskId;
 
-async function planOnce(): Promise<void> {
-  const now = Date.now();
-  const current = loadSaved();
-  const { settings } = current;
-  const open = todoList.load().filter((todo) => todo.plan && todo.status !== 'done');
-  const openIds = new Set(open.map((todo) => todo.id));
-  let error: string | undefined;
-
-  let events: CalendarEvent[] = [];
+/** Makes Google match the plan: the old calendar is emptied when Dan picks another one or turns planning off. */
+async function mirror(target: string | null, blocks: PlanBlock[], now: number): Promise<void> {
+  let writes = 0;
+  const previous = loadSaved().mirroredTo;
   try {
-    const fetched = await eventsForPlan(now - DAY_MS, now + (PLAN_DAYS + 1) * DAY_MS);
-    events = fetched?.events ?? [];
-    error = fetched?.error;
-  } catch (failure) {
-    error = messageFor(failure);
-  }
-
-  // A block that has started stays where it is, so it never jumps while Dan works on it.
-  const started = settings.enabled ? current.blocks.filter((block) => block.start <= now && block.end > now && openIds.has(block.taskId)) : [];
-  const startedMinutes = (id: string) => started.filter((block) => block.taskId === id).reduce((sum, block) => sum + (block.end - block.start) / 60_000, 0);
-  const tasks: PlanTask[] = open.flatMap((todo) => {
-    if (!todo.plan) return [];
-    const minutes = todo.plan.minutes - startedMinutes(todo.id);
-    return minutes > 0 ? [{ ...todo.plan, minutes, id: todo.id, title: todo.text, createdAt: todo.createdAt }] : [];
-  });
-  const busy = [...events.filter(takesTime), ...started].map(({ start, end }) => ({ start, end }));
-  const result = settings.enabled && tasks.length > 0 ? autoSchedule({ tasks, busy, settings, now, days: PLAN_DAYS }) : { blocks: [], risks: [] };
-  const byId = new Map(open.map((todo) => [todo.id, todo]));
-  const planned: PlanBlock[] = result.blocks.map((block) => ({ ...block, title: byId.get(block.taskId)?.text ?? '', hours: byId.get(block.taskId)?.plan?.hours ?? 'personal' }));
-  const blocks = [...started.map((block) => ({ ...block, title: byId.get(block.taskId)?.text ?? block.title })), ...planned].sort((a, b) => a.start - b.start);
-
-  // Blocks go to the calendar Dan picked; switching calendars or turning planning off clears the old one.
-  let mirroredTo = current.mirroredTo;
-  try {
-    let writes = 0;
-    const target = settings.enabled ? settings.calendarKey : null;
-    if (mirroredTo && mirroredTo !== target) {
-      writes += await mirrorToGoogle(mirroredTo, [], now);
-      mirroredTo = null;
+    if (previous && previous !== target) {
+      if (canReach(previous)) writes += await mirrorToGoogle(previous, [], now);
+      else logError('Planned blocks left on a calendar whose account was removed', previous);
+      persist({ mirroredTo: null });
     }
     if (target) {
+      // Remembered before writing: if this run fails halfway, the blocks it wrote can still be cleaned up later.
+      persist({ mirroredTo: target });
       writes += await mirrorToGoogle(target, blocks, now);
-      mirroredTo = target;
     }
+  } finally {
     if (writes > 0) forgetCachedWeeks();
+  }
+}
+
+async function planOnce(): Promise<void> {
+  const now = Date.now();
+  const { settings, blocks: previous, past } = loadSaved();
+  let fetched: Awaited<ReturnType<typeof eventsForPlan>>;
+  try {
+    fetched = await eventsForPlan(now - DAY_MS, now + (PLAN_DAYS + 1) * DAY_MS);
+  } catch (failure) {
+    fetched = { events: [], problem: messageFor(failure) };
+  }
+  if (fetched?.problem) {
+    // Planning without some calendars would put tasks over meetings: keep the last plan until they can be read.
+    broadcast({ ...(state ?? { blocks: [...past, ...previous], risks: [], plannedAt: null }), settings, error: `The plan wasn't updated. ${fetched.problem}` });
+    return;
+  }
+
+  const todos = todoList.load();
+  const progress = planProgress(todos, previous, past, now, settings.enabled);
+  const busy = [...(fetched?.events ?? []).filter(takesTime), ...progress.started].map(({ start, end }) => ({ start, end }));
+  const result = settings.enabled && progress.tasks.length > 0 ? autoSchedule({ tasks: progress.tasks, busy, settings, now, days: PLAN_DAYS }) : { blocks: [], risks: [] };
+  const byId = new Map(todos.map((todo) => [todo.id, todo]));
+  const titled = (block: Omit<PlanBlock, 'title' | 'hours'> & Partial<PlanBlock>): PlanBlock => ({
+    ...block,
+    title: byId.get(block.taskId)?.text ?? block.title ?? '',
+    hours: byId.get(block.taskId)?.plan?.hours ?? block.hours ?? 'personal',
+  });
+  const coming = [...progress.started, ...result.blocks].map(titled).sort((a, b) => a.start - b.start);
+  const risks: PlanRisk[] = settings.enabled ? [...result.risks, ...progress.timeUsed] : [];
+
+  let error: string | undefined;
+  try {
+    await mirror(settings.enabled ? settings.calendarKey : null, coming, now);
   } catch (failure) {
     error = messageFor(failure);
   }
-
-  persist({ settings, blocks, mirroredTo });
-  broadcast({ settings, blocks, risks: result.risks, plannedAt: now, ...(error ? { error } : {}) });
+  persist({ blocks: coming, past: progress.past });
+  // Settings are read again: Dan may have saved new ones while this plan was being made (another run follows for them).
+  broadcast({ settings: loadSaved().settings, blocks: [...progress.past.map(titled), ...coming], risks, plannedAt: now, ...(error ? { error } : {}) });
 }
 
-/** Plans now; a request while a plan is running makes it plan once more after, with the latest to-dos. */
+/** Plans now; a request while a plan is running makes it plan once more after, with the latest to-dos and settings. */
 function replan(): Promise<void> {
   if (running) {
     again = true;
@@ -139,7 +158,7 @@ function replanSoon(): void {
   settleTimer = setTimeout(() => void replan(), SETTLE_MS);
 }
 
-const currentState = (): PlanState => state ?? { settings: loadSaved().settings, blocks: loadSaved().blocks, risks: [], plannedAt: null };
+const currentState = (): PlanState => state ?? { settings: loadSaved().settings, blocks: [...loadSaved().past, ...loadSaved().blocks], risks: [], plannedAt: null };
 
 export function registerPlan(): void {
   ipcMain.handle(IPC.planState, () => {
@@ -147,7 +166,7 @@ export function registerPlan(): void {
     return currentState();
   });
   ipcMain.handle(IPC.planSetSettings, async (_event, raw: unknown) => {
-    persist({ ...loadSaved(), settings: normalizePlanSettings(raw) });
+    persist({ settings: normalizePlanSettings(raw) });
     await replan();
     return currentState();
   });

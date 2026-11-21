@@ -115,8 +115,8 @@ export function usePlanEditor(run: RunTodo): { open: (todo: TodoItem, x: number,
 /** Motion-style line under a to-do: how long, when it's planned, the deadline, or that it's at risk. */
 export function PlanChips({ todo, plan, onEdit }: { todo: TodoItem; plan: PlanState | null; onEdit: (x: number, y: number) => void }) {
   if (!todo.plan || todo.status === 'done') return null;
-  // Blocks are sorted and every one ended after the plan was made, so the first is the next (or current) one.
-  const next = plan?.blocks.find((block) => block.taskId === todo.id);
+  // Blocks are sorted; the first that hadn't ended when the plan was made is the next (or current) one.
+  const next = plan?.blocks.find((block) => block.taskId === todo.id && block.end > (plan.plannedAt ?? 0));
   const atRisk = plan?.risks.some((risk) => risk.taskId === todo.id) ?? false;
   const priority = PRIORITIES.find((item) => item.value === todo.plan?.priority);
   return (

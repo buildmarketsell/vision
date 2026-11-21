@@ -127,7 +127,7 @@ function DayColumn({ day, events, blocks, now, pending, onPick, onBlock }: {
         const block = blocks.get(event.id);
         if (block) {
           return (
-            <button key={event.id} className="week-event" data-planned data-short={height < 40} style={style} aria-label={`Planned: ${event.title}, ${timeRange(event)}`} onClick={(click) => onBlock({ block, x: click.clientX, y: click.clientY })}>
+            <button key={event.id} className="week-event" data-planned data-past={block.end <= now} data-short={height < 40} style={style} aria-label={`Planned: ${event.title}, ${timeRange(event)}`} onClick={(click) => onBlock({ block, x: click.clientX, y: click.clientY })}>
               <span className="week-event-title"><Circle size={10} strokeWidth={2.25} aria-hidden /> {event.title}</span>
               <span className="week-event-time">{timeRange(event)}</span>
             </button>

@@ -51,7 +51,8 @@ export function PlanSettingsForm({ settings, calendars, onSave, onCancel }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const writable = calendars.filter((calendar) => calendar.writable);
-  const backwards = Object.values(draft.hours).some((week) => Object.values(week).some((range) => range && range.from >= range.to));
+  // An emptied time box counts too: it would otherwise drop that day without a word.
+  const backwards = Object.values(draft.hours).some((week) => Object.values(week).some((range) => range && (!range.from || !range.to || range.from >= range.to)));
 
   const save = () => {
     setSaving(true);
@@ -83,7 +84,7 @@ export function PlanSettingsForm({ settings, calendars, onSave, onCancel }: {
           ))}
         </select>
       </label>
-      {backwards && <div className="calendar-error" role="alert">Each day's end has to be after its start.</div>}
+      {backwards && <div className="calendar-error" role="alert">Each day needs a start and an end after it.</div>}
       {error && <div className="calendar-error" role="alert">{error}</div>}
       <div className="flex justify-end gap-2">
         <button type="button" className="button-secondary" onClick={onCancel}>Cancel</button>

@@ -83,11 +83,12 @@ export function CalendarPage() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [panel, setPanel] = useState<Panel | null>(null);
   const plan = usePlan();
+  const now = useNow();
   const ready = state?.kind === 'ready' ? state : null;
   const canAdd = ready?.calendars.some((calendar) => calendar.writable) ?? false;
-  // VISION's own blocks in Google still to come are drawn from the plan instead (they move); past ones stay as a record.
-  const now = useNow();
-  const events = (ready?.events ?? []).filter((event) => !(event.taskId && event.end > now));
+  // VISION's own blocks in Google are drawn from the plan instead (coming ones move); older ones the plan no longer keeps still show.
+  const plannedKeys = new Set((plan?.blocks ?? []).map((block) => `${block.taskId}|${block.start}`));
+  const events = (ready?.events ?? []).filter((event) => !(event.taskId && (event.end > now || plannedKeys.has(`${event.taskId}|${event.start}`))));
   const risks = plan?.risks ?? [];
   const panelPlace = panel?.kind === 'block' ? placeAt(panel.pick.x, panel.pick.y, 220) : { left: Math.max(8, window.innerWidth - 360 - 24), top: 64 };
 

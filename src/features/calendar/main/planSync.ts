@@ -32,6 +32,11 @@ function toExisting(entry: Record<string, unknown>): Existing | null {
   return { id, key: blockKey(taskId, start, end), title: typeof entry['summary'] === 'string' ? entry['summary'] : '', start, end };
 }
 
+/** True if the calendar's account is still signed in to VISION (a calendar whose account was removed can't be cleaned up). */
+export function canReach(calendarKey: string): boolean {
+  return loadConfig().accounts.some((item) => calendarKey.startsWith(`${item.email}|`));
+}
+
 /**
  * Makes the picked Google calendar show exactly the planned blocks from now on. Only events VISION tagged as its own
  * blocks are ever changed; past blocks stay as a record. One that already started but is no longer planned

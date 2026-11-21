@@ -110,12 +110,18 @@ const changed = () => {
   for (const listener of changeListeners) listener();
 };
 
-/** The visible calendars' events for the planner, fetched fresh; null if no account is set up. */
-export async function eventsForPlan(from: number, to: number): Promise<{ calendars: CalendarInfo[]; events: CalendarEvent[]; error?: string } | null> {
+/**
+ * The visible calendars' events for the planner, fetched fresh; null if no account is set up.
+ * `problem` says why some events may be missing (an account failed or needs signing in again): planning on that would treat meetings as free time.
+ */
+export async function eventsForPlan(from: number, to: number): Promise<{ events: CalendarEvent[]; problem: string | null } | null> {
   const { client, accounts } = loadConfig();
   if (!client || accounts.length === 0) return null;
   const state = toState(await fetchAll(from, to));
-  return state.kind === 'ready' ? { calendars: state.calendars, events: state.events, ...(state.error ? { error: state.error } : {}) } : null;
+  if (state.kind !== 'ready') return null;
+  const expired = state.accounts.find((account) => account.needsSignIn);
+  const problem = state.error ?? (expired ? `Google needs you to sign in to ${expired.email} again.` : null);
+  return { events: state.events, problem };
 }
 
 /** After the planner writes to Google, the week page fetches again instead of showing the cached week. */
