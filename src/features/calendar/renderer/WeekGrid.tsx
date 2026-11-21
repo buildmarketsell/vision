@@ -19,8 +19,8 @@ export interface TimeSlot {
   end: number;
 }
 
-/** Planned blocks drawn in the accent (work) or green (personal), so they read apart from Google's events. */
-const BLOCK_COLOR = { work: 'var(--color-accent)', personal: 'var(--color-tag-green-text)' };
+/** Planned blocks: accent for work, green for personal; outlined with a circle so they read apart from Google's events. */
+const BLOCK_COLOR = { work: 'var(--color-accent)', personal: 'var(--color-success)' };
 const PLAN_ID = 'plan|';
 
 /** Blocks as events, so they share the overlap layout with meetings. */

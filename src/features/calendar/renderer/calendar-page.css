@@ -283,10 +283,10 @@ main > .calendar-page {
   font: inherit;
   text-align: left;
   cursor: pointer;
-  background: color-mix(in srgb, var(--event-color) 10%, var(--color-card));
+  background: color-mix(in srgb, var(--event-color) 12%, var(--color-card));
   box-shadow:
     inset 3px 0 0 var(--event-color),
-    inset 0 0 0 1px color-mix(in srgb, var(--event-color) 35%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--event-color) 22%, transparent);
   transition: background-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
 }
 

@@ -22,9 +22,11 @@ test('calendar page: Calendar in the menu fills the window with the week, see ev
     const today = calendar.locator('.week-column[data-today="true"]');
     const box = await today.boundingBox();
     if (!box) throw new Error('no today column');
-    await page.mouse.click(box.x + box.width / 2, box.y + 22 * 48 + 10);
+    // The fake garage call sits two hours from now (on the hour); between 20:00 and 21:00 that is 22:00, so click 20:00 instead.
+    const hour = new Date(Date.now() + 2 * 60 * 60_000).getHours() === 22 ? 20 : 22;
+    await page.mouse.click(box.x + box.width / 2, box.y + hour * 48 + 10);
     const form = page.locator('.calendar-popover').getByRole('form', { name: 'New event' });
-    await expect(form.getByRole('textbox', { name: 'Start time' })).toHaveValue('22:00');
+    await expect(form.getByRole('textbox', { name: 'Start time' })).toHaveValue(`${hour}:00`);
     await form.getByRole('textbox', { name: 'Event name' }).fill('Plan the week');
     await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-week-new.png' });
     await form.getByRole('button', { name: 'Add event' }).click();
