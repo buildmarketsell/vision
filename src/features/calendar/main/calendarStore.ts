@@ -101,6 +101,35 @@ async function rangeState(from: unknown, to: unknown, force: boolean): Promise<C
   return toState(fetched);
 }
 
+const changeListeners: Array<() => void> = [];
+/** Calls `listener` whenever Dan changes the calendar in VISION (signs in or out, shows or hides a calendar, adds an event). */
+export function onCalendarChanged(listener: () => void): void {
+  changeListeners.push(listener);
+}
+const changed = () => {
+  for (const listener of changeListeners) listener();
+};
+
+/**
+ * The visible calendars' events for the planner, fetched fresh; null if no account is set up.
+ * `problem` says why some events may be missing (an account failed or needs signing in again): planning on that would treat meetings as free time.
+ */
+export async function eventsForPlan(from: number, to: number): Promise<{ events: CalendarEvent[]; problem: string | null } | null> {
+  const { client, accounts } = loadConfig();
+  if (!client || accounts.length === 0) return null;
+  const state = toState(await fetchAll(from, to));
+  if (state.kind !== 'ready') return null;
+  const expired = state.accounts.find((account) => account.needsSignIn);
+  const problem = state.error ?? (expired ? `Google needs you to sign in to ${expired.email} again.` : null);
+  return { events: state.events, problem };
+}
+
+/** After the planner writes to Google, the week page fetches again instead of showing the cached week. */
+export function forgetCachedWeeks(): void {
+  rangeCache.clear();
+  cache = null;
+}
+
 const asText = (value: unknown, max = 500) => (typeof value === 'string' && value.trim().length > 0 && value.length <= max ? value.trim() : null);
 
 export function registerCalendar(): void {
@@ -132,6 +161,7 @@ export function registerCalendar(): void {
       const others = config.accounts.filter((account) => account.email !== email);
       await saveConfig({ ...config, accounts: [...others, { email, refreshToken }] });
       rangeCache.clear();
+      changed();
       return currentState(true);
     } catch (error) {
       const message = messageFor(error);
@@ -147,6 +177,7 @@ export function registerCalendar(): void {
     if (leaving) forgetAccessToken(leaving.refreshToken);
     rangeCache.clear();
     await saveConfig({ ...config, accounts: config.accounts.filter((account) => account !== leaving) }).catch((error: unknown) => logError('Could not save calendar settings', error));
+    changed();
     return currentState(true);
   });
 
@@ -155,6 +186,7 @@ export function registerCalendar(): void {
     const config = loadConfig();
     await saveConfig({ ...config, visibility: { ...config.visibility, [key]: visible } }).catch((error: unknown) => logError('Could not save calendar settings', error));
     if (cache) cache = { ...cache, calendars: cache.calendars.map((calendar) => (calendar.key === key ? { ...calendar, visible } : calendar)) };
+    changed();
     return currentState(false);
   });
 
@@ -170,6 +202,7 @@ export function registerCalendar(): void {
     try {
       await insertEvent(await accessToken(config.client, account.refreshToken), calendar.key.slice(account.email.length + 1), built.body);
       rangeCache.clear();
+      changed();
       return { ok: true, value: await currentState(true) };
     } catch (error) {
       return { ok: false, error: messageFor(error) };

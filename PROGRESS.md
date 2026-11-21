@@ -37,6 +37,8 @@
 - Menu pages (2026-11-19): each menu item opens its own page: To-do, Boards (picked board full window), Calendar (week), Inbox and Settings fill the window; the week page updates right after signing in.
 - Workspace tabs and HTML preview (2026-11-19): Files / Claude / Calendar tabs in the Workspace panel; HTML files open as the real page with a Preview / Code switch and live reload.
 
+- Auto-schedule (2026-11-21): Motion-style planning. To-dos get a duration, priority, Work/Personal hours and a deadline; VISION plans them into free time around meetings, splits long ones, keeps hard deadlines, flags what won't fit, re-plans on its own, and copies the blocks to a Google calendar.
+
 ## Known issues
 - `npm audit`: 6 moderate warnings in electron-builder's minimatch (build tool only, not in the app).
 - In dev mode the menu bar says "Electron"; the built `.app` says "VISION".

@@ -5,6 +5,9 @@ import type { AddressInfo } from 'node:net';
 export interface FakeGoogle {
   base: string;
   created: Array<Record<string, unknown>>;
+  /** Ids of events deleted, and changes sent to existing events. */
+  deleted: string[];
+  patched: Array<Record<string, unknown>>;
   close: () => void;
 }
 
@@ -21,6 +24,8 @@ function body(request: IncomingMessage): Promise<string> {
 /** `blockSignIn` acts like Google's "Access blocked" page: it never sends the browser back. */
 export async function startFakeGoogle({ blockSignIn = false } = {}): Promise<FakeGoogle> {
   const created: Array<Record<string, unknown>> = [];
+  const deleted: string[] = [];
+  const patched: Array<Record<string, unknown>> = [];
   const at = (hours: number) => {
     const date = new Date(Date.now() + hours * HOUR);
     date.setMinutes(0, 0, 0);
@@ -54,20 +59,37 @@ export async function startFakeGoogle({ blockSignIn = false } = {}): Promise<Fak
         ],
       });
     } else {
-      const match = /^\/calendar\/v3\/calendars\/([^/]+)\/events$/.exec(url.pathname);
+      const match = /^\/calendar\/v3\/calendars\/([^/]+)\/events(?:\/([^/]+))?$/.exec(url.pathname);
       const id = decodeURIComponent(match?.[1] ?? '');
-      if (!match || !events[id]) {
+      const list = events[id];
+      const eventId = match?.[2] ? decodeURIComponent(match[2]) : null;
+      const index = eventId && list ? list.findIndex((event) => event['id'] === eventId) : -1;
+      if (!match || !list) {
         response.writeHead(404).end();
+      } else if (eventId && index < 0) {
+        response.writeHead(410).end();
+      } else if (eventId && request.method === 'DELETE') {
+        deleted.push(eventId);
+        list.splice(index, 1);
+        response.writeHead(204).end();
+      } else if (eventId && request.method === 'PATCH') {
+        const change = JSON.parse(await body(request)) as Record<string, unknown>;
+        patched.push({ id: eventId, ...change });
+        list[index] = { ...list[index], ...change };
+        json(list[index]);
       } else if (request.method === 'POST') {
         const event = JSON.parse(await body(request)) as Record<string, unknown>;
         created.push(event);
-        events[id].push({ ...event, id: `new-${created.length}` });
+        list.push({ ...event, id: `new-${created.length}` });
         json({ id: `new-${created.length}` });
       } else {
-        json({ items: events[id] });
+        // Like Google: privateExtendedProperty=visionBlock=1 keeps only events with that private tag.
+        const [tag, value] = (url.searchParams.get('privateExtendedProperty') ?? '').split('=');
+        const tagged = (event: Record<string, unknown>) => (event['extendedProperties'] as { private?: Record<string, string> } | undefined)?.private?.[tag ?? ''] === value;
+        json({ items: tag ? list.filter(tagged) : list });
       }
     }
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  return { base: `http://127.0.0.1:${(server.address() as AddressInfo).port}`, created, close: () => server.close() };
+  return { base: `http://127.0.0.1:${(server.address() as AddressInfo).port}`, created, deleted, patched, close: () => server.close() };
 }

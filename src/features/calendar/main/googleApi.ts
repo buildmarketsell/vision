@@ -17,6 +17,8 @@ async function call(token: string, path: string, init: RequestInit = {}): Promis
   });
   if (response.status === 401) throw new SignInExpiredError('Google needs you to sign in again.');
   if (response.status === 403) throw new GoogleError('Google refused. Check that the Google Calendar API is turned on in your Google Cloud project.');
+  // Deleting something already gone (410) is what we wanted anyway.
+  if (response.status === 204 || response.status === 410) return {};
   if (!response.ok) throw new GoogleError(`Google Calendar did not answer (error ${response.status}). Try again.`);
   const body: unknown = await response.json();
   return isObj(body) ? body : {};
@@ -28,8 +30,8 @@ export async function listCalendars(token: string): Promise<Obj[]> {
   return Array.isArray(body['items']) ? body['items'].filter(isObj) : [];
 }
 
-/** Events between two times, repeats expanded by Google (singleEvents). */
-export async function listEvents(token: string, calendarId: string, from: number, to: number): Promise<Obj[]> {
+/** Events between two times, repeats expanded by Google (singleEvents). `extra` narrows it (e.g. only VISION's blocks). */
+export async function listEvents(token: string, calendarId: string, from: number, to: number, extra: Record<string, string> = {}): Promise<Obj[]> {
   const items: Obj[] = [];
   let pageToken: string | null = null;
   for (let page = 0; page < MAX_PAGES; page += 1) {
@@ -39,6 +41,7 @@ export async function listEvents(token: string, calendarId: string, from: number
       singleEvents: 'true',
       orderBy: 'startTime',
       maxResults: '250',
+      ...extra,
       ...(pageToken ? { pageToken } : {}),
     });
     const body = await call(token, `/calendars/${encodeURIComponent(calendarId)}/events?${query}`);
@@ -49,8 +52,25 @@ export async function listEvents(token: string, calendarId: string, from: number
   return items;
 }
 
+const eventsPath = (calendarId: string) => `/calendars/${encodeURIComponent(calendarId)}/events`;
+
 export async function insertEvent(token: string, calendarId: string, body: GoogleEventBody): Promise<void> {
-  await call(token, `/calendars/${encodeURIComponent(calendarId)}/events`, { method: 'POST', body: JSON.stringify(body) });
+  await call(token, eventsPath(calendarId), { method: 'POST', body: JSON.stringify(body) });
+}
+
+export async function patchEvent(token: string, calendarId: string, eventId: string, body: Partial<GoogleEventBody>): Promise<void> {
+  await call(token, `${eventsPath(calendarId)}/${encodeURIComponent(eventId)}`, { method: 'PATCH', body: JSON.stringify(body) });
+}
+
+export async function deleteEvent(token: string, calendarId: string, eventId: string): Promise<void> {
+  await call(token, `${eventsPath(calendarId)}/${encodeURIComponent(eventId)}`, { method: 'DELETE' });
+}
+
+/** VISION's tags on an event, if it has them. */
+export function visionTags(entry: Obj): Record<string, string> {
+  const props = entry['extendedProperties'];
+  const own = isObj(props) && isObj(props['private']) ? props['private'] : {};
+  return Object.fromEntries(Object.entries(own).filter((pair): pair is [string, string] => pair[0].startsWith('vision') && typeof pair[1] === 'string'));
 }
 
 /** The account's email is its primary calendar's id. */
@@ -93,7 +113,10 @@ export function toCalendarEvent(entry: Obj, calendar: CalendarInfo): CalendarEve
   const start = timeOf(entry['start']);
   const end = timeOf(entry['end']);
   if (!id || !start || entry['status'] === 'cancelled') return null;
+  const taskId = visionTags(entry)['visionTask'];
   return {
+    ...(taskId ? { taskId } : {}),
+    ...(entry['transparency'] === 'transparent' ? { free: true } : {}),
     id: `${calendar.key}|${id}`,
     calendarKey: calendar.key,
     title: str(entry['summary'])?.trim() || '(No title)',

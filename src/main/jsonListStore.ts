@@ -8,6 +8,8 @@ export interface JsonListStore<T> {
   load(): T[];
   /** Saves and tells every window; returns the new list. */
   commit(next: T[]): T[];
+  /** Calls `listener` after every change made in VISION. */
+  onCommit(listener: (items: T[]) => void): void;
 }
 
 /**
@@ -17,6 +19,7 @@ export interface JsonListStore<T> {
 export function createJsonListStore<T>(fileName: string, normalize: (raw: unknown) => T[], changedChannel: string): JsonListStore<T> {
   let items: T[] | null = null;
   let writing: Promise<void> = Promise.resolve();
+  const listeners: Array<(items: T[]) => void> = [];
   const filePath = () => join(app.getPath('userData'), fileName);
 
   const load = (): T[] => {
@@ -43,8 +46,9 @@ export function createJsonListStore<T>(fileName: string, normalize: (raw: unknow
     for (const window of BrowserWindow.getAllWindows()) {
       if (!window.webContents.isDestroyed()) window.webContents.send(changedChannel, next);
     }
+    for (const listener of listeners) listener(next);
     return next;
   };
 
-  return { load, commit };
+  return { load, commit, onCommit: (listener) => listeners.push(listener) };
 }

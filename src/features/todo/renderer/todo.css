@@ -265,3 +265,154 @@
   background: var(--color-row-hover);
   color: var(--color-text-muted);
 }
+
+/* Scheduling: Motion-style chips (duration, priority, deadline, when it's planned) and the schedule popover. */
+.todo-plan-chips {
+  display: inline-flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: 6px;
+  transition: transform var(--duration-fast) var(--ease);
+}
+
+.todo-plan-chips:active {
+  transform: scale(0.97);
+}
+
+.todo-card .todo-plan-chips {
+  margin-top: var(--space-2);
+}
+
+.todo-tag[data-priority='asap'],
+.todo-tag[data-risk] {
+  background: var(--color-tag-red);
+  color: var(--color-tag-red-text);
+}
+
+.todo-tag[data-priority='high'] {
+  background: var(--color-tag-orange);
+  color: var(--color-tag-orange-text);
+}
+
+.todo-tag[data-priority='low'] {
+  color: var(--color-text-faint);
+}
+
+.todo-tag[data-hard='true'] {
+  background: var(--color-tag-yellow);
+  color: var(--color-tag-yellow-text);
+}
+
+.todo-plan-when {
+  font-size: var(--size-small);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.todo-schedule {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--color-text-faint);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.todo-row:hover .todo-schedule,
+.todo-schedule:focus-visible {
+  opacity: 1;
+}
+
+.todo-schedule:hover {
+  background: var(--color-row-hover);
+  color: var(--color-text);
+}
+
+.todo-schedule:active {
+  transform: scale(0.92);
+}
+
+.todo-plan-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.todo-plan-popover {
+  position: fixed;
+  z-index: 31;
+  border-radius: 12px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-popover);
+  animation: todo-plan-in var(--duration-base) var(--ease);
+  transform-origin: top left;
+}
+
+@keyframes todo-plan-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .todo-plan-popover {
+    animation-name: todo-plan-fade;
+  }
+
+  @keyframes todo-plan-fade {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+.todo-plan-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.todo-plan-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.todo-plan-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.todo-plan-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-row);
+  border: 1px solid var(--color-composer-border);
+  background: var(--color-card);
+  font: inherit;
+  font-size: var(--size-small);
+  color: var(--color-text);
+}
+
+.todo-plan-input:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.todo-plan-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--size-small);
+}
+
+.todo-plan-check[data-disabled='true'] {
+  color: var(--color-text-faint);
+}

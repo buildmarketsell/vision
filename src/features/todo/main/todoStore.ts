@@ -1,21 +1,23 @@
 import { ipcMain } from 'electron';
 import { randomUUID } from 'node:crypto';
 import { IPC } from '../../../shared/ipc';
-import { applyTodoChange, cleanTodoText, isTodoStatus, MAX_TODOS, normalizeTodos, type TodoChange, type TodoItem } from '../../../shared/todos';
-import { createJsonListStore } from '../../../main/jsonListStore';
+import { applyTodoChange, cleanTodoText, isTodoStatus, MAX_TODOS, type TodoChange, type TodoItem } from '../../../shared/todos';
+import { todoList } from '../../../main/todoList';
+import { normalizeTodoPlan } from '../../../shared/plan';
 
-const store = createJsonListStore<TodoItem>('todos.json', normalizeTodos, IPC.todosChanged);
 
 function toChange(value: unknown): TodoChange | null {
   if (typeof value !== 'object' || value === null) return null;
-  const { text, status } = value as Record<string, unknown>;
+  const { text, status, plan } = value as Record<string, unknown>;
   if (text !== undefined && typeof text !== 'string') return null;
   if (status !== undefined && !isTodoStatus(status)) return null;
-  return { ...(text === undefined ? {} : { text }), ...(status === undefined ? {} : { status }) };
+  const validPlan = plan === undefined || plan === null ? plan : normalizeTodoPlan(plan);
+  if (validPlan === null && plan !== null) return null;
+  return { ...(text === undefined ? {} : { text }), ...(status === undefined ? {} : { status }), ...(validPlan === undefined ? {} : { plan: validPlan }) };
 }
 
 export function registerTodos(): void {
-  const { load, commit } = store;
+  const { load, commit } = todoList;
   ipcMain.handle(IPC.todosList, () => load());
 
   ipcMain.handle(IPC.todosAdd, (_event, text: unknown, status: unknown) => {

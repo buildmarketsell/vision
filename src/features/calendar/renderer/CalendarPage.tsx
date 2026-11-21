@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, Plus, RotateCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, RotateCw, SlidersHorizontal } from 'lucide-react';
 import type { CalendarState, NewEventInput } from '../../../shared/calendar';
 import { useLatest } from '../../../renderer/core/useLatest';
+import { useNow } from '../../../renderer/core/useNow';
+import { usePlan } from '../../../renderer/core/usePlan';
+import { BlockCard, RiskList } from './PlanPopovers';
+import { PlanSettingsForm } from './PlanSettingsForm';
 import { useCalendarVersion } from './calendarSync';
 import { NewEventForm } from './NewEventForm';
-import { WeekGrid, type SlotPick, type TimeSlot } from './WeekGrid';
+import { WeekGrid, type BlockPick, type SlotPick, type TimeSlot } from './WeekGrid';
 import { addDays, clockTime, DAYS_IN_WEEK, startOfWeek, weekDays, weekTitle } from './weekLayout';
 import './calendar.css';
 import './calendar-page.css';
@@ -49,6 +53,13 @@ function useWeek(weekStart: number) {
 }
 
 type Draft = { initial: Partial<NewEventInput>; left: number; top: number; slot: TimeSlot | null };
+/** The other popovers: a planned block, the at-risk list, plan settings. */
+type Panel = { kind: 'block'; pick: BlockPick } | { kind: 'risks' } | { kind: 'settings' };
+
+const placeAt = (x: number, y: number, height: number) => ({
+  left: Math.max(8, Math.min(x + 12, window.innerWidth - POPOVER.width - 8)),
+  top: Math.max(8, Math.min(y - 40, window.innerHeight - height - 8)),
+});
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
@@ -60,8 +71,7 @@ function draftFromPick(pick: SlotPick): Draft {
       startTime: clockTime(pick.start),
       endTime: clockTime(pick.end),
     },
-    left: Math.max(8, Math.min(pick.x + 12, window.innerWidth - POPOVER.width - 8)),
-    top: Math.max(8, Math.min(pick.y - 40, window.innerHeight - POPOVER.height - 8)),
+    ...placeAt(pick.x, pick.y, POPOVER.height),
     slot: { dayStart: pick.dayStart, start: pick.start, end: pick.end },
   };
 }
@@ -71,8 +81,16 @@ export function CalendarPage() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(Date.now()));
   const { state, loading, failed, reload } = useWeek(weekStart);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [panel, setPanel] = useState<Panel | null>(null);
+  const plan = usePlan();
+  const now = useNow();
   const ready = state?.kind === 'ready' ? state : null;
   const canAdd = ready?.calendars.some((calendar) => calendar.writable) ?? false;
+  // VISION's own blocks in Google are drawn from the plan instead (coming ones move); older ones the plan no longer keeps still show.
+  const plannedKeys = new Set((plan?.blocks ?? []).map((block) => `${block.taskId}|${block.start}`));
+  const events = (ready?.events ?? []).filter((event) => !(event.taskId && (event.end > now || plannedKeys.has(`${event.taskId}|${event.start}`))));
+  const risks = plan?.risks ?? [];
+  const panelPlace = panel?.kind === 'block' ? placeAt(panel.pick.x, panel.pick.y, 220) : { left: Math.max(8, window.innerWidth - 360 - 24), top: 64 };
 
   const openNew = () => setDraft({ initial: {}, left: Math.max(8, window.innerWidth - POPOVER.width - 24), top: 64, slot: null });
 
@@ -91,6 +109,14 @@ export function CalendarPage() {
         <button className="icon-button" title="Next week" aria-label="Next week" onClick={() => setWeekStart(addDays(weekStart, DAYS_IN_WEEK))}>
           <ChevronRight size={16} strokeWidth={1.75} />
         </button>
+        {risks.length > 0 && (
+          <button className="plan-risk-button" onClick={() => setPanel({ kind: 'risks' })}>
+            {risks.length} at risk
+          </button>
+        )}
+        <button className="icon-button" title="Plan settings" aria-label="Plan settings" onClick={() => setPanel({ kind: 'settings' })}>
+          <SlidersHorizontal size={14} strokeWidth={1.5} />
+        </button>
         <button className="icon-button" title="Refresh" aria-label="Refresh calendar" onClick={reload}>
           <RotateCw size={14} strokeWidth={1.5} />
         </button>
@@ -105,13 +131,49 @@ export function CalendarPage() {
           The calendar could not be read. Check your internet and press refresh.
         </div>
       )}
+      {plan?.error && (
+        <div className="calendar-error px-6 pb-2" role="alert">
+          {plan.error}
+        </div>
+      )}
       {ready?.error && (
         <div className="calendar-error px-6 pb-2" role="alert">
           {ready.error}
         </div>
       )}
       {state?.kind === 'setup' && <p className="calendar-empty px-6">Connect Google Calendar in the Calendar view of the sidebar first.</p>}
-      <WeekGrid days={weekDays(weekStart)} events={ready?.events ?? []} pending={draft?.slot ?? null} onPick={(pick) => canAdd && setDraft(draftFromPick(pick))} />
+      <WeekGrid
+        days={weekDays(weekStart)}
+        events={events}
+        blocks={plan?.blocks ?? []}
+        pending={draft?.slot ?? null}
+        onPick={(pick) => canAdd && setDraft(draftFromPick(pick))}
+        onBlock={(pick) => setPanel({ kind: 'block', pick })}
+      />
+      {panel &&
+        plan &&
+        createPortal(
+          <>
+            <div className="calendar-scrim" onClick={() => setPanel(null)} aria-hidden />
+            <div className="calendar-popover" style={{ ...panelPlace, width: panel.kind === 'block' ? POPOVER.width : 360 }}>
+              {panel.kind === 'block' && <BlockCard block={panel.pick.block} onClose={() => setPanel(null)} />}
+              {panel.kind === 'risks' && <RiskList risks={risks} onClose={() => setPanel(null)} />}
+              {panel.kind === 'settings' && (
+                <PlanSettingsForm
+                  settings={plan.settings}
+                  calendars={ready?.calendars ?? []}
+                  onCancel={() => setPanel(null)}
+                  onSave={async (settings) => {
+                    await window.vision.plan.setSettings(settings);
+                    setPanel(null);
+                    reload();
+                  }}
+                />
+              )}
+            </div>
+          </>,
+          document.body,
+        )}
       {draft &&
         ready &&
         // On the body: the dock's panes clip anything fixed-positioned inside them.
