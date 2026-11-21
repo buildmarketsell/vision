@@ -1,16 +1,21 @@
 import { useState } from 'react';
-import { Check, ChevronRight } from 'lucide-react';
+import { CalendarClock, Check, ChevronRight } from 'lucide-react';
+import type { PlanState } from '../../../shared/plan';
 import type { TodoItem } from '../../../shared/todos';
+import { usePlan } from '../../../renderer/core/usePlan';
+import { PlanChips, usePlanEditor } from './TodoPlan';
 import { ContextMenu } from '../../../renderer/components/ContextMenu';
 import { AddTodo, openMenuAt, StatusTag, TodoText, todoMenu, type MenuState } from './TodoParts';
 import type { RunTodo } from './todoStore';
 
-function TodoRow({ todo, run, onMenu, editing, setEditing }: {
+function TodoRow({ todo, run, onMenu, editing, setEditing, plan, onSchedule }: {
   todo: TodoItem;
   run: RunTodo;
   onMenu: (menu: MenuState) => void;
   editing: boolean;
   setEditing: (id: string | null) => void;
+  plan: PlanState | null;
+  onSchedule: (x: number, y: number) => void;
 }) {
   const done = todo.status === 'done';
   return (
@@ -26,6 +31,12 @@ function TodoRow({ todo, run, onMenu, editing, setEditing }: {
       </button>
       <TodoText todo={todo} editing={editing} onStop={() => setEditing(null)} run={run} />
       {todo.status === 'doing' && <StatusTag status="doing" />}
+      <PlanChips todo={todo} plan={plan} onEdit={onSchedule} />
+      {!todo.plan && !done && (
+        <button className="todo-schedule" title="Schedule on the calendar" aria-label={`Schedule "${todo.text}"`} onClick={(event) => onSchedule(event.clientX, event.clientY)}>
+          <CalendarClock size={14} strokeWidth={1.5} />
+        </button>
+      )}
     </li>
   );
 }
@@ -35,9 +46,13 @@ export function TodoList({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
   const [menu, setMenu] = useState<MenuState>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [showDone, setShowDone] = useState(false);
+  const plan = usePlan();
+  const planEditor = usePlanEditor(run);
   const open = todos.filter((todo) => todo.status !== 'done');
   const done = todos.filter((todo) => todo.status === 'done');
-  const row = (todo: TodoItem) => <TodoRow key={todo.id} todo={todo} run={run} onMenu={setMenu} editing={editing === todo.id} setEditing={setEditing} />;
+  const row = (todo: TodoItem) => (
+    <TodoRow key={todo.id} todo={todo} run={run} onMenu={setMenu} editing={editing === todo.id} setEditing={setEditing} plan={plan} onSchedule={(x, y) => planEditor.open(todo, x, y)} />
+  );
   return (
     <div className="todo-list">
       <AddTodo run={run} />
@@ -52,7 +67,8 @@ export function TodoList({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
           {showDone && <ul aria-label="Done">{done.map(row)}</ul>}
         </>
       )}
-      {menu && <ContextMenu x={menu.x} y={menu.y} items={todoMenu(menu.todo, run, () => setEditing(menu.todo.id))} onClose={() => setMenu(null)} />}
+      {menu && <ContextMenu x={menu.x} y={menu.y} items={todoMenu(menu.todo, run, () => setEditing(menu.todo.id), () => planEditor.open(menu.todo, menu.x, menu.y))} onClose={() => setMenu(null)} />}
+      {planEditor.editor}
     </div>
   );
 }

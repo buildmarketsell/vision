@@ -1,5 +1,6 @@
 /** Types shared by the main process, the preload bridge and the renderer. */
 import type { CalendarState, NewEventInput } from './calendar';
+import type { PlanSettings, PlanState } from './plan';
 import type { ContentState, Platform } from './content';
 import type { SearchHit } from './fileSearch';
 import type { InboxMessage } from './inbox';
@@ -172,6 +173,15 @@ export interface VisionApi {
     setVisible(calendarKey: string, visible: boolean): Promise<CalendarState>;
     createEvent(input: NewEventInput): Promise<Result<CalendarState>>;
   };
+  plan: {
+    /** The latest auto-schedule: planned blocks, to-dos at risk, settings. */
+    state(): Promise<PlanState>;
+    /** Saves the settings and plans again; resolves once the new plan is ready. */
+    setSettings(settings: PlanSettings): Promise<PlanState>;
+    run(): Promise<PlanState>;
+    /** Fires in every window after each new plan. */
+    onChange(callback: (state: PlanState) => void): Unsubscribe;
+  };
   content: {
     /** YouTube and Instagram numbers; `force` skips the 10-minute cache (refresh button). */
     state(force?: boolean): Promise<ContentState>;
@@ -264,6 +274,10 @@ export const IPC = {
   calendarSignOut: 'calendar:signOut',
   calendarSetVisible: 'calendar:setVisible',
   calendarCreateEvent: 'calendar:createEvent',
+  planState: 'plan:state',
+  planSetSettings: 'plan:setSettings',
+  planRun: 'plan:run',
+  planChanged: 'plan:changed',
   contentState: 'content:state',
   contentConnectYouTube: 'content:connectYouTube',
   contentConnectInstagram: 'content:connectInstagram',

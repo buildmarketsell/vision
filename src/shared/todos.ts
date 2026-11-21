@@ -1,4 +1,5 @@
 /** To-dos: Dan's task list, shown as a checklist or a kanban board. Saved app-wide on this Mac, not per folder. */
+import { normalizeTodoPlan, type TodoPlan } from './plan';
 
 export type TodoStatus = 'todo' | 'doing' | 'done';
 
@@ -14,11 +15,15 @@ export interface TodoItem {
   status: TodoStatus;
   /** Milliseconds since 1970. */
   createdAt: number;
+  /** Set = the Calendar plans time for it (duration, priority, deadline). */
+  plan?: TodoPlan;
 }
 
 export interface TodoChange {
   text?: string;
   status?: TodoStatus;
+  /** null takes it off the calendar. */
+  plan?: TodoPlan | null;
 }
 
 export const MAX_TODO_TEXT = 2_000;
@@ -40,7 +45,8 @@ export function normalizeTodos(raw: unknown): TodoItem[] {
       if (!isRecord(item)) return [];
       const { id, text, status, createdAt } = item;
       if (typeof id !== 'string' || typeof text !== 'string' || typeof createdAt !== 'number') return [];
-      return [{ id, text: text.slice(0, MAX_TODO_TEXT), status: isTodoStatus(status) ? status : 'todo', createdAt }];
+      const plan = normalizeTodoPlan(item['plan']);
+      return [{ id, text: text.slice(0, MAX_TODO_TEXT), status: isTodoStatus(status) ? status : 'todo', createdAt, ...(plan ? { plan } : {}) }];
     })
     .slice(-MAX_TODOS);
 }
@@ -62,7 +68,9 @@ export function applyTodoChange(todos: TodoItem[], id: string, change: TodoChang
   const text = change.text === undefined ? current.text : cleanTodoText(change.text);
   if (text === null) return todos;
   const status = change.status ?? current.status;
-  const next = { ...current, text, status };
+  const next: TodoItem = { ...current, text, status };
+  if (change.plan === null) delete next.plan;
+  else if (change.plan) next.plan = change.plan;
   if (status === current.status) return todos.map((todo) => (todo.id === id ? next : todo));
   return [...todos.filter((todo) => todo.id !== id), next];
 }

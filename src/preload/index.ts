@@ -85,6 +85,12 @@ const api: VisionApi = {
     setVisible: (calendarKey, visible) => ipcRenderer.invoke(IPC.calendarSetVisible, calendarKey, visible),
     createEvent: (input) => ipcRenderer.invoke(IPC.calendarCreateEvent, input),
   },
+  plan: {
+    state: () => ipcRenderer.invoke(IPC.planState),
+    setSettings: (settings) => ipcRenderer.invoke(IPC.planSetSettings, settings),
+    run: () => ipcRenderer.invoke(IPC.planRun),
+    onChange: (callback) => subscribe(IPC.planChanged, callback),
+  },
   content: {
     state: (force) => ipcRenderer.invoke(IPC.contentState, force === true),
     connectYouTube: (apiKey, channel) => ipcRenderer.invoke(IPC.contentConnectYouTube, apiKey, channel),

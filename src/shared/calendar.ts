@@ -23,6 +23,10 @@ export interface CalendarEvent {
   start: number;
   end: number;
   color: string;
+  /** A block VISION planned for this to-do (tagged by VISION when it wrote it). */
+  taskId?: string;
+  /** Marked "free" in Google: it doesn't take up time. */
+  free?: boolean;
 }
 
 export interface CalendarAccount {
@@ -55,6 +59,9 @@ export interface GoogleEventBody {
   location?: string;
   start: { date: string } | { dateTime: string; timeZone: string };
   end: { date: string } | { dateTime: string; timeZone: string };
+  description?: string;
+  /** Private tags only VISION reads: `visionBlock` marks a planned block, `visionTask` its to-do. */
+  extendedProperties?: { private: Record<string, string> };
 }
 
 /** How far ahead the calendar looks. */

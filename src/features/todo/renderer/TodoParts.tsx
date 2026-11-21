@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { ArrowRight, Check, Pencil, Trash2 } from 'lucide-react';
+import { ArrowRight, CalendarClock, Check, Pencil, Trash2 } from 'lucide-react';
 import { TODO_COLUMNS, type TodoItem, type TodoStatus } from '../../../shared/todos';
 import type { ContextMenuItem } from '../../../renderer/components/ContextMenu';
 import type { RunTodo } from './todoStore';
@@ -69,8 +69,8 @@ export function TodoText({ todo, editing, onStop, run }: { todo: TodoItem; editi
   );
 }
 
-/** Right-click menu: rename, move to another column, delete. */
-export function todoMenu(todo: TodoItem, run: RunTodo, rename: () => void): ContextMenuItem[] {
+/** Right-click menu: rename, schedule, move to another column, delete. */
+export function todoMenu(todo: TodoItem, run: RunTodo, rename: () => void, schedule: () => void): ContextMenuItem[] {
   const moves = TODO_COLUMNS.filter((column) => column.status !== todo.status).map(
     (column): ContextMenuItem => ({
       label: `Move to ${column.label}`,
@@ -80,6 +80,7 @@ export function todoMenu(todo: TodoItem, run: RunTodo, rename: () => void): Cont
   );
   return [
     { label: 'Rename', icon: <Pencil {...ICON} />, onSelect: rename },
+    { label: todo.plan ? 'Edit schedule' : 'Schedule…', icon: <CalendarClock {...ICON} />, onSelect: schedule },
     ...moves,
     { label: 'Delete', icon: <Trash2 {...ICON} />, danger: true, onSelect: () => run(window.vision.todos.remove(todo.id)) },
   ];

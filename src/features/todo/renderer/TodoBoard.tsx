@@ -4,12 +4,19 @@ import { TODO_COLUMNS, type TodoItem, type TodoStatus } from '../../../shared/to
 import { ContextMenu } from '../../../renderer/components/ContextMenu';
 import { AddTodo, openMenuAt, StatusTag, TodoText, todoMenu, type MenuState } from './TodoParts';
 import type { RunTodo } from './todoStore';
+import type { PlanState } from '../../../shared/plan';
+import { usePlan } from '../../../renderer/core/usePlan';
+import { PlanChips, usePlanEditor } from './TodoPlan';
+
+type Schedule = (todo: TodoItem, x: number, y: number) => void;
 
 const DRAG_TYPE = 'application/x-vision-todo';
 
-function Card({ todo, run, onMenu, editing, setEditing }: {
+function Card({ todo, run, onMenu, editing, setEditing, plan, onSchedule }: {
   todo: TodoItem;
   run: RunTodo;
+  plan: PlanState | null;
+  onSchedule: Schedule;
   onMenu: (menu: MenuState) => void;
   editing: boolean;
   setEditing: (id: string | null) => void;
@@ -29,15 +36,18 @@ function Card({ todo, run, onMenu, editing, setEditing }: {
       onContextMenu={(event) => openMenuAt(event, todo, onMenu)}
     >
       <TodoText todo={todo} editing={editing} onStop={() => setEditing(null)} run={run} />
+      <PlanChips todo={todo} plan={plan} onEdit={(x, y) => onSchedule(todo, x, y)} />
     </li>
   );
 }
 
-function Column({ status, label, todos, run, onMenu, editing, setEditing }: {
+function Column({ status, label, todos, run, onMenu, editing, setEditing, plan, onSchedule }: {
   status: TodoStatus;
   label: string;
   todos: TodoItem[];
   run: RunTodo;
+  plan: PlanState | null;
+  onSchedule: Schedule;
   onMenu: (menu: MenuState) => void;
   editing: string | null;
   setEditing: (id: string | null) => void;
@@ -62,7 +72,7 @@ function Column({ status, label, todos, run, onMenu, editing, setEditing }: {
       </header>
       <ul className="flex flex-col gap-1.5">
         {todos.map((todo) => (
-          <Card key={todo.id} todo={todo} run={run} onMenu={onMenu} editing={editing === todo.id} setEditing={setEditing} />
+          <Card key={todo.id} todo={todo} run={run} onMenu={onMenu} editing={editing === todo.id} setEditing={setEditing} plan={plan} onSchedule={onSchedule} />
         ))}
       </ul>
       {adding ? (
@@ -80,6 +90,8 @@ function Column({ status, label, todos, run, onMenu, editing, setEditing }: {
 export function TodoBoard({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
   const [menu, setMenu] = useState<MenuState>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const plan = usePlan();
+  const planEditor = usePlanEditor(run);
   return (
     <div className="todo-board page-wide">
       {TODO_COLUMNS.map((column) => (
@@ -92,9 +104,12 @@ export function TodoBoard({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
           onMenu={setMenu}
           editing={editing}
           setEditing={setEditing}
+          plan={plan}
+          onSchedule={planEditor.open}
         />
       ))}
-      {menu && <ContextMenu x={menu.x} y={menu.y} items={todoMenu(menu.todo, run, () => setEditing(menu.todo.id))} onClose={() => setMenu(null)} />}
+      {menu && <ContextMenu x={menu.x} y={menu.y} items={todoMenu(menu.todo, run, () => setEditing(menu.todo.id), () => planEditor.open(menu.todo, menu.x, menu.y))} onClose={() => setMenu(null)} />}
+      {planEditor.editor}
     </div>
   );
 }

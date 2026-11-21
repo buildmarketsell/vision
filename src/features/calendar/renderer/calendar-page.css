@@ -276,3 +276,107 @@ main > .calendar-page {
   min-height: 0;
   height: auto;
 }
+
+/* Auto-scheduled blocks: same soft block as an event, outlined, with an empty circle like Motion's task check. */
+.week-event[data-planned] {
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--event-color) 10%, var(--color-card));
+  box-shadow:
+    inset 3px 0 0 var(--event-color),
+    inset 0 0 0 1px color-mix(in srgb, var(--event-color) 35%, transparent);
+  transition: background-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.week-event[data-planned]:hover {
+  background: color-mix(in srgb, var(--event-color) 18%, var(--color-card));
+}
+
+.week-event[data-planned]:active {
+  transform: scale(0.98);
+}
+
+.week-event[data-planned]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.week-event[data-planned] .week-event-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.week-event[data-planned] svg {
+  flex-shrink: 0;
+  color: var(--event-color);
+}
+
+/* A block VISION planned that has already passed: kept as a record, quieter. */
+.week-event[data-past-plan='true'] {
+  opacity: 0.6;
+}
+
+.plan-risk-button {
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: 6px;
+  background: var(--color-tag-red);
+  color: var(--color-tag-red-text);
+  font-size: var(--size-small);
+  font-weight: 600;
+  transition: transform var(--duration-fast) var(--ease);
+}
+
+.plan-risk-button:active {
+  transform: scale(0.96);
+}
+
+.plan-hours {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.plan-hours-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+}
+
+.plan-hours-row > .caption:only-of-type {
+  grid-column: 2 / -1;
+}
+
+.plan-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.plan-block-title {
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.plan-risk-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.plan-risk-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.plan-risk-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
