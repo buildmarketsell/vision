@@ -55,7 +55,7 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - Check every new page with the menu and sidebar both open and hidden, at 1440 and 900 wide. `tests/e2e/pageFrame.spec.ts` checks To-do, Content and Settings that way; add each new page to its list.
 
 ## Menu (left) and sidebar (right) (Dan, 2026-11-19)
-- Left: the feature menu (`FeatureMenu.tsx`), Notion-style rows in registry order: Workspace, To-do, Boards, Database, Calendar, Content, Agents, Inbox, and Settings pinned at the bottom (`pinBottom`). New features show up here; Dan has many planned. Its button sits right of the traffic lights (76px) and never moves; ⌘\\ does the same. Saved per folder as `menuCollapsed`.
+- Left: the feature menu (`FeatureMenu.tsx`), Notion-style rows in registry order: Workspace, Dashboard, To-do, Boards, Database, Calendar, Content, Agents, Inbox, and Settings pinned at the bottom (`pinBottom`). New features show up here; Dan has many planned. Its button sits right of the traffic lights (76px) and never moves; ⌘\\ does the same. Saved per folder as `menuCollapsed`.
 - Right: the sidebar (`Sidebar.tsx`) shows the picked feature's panel (files for Workspace), folder name on top, Claude button at the bottom, resized from its left edge. Button top right; ⌘⇧\\ and View menu. Saved per folder as `sidebarCollapsed`, width as `sidebarWidth`.
 - Each menu item opens its own thing (Dan, 2026-11-19: "each view from the menu should open its thing"): a view's `main` fills the window instead of the panes (which stay alive underneath). Workspace and Claude show the panes; To-do, Boards (the board picked on the right), Database, Calendar (week), Inbox and Settings have pages. A view without `component` has no sidebar panel, so the sidebar steps aside (To-do, Inbox, Settings). Pages without `ownTopBar` get an empty 36px top row for the lights and buttons.
 - The two panel buttons are portaled to the end of `<body>`: Electron applies drag areas in page order, so a page's draggable top row placed after a button swallowed its clicks in the real window (Dan couldn't open the menu on the Inbox page, 2026-11-19). Tests can't click through drag areas; `sidebar.spec.ts` checks the order instead.
@@ -114,6 +114,13 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - Mac notifications have Done / +5 min / Join buttons where macOS shows them; an old notification answers only its own check-in. The island and menu bar are the reliable path.
 - Heads-up: a meeting is timed, not free, not declined, not a VISION block; from 5 min before to 10 min after its start. One meeting in two calendars is one (`meetingKey`). Join opens only https links on Meet, Zoom or Teams (`safeJoinLink`, checked again in main).
 - Tests: `focus.spec.ts` (`VISION_FOCUS_TEST_MINUTE_MS` makes a minute last 1 s; the fake Google's `meetingInMinutes` adds a Meet call). In headless runs the island window exists but never shows, and there is no menu bar item. Never `setViewportSize` on the island in a test: it hid that the open card was cut off by the real 200 px window (Dan's screen, 2026-11-23); `expectCardFits` checks against the real size.
+
+## Dashboard (`src/features/dashboard/`, Dan 2026-11-23: "the most important things that i can choose")
+- Each feature adds its own card through `dashboardCards` in its manifest (like `searchProviders`); the Dashboard only draws the frame, title and Customize. **A new feature that has something worth glancing at adds a card**; never put feature logic in the Dashboard.
+- Cards today: Today (calendar), To-do (tick off in place), Agents, Focus (start, pause, stop), Claude usage, Content, Inbox. Default order `DEFAULT_ORDER` in `DashboardPage.tsx`.
+- Customize: move up/down, hide, show again. Choices in localStorage `vision.dashboard`; order and hiding are pure in `src/shared/dashboard.ts` (unit tested): new cards join at the end, cards of removed features are forgotten.
+- Shared page frame (`page-column` wide) with `scrollbar-gutter: stable both-edges`, because the page always scrolls and the scrollbar otherwise pushed the column off center (`pageFrame.spec.ts` caught it).
+- Test: `dashboard.spec.ts`.
 
 ## Agents (`src/features/agents/`, Dan 2026-11-23, after Bupsy, bupsy.si)
 - Spec: `docs/specs/2026-11-23-agents.md`; words in `GLOSSARY.md` (agent, job, face, trust level, waiting on you, routine, fresh chat, handoff note). Design copied from Bupsy's SwiftUI app (its `docs/06-design.md`), code written fresh.

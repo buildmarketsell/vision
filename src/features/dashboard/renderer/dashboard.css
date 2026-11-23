@@ -1,0 +1,119 @@
+/* Dashboard: Notion's page frame (wide), a two-column grid of quiet cards. */
+
+.dash-page {
+  height: 100%;
+  overflow: auto;
+  /* The page always scrolls (many cards); room for the scrollbar on both sides keeps the column centered. */
+  scrollbar-gutter: stable both-edges;
+  background: var(--color-card);
+}
+
+.dash-icon {
+  color: var(--color-text-muted);
+}
+
+.dash-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: calc(-1 * var(--space-4)) 0 var(--space-6);
+}
+
+.dash-controls .button-secondary,
+.dash-hidden .pill-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-hidden {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--space-4);
+  padding-bottom: var(--space-12);
+}
+
+.dash-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 180px;
+  max-height: 420px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+  overflow: hidden;
+}
+
+.dash-card[data-wide='true'] {
+  grid-column: 1 / -1;
+}
+
+.dash-card-head {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 var(--space-2) 0 var(--space-4);
+  flex-shrink: 0;
+}
+
+.dash-card-title {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--size-small);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  text-align: left;
+}
+
+.dash-card-title:not(:disabled):hover {
+  color: var(--color-text);
+}
+
+.dash-card-tools {
+  display: flex;
+  gap: 2px;
+}
+
+.dash-card-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  overflow-y: auto;
+}
+
+.dash-empty {
+  padding: var(--space-8) 0;
+  text-align: center;
+}
+
+/* Shared by the cards the features add */
+.dash-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  border-radius: var(--radius-row);
+}
+
+.dash-big {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
