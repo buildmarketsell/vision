@@ -66,16 +66,16 @@ const SHAPES: Record<FaceShape, { body: (fill: string) => ReactNode; eyes: [numb
 
 function Eyes({ mood, x, y, gap }: { mood: AgentMood; x: number; y: number; gap: number }) {
   const sides = [x - gap, x + gap];
-  if (mood === 'done') return <g className="face-eyes" fill="none" stroke="#141414" strokeWidth="4.2" strokeLinecap="round">{sides.map((cx) => <path key={cx} d={`M${cx - 6} ${y + 3} Q${cx} ${y - 6} ${cx + 6} ${y + 3}`} />)}</g>;
-  if (mood === 'sleeping') return <g className="face-eyes" fill="none" stroke="#141414" strokeWidth="3.8" strokeLinecap="round">{sides.map((cx) => <path key={cx} d={`M${cx - 6} ${y} Q${cx} ${y + 6} ${cx + 6} ${y}`} />)}</g>;
-  if (mood === 'failed') return <g className="face-eyes" stroke="#141414" strokeWidth="3.6" strokeLinecap="round">{sides.map((cx) => <path key={cx} d={`M${cx - 5} ${y - 5} L${cx + 5} ${y + 5} M${cx + 5} ${y - 5} L${cx - 5} ${y + 5}`} />)}</g>;
+  if (mood === 'done') return <g className="face-eyes" fill="none" stroke="#141414" strokeWidth="5.5" strokeLinecap="round">{sides.map((cx) => <path key={cx} d={`M${cx - 7} ${y + 4} Q${cx} ${y - 7} ${cx + 7} ${y + 4}`} />)}</g>;
+  if (mood === 'sleeping') return <g className="face-eyes" fill="none" stroke="#141414" strokeWidth="5" strokeLinecap="round">{sides.map((cx) => <path key={cx} d={`M${cx - 7} ${y} Q${cx} ${y + 7} ${cx + 7} ${y}`} />)}</g>;
+  if (mood === 'failed') return <g className="face-eyes" stroke="#141414" strokeWidth="5" strokeLinecap="round">{sides.map((cx) => <path key={cx} d={`M${cx - 6} ${y - 6} L${cx + 6} ${y + 6} M${cx + 6} ${y - 6} L${cx - 6} ${y + 6}`} />)}</g>;
   const lookY = mood === 'waiting' ? -2 : 0;
   return (
     <g className="face-eyes">
       {sides.map((cx) => (
         <g key={cx}>
-          <ellipse cx={cx} cy={y + lookY} rx="5.4" ry="7.4" fill="#141414" />
-          <circle cx={cx + 1.7} cy={y + lookY - 2.8} r="1.8" fill="#ffffff" />
+          <ellipse cx={cx} cy={y + lookY} rx="7" ry="9.5" fill="#141414" />
+          <circle cx={cx + 2.2} cy={y + lookY - 3.6} r="2.4" fill="#ffffff" />
         </g>
       ))}
     </g>
@@ -86,7 +86,8 @@ export const AgentFace = memo(function AgentFace({ face, mood = 'idle', size = 2
   const id = useId();
   const tint = FACE_COLOURS[face.colour] ?? FACE_COLOURS[0];
   const shape = SHAPES[face.shape];
-  const [x, y, gap] = shape.eyes;
+  const [x, y, baseGap] = shape.eyes;
+  const gap = baseGap + 3;
   return (
     <svg className="agent-face" data-mood={mood} width={size} height={size} viewBox="0 0 120 120" role="img" aria-label={label ? `${label}, ${MOOD_LABEL[mood]}` : MOOD_LABEL[mood]}>
       <defs>

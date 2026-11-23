@@ -83,7 +83,7 @@ export function AgentThread({ agent }: { agent: Agent }) {
           <span>{agent.name}</span>
           <span aria-current="page">Chat</span>
         </nav>
-        {status?.phase === 'working' && <span className="agent-badge" data-tone="working">Working</span>}
+        {status?.phase === 'working' && !waiting && <span className="agent-badge" data-tone="working">Working</span>}
         {waiting && <span className="agent-badge" data-tone="needs-you">Needs you</span>}
         <button className="agent-button" data-kind="secondary" onClick={() => setDetailsOpen(true)}>
           <AgentFace face={agent.face} mood={moodOf(agent, status)} size={18} />
