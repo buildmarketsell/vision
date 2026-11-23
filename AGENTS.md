@@ -113,7 +113,7 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - The app's "is any window open?" check (Dock click) counts `allWindowContexts()`, not `BrowserWindow.getAllWindows()`, because the island is a window too.
 - Mac notifications have Done / +5 min / Join buttons where macOS shows them; an old notification answers only its own check-in. The island and menu bar are the reliable path.
 - Heads-up: a meeting is timed, not free, not declined, not a VISION block; from 5 min before to 10 min after its start. One meeting in two calendars is one (`meetingKey`). Join opens only https links on Meet, Zoom or Teams (`safeJoinLink`, checked again in main).
-- Tests: `focus.spec.ts` (`VISION_FOCUS_TEST_MINUTE_MS` makes a minute last 1 s; the fake Google's `meetingInMinutes` adds a Meet call). In headless runs the island window exists but never shows, and there is no menu bar item.
+- Tests: `focus.spec.ts` (`VISION_FOCUS_TEST_MINUTE_MS` makes a minute last 1 s; the fake Google's `meetingInMinutes` adds a Meet call). In headless runs the island window exists but never shows, and there is no menu bar item. Never `setViewportSize` on the island in a test: it hid that the open card was cut off by the real 200 px window (Dan's screen, 2026-11-23); `expectCardFits` checks against the real size.
 
 ## Content (`src/features/content/`)
 - Menu item for Dan's content work (Dan, 2026-11-20: "we're going to add a lot of stuff there"). First part: a dashboard of YouTube and Instagram numbers (`ContentPage.tsx`), full page, no sidebar panel. New content tools go on this page or as sections next to it.
