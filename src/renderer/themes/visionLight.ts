@@ -56,6 +56,10 @@ export const visionLightColors = {
   tagBlueText: '#183347',
   tagGreen: '#DBEDDB',
   tagGreenText: '#1C3829',
+  /** Notion's status dots, also its column counts and "New" text: gray, blue, green. */
+  statusGray: '#9B9A97',
+  statusBlue: '#3D84E0',
+  statusGreen: '#4F9A6E',
   /** The rest of Notion's tag colors, for database options. */
   tagBrown: '#EEE0DA',
   tagBrownText: '#442A1E',

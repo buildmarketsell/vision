@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { create } from 'zustand';
-import type { TodoItem } from '../../../shared/todos';
+import type { TodoItem, TodoStatus } from '../../../shared/todos';
 
 export type TodoLayout = 'list' | 'board';
 const LAYOUT_KEY = 'vision.todoLayout';
@@ -26,6 +26,12 @@ export const useTodoLayout = create<{ layout: TodoLayout; setLayout: (layout: To
       // Not remembering the choice is fine; the view still switches.
     }
   },
+}));
+
+/** Which column is taking a new to-do (the page's New button, a column's + or New), or null. */
+export const useTodoAdding = create<{ adding: TodoStatus | null; setAdding: (adding: TodoStatus | null) => void }>((set) => ({
+  adding: null,
+  setAdding: (adding) => set({ adding }),
 }));
 
 /** The saved to-dos, kept in sync with every window. Null while loading. */

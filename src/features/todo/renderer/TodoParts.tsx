@@ -6,10 +6,15 @@ import type { RunTodo } from './todoStore';
 
 const ICON = { size: 15, strokeWidth: 1.5 };
 
-/** Notion's colored status tag. */
+/** Notion's status tag: a rounded pill with a colored dot. */
 export function StatusTag({ status }: { status: TodoStatus }) {
   const label = TODO_COLUMNS.find((column) => column.status === status)?.label ?? status;
-  return <span className="todo-tag" data-status={status}>{label}</span>;
+  return (
+    <span className="todo-tag todo-status" data-status={status}>
+      <span className="todo-status-dot" aria-hidden />
+      {label}
+    </span>
+  );
 }
 
 /** A text box that adds a to-do on Enter and stays open for the next one. */

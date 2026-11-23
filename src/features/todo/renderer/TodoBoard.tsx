@@ -1,10 +1,10 @@
-import { useState, type DragEvent } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, type DragEvent, type ReactNode } from 'react';
+import { FileText, Plus } from 'lucide-react';
 import { TODO_COLUMNS, type TodoItem, type TodoStatus } from '../../../shared/todos';
 import { ContextMenu } from '../../../renderer/components/ContextMenu';
 import { FocusChip, useFocusPicker } from '../../../renderer/components/FocusPicker';
 import { AddTodo, openMenuAt, StatusTag, TodoText, todoMenu, type MenuState } from './TodoParts';
-import type { RunTodo } from './todoStore';
+import { useTodoAdding, type RunTodo } from './todoStore';
 import type { PlanState } from '../../../shared/plan';
 import { usePlan } from '../../../renderer/core/usePlan';
 import { PlanChips, usePlanEditor } from './TodoPlan';
@@ -55,7 +55,8 @@ function Column({ status, label, todos, run, onMenu, editing, setEditing, plan, 
   setEditing: (id: string | null) => void;
 }) {
   const [over, setOver] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const adding = useTodoAdding((state) => state.adding === status);
+  const setAdding = useTodoAdding((state) => state.setAdding);
   const onDragOver = (event: DragEvent) => {
     if (!event.dataTransfer.types.includes(DRAG_TYPE)) return;
     event.preventDefault();
@@ -71,46 +72,57 @@ function Column({ status, label, todos, run, onMenu, editing, setEditing, plan, 
       <header className="todo-column-header">
         <StatusTag status={status} />
         <span className="todo-count">{todos.length}</span>
+        <button className="todo-column-add" title={`New in ${label}`} aria-label={`New to-do in ${label}`} onClick={() => setAdding(status)}>
+          <Plus size={16} strokeWidth={1.75} />
+        </button>
       </header>
       <ul className="flex flex-col gap-1.5">
         {todos.map((todo) => (
           <Card key={todo.id} todo={todo} run={run} onMenu={onMenu} editing={editing === todo.id} setEditing={setEditing} plan={plan} onSchedule={onSchedule} />
         ))}
       </ul>
-      {adding ? (
-        <AddTodo status={status} run={run} placeholder="Type a name, then Enter" autoFocus onDone={() => setAdding(false)} />
-      ) : (
-        <button className="todo-new" onClick={() => setAdding(true)}>
-          <Plus size={14} strokeWidth={1.75} /> New
-        </button>
+      {adding && (
+        // Notion's new card: a page icon and a name to type; Enter adds it and leaves room for the next.
+        <div className="todo-card todo-card-new">
+          <FileText size={16} strokeWidth={1.5} aria-hidden />
+          <AddTodo status={status} run={run} placeholder="Type a name…" autoFocus onDone={() => setAdding(null)} />
+        </div>
       )}
+      <button className="todo-new" onClick={() => setAdding(status)}>
+        <Plus size={16} strokeWidth={1.75} /> New
+      </button>
     </section>
   );
 }
 
 /** Kanban board: one column per status; drag a card to move it, right-click for more. */
-export function TodoBoard({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
+export function TodoBoard({ todos, run, header }: { todos: TodoItem[]; run: RunTodo; header: ReactNode }) {
   const [menu, setMenu] = useState<MenuState>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const plan = usePlan();
   const planEditor = usePlanEditor(run);
   const focusPicker = useFocusPicker();
   return (
-    <div className="todo-board page-wide">
-      {TODO_COLUMNS.map((column) => (
-        <Column
-          key={column.status}
-          status={column.status}
-          label={column.label}
-          todos={todos.filter((todo) => todo.status === column.status)}
-          run={run}
-          onMenu={setMenu}
-          editing={editing}
-          setEditing={setEditing}
-          plan={plan}
-          onSchedule={planEditor.open}
-        />
-      ))}
+    <div className="todo-board-area page-wide">
+      <div className="todo-board-frame">
+        {header}
+        <div className="todo-board">
+          {TODO_COLUMNS.map((column) => (
+            <Column
+              key={column.status}
+              status={column.status}
+              label={column.label}
+              todos={todos.filter((todo) => todo.status === column.status)}
+              run={run}
+              onMenu={setMenu}
+              editing={editing}
+              setEditing={setEditing}
+              plan={plan}
+              onSchedule={planEditor.open}
+            />
+          ))}
+        </div>
+      </div>
       {menu && <ContextMenu x={menu.x} y={menu.y} items={todoMenu(menu.todo, run, () => setEditing(menu.todo.id), () => planEditor.open(menu.todo, menu.x, menu.y), () => focusPicker.open(menu.todo.id, menu.todo.text, menu.x, menu.y))} onClose={() => setMenu(null)} />}
       {planEditor.editor}
       {focusPicker.picker}

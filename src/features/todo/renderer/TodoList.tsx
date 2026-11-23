@@ -7,7 +7,7 @@ import { PlanChips, usePlanEditor } from './TodoPlan';
 import { ContextMenu } from '../../../renderer/components/ContextMenu';
 import { FocusChip, useFocusPicker } from '../../../renderer/components/FocusPicker';
 import { AddTodo, openMenuAt, StatusTag, TodoText, todoMenu, type MenuState } from './TodoParts';
-import type { RunTodo } from './todoStore';
+import { useTodoAdding, type RunTodo } from './todoStore';
 
 function TodoRow({ todo, run, onMenu, editing, setEditing, plan, onSchedule, onFocus }: {
   todo: TodoItem;
@@ -57,6 +57,8 @@ export function TodoList({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
   const plan = usePlan();
   const planEditor = usePlanEditor(run);
   const focusPicker = useFocusPicker();
+  const adding = useTodoAdding((state) => state.adding);
+  const setAdding = useTodoAdding((state) => state.setAdding);
   const open = todos.filter((todo) => todo.status !== 'done');
   const done = todos.filter((todo) => todo.status === 'done');
   const row = (todo: TodoItem) => (
@@ -64,7 +66,8 @@ export function TodoList({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
   );
   return (
     <div className="todo-list">
-      <AddTodo run={run} />
+      {/* The page's New button focuses this box (a new key remounts it with the cursor in it). */}
+      <AddTodo key={adding === 'todo' ? 'new' : 'idle'} run={run} autoFocus={adding === 'todo'} onDone={() => setAdding(null)} />
       <ul aria-label="To-dos">{open.map(row)}</ul>
       {open.length === 0 && <p className="todo-empty">Nothing to do. Add a to-do above.</p>}
       {done.length > 0 && (
