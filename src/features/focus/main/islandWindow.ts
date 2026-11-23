@@ -5,7 +5,8 @@ import { islandPlacement } from './islandPlacement';
 
 /** Room for the island at its widest (hovered, with buttons); everything outside the island is see-through and lets clicks through. */
 const WIDTH = 460;
-const HEIGHT = 200;
+/** Tall enough for the open card with a meeting and a check-in in it (checked by focus.spec.ts against the real window). */
+const HEIGHT = 320;
 const HEADLESS = process.env['VISION_HEADLESS'] === '1';
 
 let island: BrowserWindow | null = null;
