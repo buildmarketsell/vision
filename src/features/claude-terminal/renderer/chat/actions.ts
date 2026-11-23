@@ -1,5 +1,5 @@
 import { PERMISSION_MODES, type PermissionMode } from '../../../../shared/claudeChat';
-import type { SessionInfo } from './sessionInfo';
+import type { SessionInfo } from '../../../../shared/chat/sessionInfo';
 
 /** The "/" menu in the message box, like Claude Code's in VS Code (Dan, 2026-11-20). */
 

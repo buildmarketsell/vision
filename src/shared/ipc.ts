@@ -9,6 +9,7 @@ import type { InboxMessage } from './inbox';
 import type { TodoChange, TodoItem, TodoStatus } from './todos';
 import type { Database } from './databases';
 import type { Page } from './pages';
+import type { AgentsApi, RoutinesApi } from './agentsIpc';
 import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions, ChatStartResult, PastConversation } from './claudeChat';
 
 /** What windows need to draw focus: the state (to-do rows count on their own), the glance, and whether the island is on. */
@@ -226,6 +227,8 @@ export interface VisionApi {
     /** Island window only: every change to what it shows. */
     onIsland(callback: (update: IslandUpdate) => void): Unsubscribe;
   };
+  agents: AgentsApi;
+  routines: RoutinesApi;
   chat: {
     start(options: ChatStartOptions): Promise<ChatStartResult>;
     send(id: number, message: ChatOutgoing): void;
@@ -275,6 +278,25 @@ export const IPC = {
   ptyKill: 'claude-terminal:kill',
   ptyData: 'claude-terminal:data',
   ptyExit: 'claude-terminal:exit',
+  agentsList: 'agents:list',
+  agentsCreate: 'agents:create',
+  agentsUpdate: 'agents:update',
+  agentsRemove: 'agents:remove',
+  agentsPickFolder: 'agents:pick-folder',
+  agentsStatuses: 'agents:statuses',
+  agentsChat: 'agents:chat',
+  agentsSend: 'agents:send',
+  agentsFreshChat: 'agents:fresh-chat',
+  agentsMarkRead: 'agents:mark-read',
+  agentsChanged: 'agents:changed',
+  agentsStatusChanged: 'agents:status-changed',
+  agentsChatUpdate: 'agents:chat-update',
+  agentsOpen: 'agents:open',
+  routinesList: 'routines:list',
+  routinesSave: 'routines:save',
+  routinesRemove: 'routines:remove',
+  routinesRunNow: 'routines:run-now',
+  routinesChanged: 'routines:changed',
   chatStart: 'claude-chat:start',
   chatSend: 'claude-chat:send',
   chatStop: 'claude-chat:stop',

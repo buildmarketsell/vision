@@ -4,7 +4,7 @@ import type { PastConversation } from '../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
 import { getDockApi, onDockReady } from '../../../renderer/core/dockActions';
 import { CLAUDE_TAB, newClaudeSession, openConversation, useClaudeSessions } from './sessionsStore';
-import { timeAgo } from './timeAgo';
+import { timeAgo } from '../../../renderer/core/timeAgo';
 import { UsagePanel } from './usage/UsagePanel';
 
 const ICON = { size: 14, strokeWidth: 1.75 };

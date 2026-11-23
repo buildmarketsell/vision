@@ -1,6 +1,7 @@
+import { registerAgents } from '../features/agents/main/registerAgents';
 import { registerClaudeChat } from '../features/claude-terminal/main/chatProcess';
 import { registerClaudeTerminal } from '../features/claude-terminal/main/ptyHandlers';
-import { registerTranscripts } from '../features/claude-terminal/main/transcripts';
+import { registerTranscripts } from './claude/transcripts';
 import { registerEmbedFrames } from '../features/board/main/embedFrames';
 import { registerCalendar } from '../features/calendar/main/calendarStore';
 import { registerPlan } from '../features/calendar/main/planStore';
@@ -15,4 +16,4 @@ import { registerPages } from '../features/notion/main/pageStore';
  * Main-process parts of features. Adding a feature with a main side = one line here.
  * (Renderer parts are listed in src/features/registry.ts.)
  */
-export const mainFeatures: Array<() => void> = [registerClaudeTerminal, registerClaudeChat, registerTranscripts, registerInbox, registerTodos, registerDatabases, registerPages, registerCalendar, registerPlan, registerFocus, registerContent, registerEmbedFrames];
+export const mainFeatures: Array<() => void> = [registerClaudeTerminal, registerClaudeChat, registerTranscripts, registerAgents, registerInbox, registerTodos, registerDatabases, registerPages, registerCalendar, registerPlan, registerFocus, registerContent, registerEmbedFrames];

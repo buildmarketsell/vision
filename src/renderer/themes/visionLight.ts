@@ -76,6 +76,11 @@ export const visionLightColors = {
   /** Notion's blue "New" button. */
   /** Notion's yellow Favorites star. */
   favoriteStar: '#F5B82E',
+  /** Agents: Bupsy's one pink for whatever needs Dan (his messages, send, approvals, the selected agent). */
+  agentPink: '#D76ABF',
+  agentPinkSoft: 'rgba(215, 106, 191, 0.12)',
+  /** Text on agentPink. */
+  agentOnPink: '#FAFAFA',
   notionBlue: '#2383E2',
   notionBlueHover: '#0077D4',
   columnGray: 'rgba(227, 226, 224, 0.22)',

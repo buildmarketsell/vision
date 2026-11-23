@@ -1,6 +1,6 @@
 import { accessSync, constants } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
-import { childProcessEnv } from '../../../main/shellEnv';
+import { childProcessEnv } from '../shellEnv';
 
 /** The `claude` CLI. Tests point it at a fake script. */
 const CLAUDE_COMMAND = process.env['VISION_CLAUDE_COMMAND'] ?? 'claude';

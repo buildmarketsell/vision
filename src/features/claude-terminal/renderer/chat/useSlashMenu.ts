@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
 import type { MenuItem } from './ComposerMenu';
-import type { SlashCommand } from './sessionInfo';
+import type { SlashCommand } from '../../../../shared/chat/sessionInfo';
 
 const MAX_SHOWN = 50;
 const MAX_DETAIL_CHARS = 120;

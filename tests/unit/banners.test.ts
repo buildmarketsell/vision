@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { chatBanners } from '../../src/features/claude-terminal/renderer/chat/chatBanners';
-import { reduceSessionInfo, emptySessionInfo } from '../../src/features/claude-terminal/renderer/chat/sessionInfo';
+import { reduceSessionInfo, emptySessionInfo } from '../../src/shared/chat/sessionInfo';
 import { MCP_STATUS_REQUEST_ID } from '../../src/shared/claudeChat';
 
 const now = new Date('2026-11-17T20:00').getTime();

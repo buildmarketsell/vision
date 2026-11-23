@@ -2,9 +2,9 @@ import { ipcMain } from 'electron';
 import { open, readdir, readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { IPC } from '../../../shared/ipc';
-import { isSessionId, type PastConversation } from '../../../shared/claudeChat';
-import { windowContextFor } from '../../../main/windows';
+import { IPC } from '../../shared/ipc';
+import { isSessionId, type PastConversation } from '../../shared/claudeChat';
+import { windowContextFor } from '../windows';
 
 /** Where Claude Code keeps its transcripts. Tests point it at a fixture folder. */
 const PROJECTS_DIR = process.env['VISION_CLAUDE_PROJECTS_DIR'] ?? join(homedir(), '.claude', 'projects');
@@ -85,7 +85,7 @@ export function messagesFromTranscript(text: string): unknown[] {
   return events;
 }
 
-async function readConversation(folder: string, sessionId: string): Promise<unknown[]> {
+export async function readConversation(folder: string, sessionId: string): Promise<unknown[]> {
   const path = join(transcriptDirFor(folder), `${sessionId}.jsonl`);
   try {
     if ((await stat(path)).size > MAX_TRANSCRIPT_BYTES) return [];

@@ -3,7 +3,7 @@ import type { PastConversation } from '../../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../../renderer/components/ClaudeLogo';
 import { CopyButton } from '../../../../renderer/components/CopyButton';
 import { baseName, useWorkspace } from '../../../../renderer/core/workspaceStore';
-import type { ChatItem, ChatState } from './chatTypes';
+import type { ChatItem, ChatState } from '../../../../shared/chat/chatTypes';
 import { Banners } from './Banners';
 import { Composer } from './Composer';
 import { useDraft } from './useDraft';
@@ -12,7 +12,7 @@ import { Markdown } from './Markdown';
 import { PermissionCard, QuestionCard } from './RequestCards';
 import { ToolRow } from './ToolRow';
 import type { ChatSession } from './useChatSession';
-import { timeAgo } from '../timeAgo';
+import { timeAgo } from '../../../../renderer/core/timeAgo';
 import { isLastTextOfAnswer, textForDocument } from './copyText';
 
 const STICK_TO_BOTTOM_PX = 80;

@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { reduceClaudeEvent, reduceLocal } from '../../src/features/claude-terminal/renderer/chat/chatReducer';
-import { emptyChatState, type ChatState } from '../../src/features/claude-terminal/renderer/chat/chatTypes';
-import { describeTool } from '../../src/features/claude-terminal/renderer/chat/eventParsing';
-import { messagesFromTranscript, titleFromTail } from '../../src/features/claude-terminal/main/transcripts';
+import { reduceClaudeEvent, reduceLocal } from '../../src/shared/chat/chatReducer';
+import { emptyChatState, type ChatState } from '../../src/shared/chat/chatTypes';
+import { describeTool } from '../../src/shared/chat/eventParsing';
+import { messagesFromTranscript, titleFromTail } from '../../src/main/claude/transcripts';
 import { toClaudeMessage } from '../../src/features/claude-terminal/main/chatProcess';
 import { mentionFor } from '../../src/features/claude-terminal/renderer/chat/useDraft';
 import { matchCommands, slashQuery } from '../../src/features/claude-terminal/renderer/chat/useSlashMenu';

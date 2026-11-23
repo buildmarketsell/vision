@@ -11,6 +11,7 @@ import { registerImageProtocol, registerImageScheme } from './workspace/imagePro
 import { registerPreviewProtocol } from './workspace/previewProtocol';
 import { killAllClaudeSessions } from '../features/claude-terminal/main/ptyHandlers';
 import { stopAllChats } from '../features/claude-terminal/main/chatProcess';
+import { stopAllAgents } from '../features/agents/main/agentRuns';
 
 app.setName(APP_NAME);
 
@@ -55,6 +56,7 @@ app.on('before-quit', (event) => {
 app.on('will-quit', () => {
   killAllClaudeSessions();
   stopAllChats();
+  stopAllAgents();
 });
 
 // On macOS the app stays open with no windows, like other Mac apps.

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { EFFORT_LEVELS, type EffortLevel } from '../../../../shared/claudeChat';
 import { ComposerMenu } from './ComposerMenu';
-import type { ModelOption, SessionInfo } from './sessionInfo';
+import type { ModelOption, SessionInfo } from '../../../../shared/chat/sessionInfo';
 
 const RING_SIZE = 16;
 const RING_STROKE = 2;

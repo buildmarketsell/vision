@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildActions, filterActions } from '../../src/features/claude-terminal/renderer/chat/actions';
-import { emptySessionInfo } from '../../src/features/claude-terminal/renderer/chat/sessionInfo';
+import { emptySessionInfo } from '../../src/shared/chat/sessionInfo';
 
 const info = {
   ...emptySessionInfo(),

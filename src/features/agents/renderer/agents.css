@@ -1,0 +1,967 @@
+/*
+ * Agents, after Bupsy (docs/06-design.md in its repo): greys from the VISION theme, one pink (--color-agent-pink)
+ * for what needs Dan. Bupsy's tokens: rows 36, radius 10 for buttons and fields, 14 for cards; bubbles stop at 560,
+ * the thread at 896; replies sit 40 in (28 face + 12 gap).
+ */
+
+.agents-page {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  background: var(--color-sidebar);
+}
+
+/* Column */
+.agents-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 0 var(--space-2) var(--space-3);
+}
+
+.agents-column-head {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 var(--space-1) 0 var(--space-2);
+}
+
+.agents-column-title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.agents-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.agents-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border-radius: 10px;
+  color: var(--color-text);
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.agents-row:hover {
+  background: var(--color-row-hover);
+}
+
+.agents-row:active {
+  transform: scale(0.98);
+}
+
+.agents-row[data-selected='true'] {
+  background: var(--color-row-selected);
+}
+
+.agents-row svg:not(.agent-face) {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.agents-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agents-row[data-unread='true'] .agents-row-name {
+  font-weight: 600;
+}
+
+.agents-chip {
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-row-hover);
+}
+
+.agents-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  color: var(--color-agent-on-pink);
+  background: var(--color-agent-pink);
+}
+
+.agents-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-agent-pink);
+}
+
+.agents-section {
+  margin-top: var(--space-3);
+}
+
+.agents-section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 var(--space-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.agents-hint {
+  padding: var(--space-3) var(--space-2);
+  font-size: var(--size-small);
+  color: var(--color-text-faint);
+}
+
+.agents-icon-button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--color-text-muted);
+}
+
+.agents-icon-button:hover {
+  background: var(--color-row-hover);
+  color: var(--color-text);
+}
+
+.agents-icon-button[data-tone='destructive']:hover {
+  color: var(--color-danger);
+}
+
+/* The content card, lifted off the column like Bupsy's */
+.agents-main {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 var(--space-2) var(--space-2) 0;
+  border-radius: 14px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.agent-thread,
+.agent-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.agent-page {
+  overflow-y: auto;
+}
+
+.agent-column {
+  width: 100%;
+  max-width: 896px;
+  margin: 0 auto;
+  padding: 0 var(--space-8);
+}
+
+.agent-thread-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 60px;
+  padding: 0 var(--space-4) 0 var(--space-6);
+  flex-shrink: 0;
+}
+
+.agent-crumbs {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+
+.agent-crumbs span + span::before {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 14px;
+  margin: 0 10px;
+  vertical-align: -2px;
+  background: var(--color-border);
+}
+
+.agent-crumbs [aria-current='page'] {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.agent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: var(--size-small);
+  font-weight: 500;
+  background: var(--color-row-hover);
+}
+
+.agent-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+}
+
+.agent-badge[data-tone='needs-you'] {
+  background: var(--color-agent-pink-soft);
+}
+
+.agent-badge[data-tone='needs-you']::before {
+  background: var(--color-agent-pink);
+}
+
+.agent-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--space-4);
+}
+
+/* Thread */
+.agent-bubble {
+  width: fit-content;
+  max-width: 560px;
+  margin: var(--space-6) 0 var(--space-2) auto;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--color-row-selected);
+}
+
+.agent-reply-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: var(--space-4);
+}
+
+.agent-reply-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.agent-reply-body {
+  padding-left: 40px;
+}
+
+.agent-text {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.agent-tool {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.agent-tool[data-status='error'],
+.agent-tool[data-status='denied'] {
+  color: var(--color-danger);
+}
+
+.agent-tool-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+  animation: agent-breathe 2.2s var(--ease) infinite;
+}
+
+.agent-tool-blocked {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.agent-notice {
+  margin: var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  background: var(--color-row-hover);
+}
+
+.agent-notice[data-tone='error'] {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.agent-muted {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.agent-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 320px;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.agent-empty-title {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Approval and question cards: a card with a tinted lip (pink for an approval, grey for a question) */
+.agent-dock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+.agent-card {
+  max-width: 640px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-card);
+  overflow: hidden;
+  animation: agent-enter var(--duration-base) var(--ease);
+}
+
+.agent-card[data-tone='approval'] {
+  border-color: var(--color-agent-pink-soft);
+}
+
+.agent-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.agent-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.agent-card-detail {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.agent-card-code {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--color-code-background);
+}
+
+.agent-card-lip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  background: var(--color-row-hover);
+}
+
+.agent-card[data-tone='approval'] .agent-card-lip {
+  background: var(--color-agent-pink-soft);
+}
+
+.agent-card-hint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.agent-question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.agent-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.agent-option {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  text-align: left;
+}
+
+.agent-option:hover {
+  background: var(--color-row-hover);
+}
+
+.agent-option[data-selected='true'] {
+  border-color: var(--color-agent-pink);
+  background: var(--color-agent-pink-soft);
+}
+
+.agent-thinking {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.agent-thinking-step {
+  animation: agent-breathe 2.2s var(--ease) infinite;
+}
+
+/* Composer */
+.agent-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: 10px 10px 10px var(--space-4);
+  border: 1px solid var(--color-composer-border);
+  border-radius: 14px;
+  background: var(--color-card);
+  transition: border-color var(--duration-fast) var(--ease);
+}
+
+.agent-composer:focus-within {
+  border-color: var(--color-composer-border-focus);
+}
+
+.agent-composer[data-working='true'] {
+  border-color: var(--color-agent-pink);
+  animation: agent-beam 2.4s var(--ease) infinite;
+}
+
+.agent-composer textarea {
+  flex: 1;
+  min-height: 36px;
+  padding: 7px 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  font-size: 15px;
+  line-height: 22px;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.agent-send {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--color-agent-on-pink);
+  background: var(--color-agent-pink);
+  transition: opacity var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.agent-send:disabled {
+  opacity: 0.45;
+}
+
+.agent-send:not(:disabled):active {
+  transform: scale(0.94);
+}
+
+/* Buttons: Bupsy's kinds; one primary (pink) per view */
+.agent-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.agent-button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.agent-button:disabled {
+  opacity: 0.45;
+}
+
+.agent-button[data-kind='primary'] {
+  color: var(--color-agent-on-pink);
+  background: var(--color-agent-pink);
+}
+
+.agent-button[data-kind='secondary'] {
+  background: var(--color-row-hover);
+}
+
+.agent-button[data-kind='secondary']:hover {
+  background: var(--color-row-selected);
+}
+
+.agent-button[data-kind='ghost']:hover {
+  background: var(--color-row-hover);
+}
+
+.agent-button[data-kind='ghost-destructive'] {
+  color: var(--color-danger);
+}
+
+.agent-button[data-kind='ghost-destructive']:hover,
+.agent-button[data-kind='destructive'] {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+/* Fields */
+.agent-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.agent-field {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-composer-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text);
+  background: var(--color-card);
+  outline: 0;
+}
+
+.agent-field:focus {
+  border-color: var(--color-composer-border-focus);
+}
+
+textarea.agent-field {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.agent-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--color-composer-border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.agent-folder:hover {
+  background: var(--color-row-hover);
+}
+
+.agent-trust {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.agent-trust:hover {
+  background: var(--color-row-hover);
+}
+
+.agent-trust[data-selected='true'] {
+  border-color: var(--color-agent-pink);
+  background: var(--color-agent-pink-soft);
+}
+
+.agent-note {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 400;
+  white-space: pre-wrap;
+  color: var(--color-text);
+  background: var(--color-row-hover);
+}
+
+.agent-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: 10px;
+  font-size: 13px;
+  background: var(--color-danger-soft);
+}
+
+/* Details: a side panel over the chat's right edge */
+.agent-details {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: min(360px, 100%);
+  border-left: 1px solid var(--color-border);
+  background: var(--color-card);
+  box-shadow: var(--shadow-popover);
+  animation: agent-slide var(--duration-base) var(--ease);
+}
+
+.agent-details-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.agent-details-name {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.agent-details-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+/* Face picker */
+.face-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.face-picker-shapes {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.face-picker-shapes button {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border-radius: 10px;
+}
+
+.face-picker-shapes button:hover {
+  background: var(--color-row-hover);
+}
+
+.face-picker-shapes button[data-selected='true'] {
+  background: var(--color-row-selected);
+}
+
+.face-picker-colours {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.face-picker-colours button[role='radio'] {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.face-picker-colours button[data-selected='true'] {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.face-picker-colours .agent-button {
+  margin-left: auto;
+  height: 28px;
+}
+
+/* New agent sheet */
+.agent-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.32);
+  animation: agent-fade var(--duration-base) var(--ease);
+}
+
+.agent-sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(520px, 100%);
+  max-height: calc(100vh - 32px);
+  border-radius: 16px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+  animation: agent-enter var(--duration-base) var(--ease);
+}
+
+/* Bupsy's mascot stage: a tinted, dotted ground the face stands on */
+.agent-stage {
+  display: grid;
+  place-items: center;
+  height: 168px;
+  flex-shrink: 0;
+  background:
+    radial-gradient(circle, var(--color-border) 1px, transparent 1.5px) 0 0 / 14px 14px,
+    var(--color-agent-pink-soft);
+}
+
+.agent-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  overflow-y: auto;
+}
+
+.agent-sheet-lip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-row-hover);
+}
+
+.agent-keycap {
+  padding: 1px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-card);
+}
+
+/* Waiting on you and Routines */
+.agent-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.agent-page-title {
+  margin: var(--space-8) 0 var(--space-6);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.waiting-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.waiting-agent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.routine-form {
+  gap: var(--space-4);
+}
+
+.routine-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.routine-when .agent-field {
+  width: auto;
+}
+
+.agent-page .agent-card {
+  max-width: none;
+  margin-bottom: var(--space-4);
+}
+
+.routine-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 14px;
+}
+
+.routine-row:hover {
+  background: var(--color-row-hover);
+}
+
+.routine-row[data-enabled='false'] {
+  opacity: 0.6;
+}
+
+/* Faces: only moods worth noticing move */
+.agent-face {
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.agent-face .face-body {
+  transform-origin: 60px 110px;
+}
+
+.agent-face[data-mood='working'] .face-body {
+  animation: face-bob 1s var(--ease) infinite alternate;
+}
+
+.agent-face[data-mood='waiting'] .face-body {
+  animation: face-wiggle 0.9s linear infinite;
+}
+
+.agent-face[data-mood='done'] .face-body {
+  animation: face-hop 1.1s var(--ease) 2;
+}
+
+.agent-face[data-mood='failed'] .face-body {
+  animation: face-wobble 1.6s linear 2;
+}
+
+.agent-face[data-mood='sleeping'] {
+  filter: saturate(0.55) brightness(0.92);
+}
+
+@keyframes face-bob {
+  from { transform: translateY(0) scale(1.02, 0.98); }
+  to { transform: translateY(-4px) scale(0.99, 1.02); }
+}
+
+@keyframes face-wiggle {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-5deg); }
+  40% { transform: rotate(4deg); }
+  60% { transform: rotate(-3deg); }
+  80% { transform: rotate(2deg); }
+}
+
+@keyframes face-hop {
+  0%, 65%, 100% { transform: translateY(0) scale(1.04, 0.95); }
+  35% { transform: translateY(-12px) scale(0.97, 1.04); }
+}
+
+@keyframes face-wobble {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-7deg); }
+  50% { transform: rotate(5deg); }
+  75% { transform: rotate(-3deg); }
+}
+
+@keyframes agent-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes agent-beam {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-agent-pink-soft); }
+  50% { box-shadow: 0 0 0 4px var(--color-agent-pink-soft); }
+}
+
+@keyframes agent-enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes agent-slide {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes agent-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-face .face-body,
+  .agent-tool-dot,
+  .agent-thinking-step,
+  .agent-composer[data-working='true'],
+  .agent-card,
+  .agent-details,
+  .agent-sheet,
+  .agent-sheet-backdrop {
+    animation: none;
+  }
+}

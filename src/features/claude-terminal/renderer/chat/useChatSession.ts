@@ -2,16 +2,8 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useLatest } from '../../../../renderer/core/useLatest';
 import { DEFAULT_EFFORT, DEFAULT_MODEL, type ChatImage, type EffortLevel, type PermissionMode } from '../../../../shared/claudeChat';
 import { recordChatEvent } from '../usage/usageStore';
-import { reduceClaudeEvent, reduceLocal } from './chatReducer';
-import { emptyChatState, type ChatState, type LocalAction } from './chatTypes';
-
-type Action = LocalAction | { type: 'claude'; event: unknown } | { type: 'replace'; state: ChatState };
-
-function reducer(state: ChatState, action: Action): ChatState {
-  if (action.type === 'claude') return reduceClaudeEvent(state, action.event);
-  if (action.type === 'replace') return action.state;
-  return reduceLocal(state, action);
-}
+import { reduceChat, reduceClaudeEvent } from '../../../../shared/chat/chatReducer';
+import { emptyChatState, type ChatState } from '../../../../shared/chat/chatTypes';
 
 /** Replays a saved conversation so a reopened tab shows its history. */
 async function loadHistory(sessionId: string): Promise<ChatState> {
@@ -40,7 +32,7 @@ export interface ChatSession {
 
 /** One chat tab's link to a `claude -p` stream-json process. */
 export function useChatSession(initialSessionId: string | null, initialMode: PermissionMode): ChatSession {
-  const [state, dispatch] = useReducer(reducer, undefined, emptyChatState);
+  const [state, dispatch] = useReducer(reduceChat, undefined, emptyChatState);
   const [mode, setModeState] = useState(initialMode);
   const [target, setTarget] = useState<{ sessionId: string | null }>({ sessionId: initialSessionId });
   const processId = useRef<number | null>(null);

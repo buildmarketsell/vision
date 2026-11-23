@@ -1,4 +1,4 @@
-import { MCP_STATUS_REQUEST_ID, TITLE_REQUEST_ID } from '../../../../shared/claudeChat';
+import { MCP_STATUS_REQUEST_ID, TITLE_REQUEST_ID } from '../claudeChat';
 import { asArr, asObj, asStr, type Obj } from './eventParsing';
 
 /**

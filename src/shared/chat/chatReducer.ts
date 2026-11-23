@@ -222,3 +222,12 @@ export function reduceLocal(state: ChatState, action: LocalAction): ChatState {
       return { ...state, items: [], tools: {}, todos: [], permissions: [], questions: [], streamingKeys: {} };
   }
 }
+
+/** Everything that can change a chat: Claude's events, the window's own actions, or a whole new state. */
+export type ChatAction = LocalAction | { type: 'claude'; event: unknown } | { type: 'replace'; state: ChatState };
+
+export function reduceChat(state: ChatState, action: ChatAction): ChatState {
+  if (action.type === 'claude') return reduceClaudeEvent(state, action.event);
+  if (action.type === 'replace') return action.state;
+  return reduceLocal(state, action);
+}
