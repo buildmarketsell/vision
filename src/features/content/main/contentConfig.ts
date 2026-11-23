@@ -1,8 +1,8 @@
 import { app } from 'electron';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { MAX_SNAPSHOTS, PLATFORMS, type Platform, type Snapshot } from '../../../shared/content';
-import { decryptSecret, encryptSecret, writePrivateJson } from '../../../main/secrets';
+import { createDocumentStore } from '../../../main/documentStore';
+import { decryptSecret, encryptSecret } from '../../../main/secrets';
 import { isObj, num, str } from './http';
 
 export type ChannelRef = { forHandle: string } | { id: string };
@@ -16,11 +16,6 @@ export interface ContentConfig {
 }
 
 const empty = (): ContentConfig => ({ youtube: null, instagram: null, history: { youtube: [], instagram: [] } });
-
-let config: ContentConfig | null = null;
-let writing: Promise<void> = Promise.resolve();
-
-const configPath = () => join(app.getPath('userData'), 'content.json');
 
 function parseChannel(raw: unknown): ChannelRef | null {
   if (!isObj(raw)) return null;
@@ -52,24 +47,17 @@ function parse(raw: unknown): ContentConfig {
   };
 }
 
-export function loadContentConfig(): ContentConfig {
-  if (config) return config;
-  try {
-    config = parse(JSON.parse(readFileSync(configPath(), 'utf8')));
-  } catch {
-    config = empty();
-  }
-  return config;
-}
+const document = createDocumentStore<ContentConfig>({
+  path: () => join(app.getPath('userData'), 'content.json'),
+  read: parse,
+  write: (config) => ({
+    youtube: config.youtube ? { key: encryptSecret(config.youtube.key), channel: config.youtube.channel } : null,
+    instagram: config.instagram ? { token: encryptSecret(config.instagram.token), refreshedAt: config.instagram.refreshedAt } : null,
+    history: config.history,
+  }),
+});
+
+export const loadContentConfig = (): ContentConfig => document.get();
 
 /** Throws if the Keychain can't encrypt (KeychainUnavailableError). */
-export function saveContentConfig(next: ContentConfig): Promise<void> {
-  const onDisk = {
-    youtube: next.youtube ? { key: encryptSecret(next.youtube.key), channel: next.youtube.channel } : null,
-    instagram: next.instagram ? { token: encryptSecret(next.instagram.token), refreshedAt: next.instagram.refreshedAt } : null,
-    history: next.history,
-  };
-  config = next;
-  writing = writing.then(() => writePrivateJson(configPath(), onDisk));
-  return writing;
-}
+export const saveContentConfig = (next: ContentConfig): Promise<void> => document.set(next);
