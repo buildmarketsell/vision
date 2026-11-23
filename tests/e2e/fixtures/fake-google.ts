@@ -22,7 +22,8 @@ function body(request: IncomingMessage): Promise<string> {
 }
 
 /** `blockSignIn` acts like Google's "Access blocked" page: it never sends the browser back. */
-export async function startFakeGoogle({ blockSignIn = false } = {}): Promise<FakeGoogle> {
+/** `meetingInMinutes`: also a Google Meet call that starts that many minutes from now (for the focus heads-up). */
+export async function startFakeGoogle({ blockSignIn = false, meetingInMinutes = null as number | null } = {}): Promise<FakeGoogle> {
   const created: Array<Record<string, unknown>> = [];
   const deleted: string[] = [];
   const patched: Array<Record<string, unknown>> = [];
@@ -35,6 +36,9 @@ export async function startFakeGoogle({ blockSignIn = false } = {}): Promise<Fak
     'dan@example.com': [
       { id: 'garage', summary: 'Call with the garage', location: 'Technowagen', start: { dateTime: at(2) }, end: { dateTime: at(3) } },
       { id: 'plan', summary: 'Weekly Plan', start: { dateTime: at(26) }, end: { dateTime: at(27) } },
+      ...(meetingInMinutes === null
+        ? []
+        : [{ id: 'kilo', summary: 'Call with Kilo', hangoutLink: 'https://meet.google.com/abc-defg-hij', start: { dateTime: new Date(Date.now() + meetingInMinutes * 60_000).toISOString() }, end: { dateTime: new Date(Date.now() + (meetingInMinutes + 30) * 60_000).toISOString() } }]),
     ],
     family: [{ id: 'bday', summary: "Mum's birthday", start: { date: at(50).slice(0, 10) }, end: { date: at(74).slice(0, 10) } }],
   };

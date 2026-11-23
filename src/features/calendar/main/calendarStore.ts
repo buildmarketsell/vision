@@ -109,6 +109,7 @@ export function onCalendarChanged(listener: () => void): void {
 }
 const changed = () => {
   for (const listener of changeListeners) listener();
+  calendarBridge.eventsChanged();
 };
 
 /**

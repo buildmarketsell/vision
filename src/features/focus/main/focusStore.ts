@@ -206,8 +206,10 @@ export function registerFocus(): void {
   void app.whenReady().then(() => {
     if (!HEADLESS) tray = createFocusTray(runFromTray);
     broadcast();
-    void readMeetings().then(() => refreshGlance(view()));
-    setInterval(() => void readMeetings(), MEETINGS_MS);
+    const refreshMeetings = () => void readMeetings().then(() => refreshGlance(view()));
+    refreshMeetings();
+    calendarBridge.onEventsChanged(refreshMeetings);
+    setInterval(refreshMeetings, MEETINGS_MS);
     setInterval(tick, TICK_MS);
   });
 }
