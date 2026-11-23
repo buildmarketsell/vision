@@ -22,9 +22,35 @@
   color: var(--color-tag-green-text);
 }
 
+/* Notion's status: a rounded pill with a dot in the status color. */
+.todo-status {
+  gap: 5px;
+  height: 22px;
+  padding: 0 var(--space-2) 0 6px;
+  border-radius: 11px;
+  font-size: var(--size-base);
+  line-height: 1;
+}
+
+.todo-status-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--color-status-gray);
+}
+
+.todo-status[data-status='doing'] .todo-status-dot {
+  background: var(--color-status-blue);
+}
+
+.todo-status[data-status='done'] .todo-status-dot {
+  background: var(--color-status-green);
+}
+
 .todo-count {
-  font-size: var(--size-small);
-  color: var(--color-text-faint);
+  font-size: var(--size-base);
+  color: var(--color-text-muted);
 }
 
 .todo-add,
@@ -183,32 +209,47 @@
   padding-bottom: var(--space-12);
 }
 
-.todo-board {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding-top: var(--space-2);
+/* The board, after Notion's: tinted columns, a dot status pill with a colored count, white cards, and a bordered New. */
+.todo-board-area {
   padding-bottom: var(--space-12);
 }
 
+/* As wide as the columns, so the view bar's New ends where the last column does. */
+.todo-board-frame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.todo-board {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
 .todo-column {
+  /* The column's status color: its count, + and New are in it. */
+  --status-color: var(--color-text-muted);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  flex: 1 1 0;
+  flex: 0 1 340px;
   min-width: 0;
-  max-width: 320px;
   padding: var(--space-2);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--color-column-gray);
   transition: box-shadow var(--duration-fast) var(--ease);
 }
 
 .todo-column[data-status='doing'] {
+  --status-color: var(--color-status-blue);
   background: var(--color-column-blue);
 }
 
 .todo-column[data-status='done'] {
+  --status-color: var(--color-status-green);
   background: var(--color-column-green);
 }
 
@@ -219,15 +260,52 @@
 .todo-column-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 2px 2px 0;
+  gap: var(--space-3);
+  height: 28px;
+  padding: 0 var(--space-1);
+}
+
+.todo-column .todo-count {
+  color: var(--status-color);
+}
+
+/* Notion shows a column's + only while the pointer is over it. */
+.todo-column-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  border-radius: 6px;
+  color: var(--status-color);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.todo-column:hover .todo-column-add,
+.todo-column-add:focus-visible {
+  opacity: 1;
+}
+
+.todo-column-add:hover {
+  background: var(--color-row-hover);
+}
+
+.todo-column-add:active {
+  transform: scale(0.92);
 }
 
 .todo-card {
+  display: flex;
+  flex-direction: column;
   padding: 10px var(--space-3);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--color-card);
-  box-shadow: var(--shadow-control);
+  box-shadow: 0 0 0 1px var(--color-border), var(--shadow-control);
+  font-size: var(--size-base);
+  font-weight: 500;
+  line-height: 1.45;
   cursor: grab;
   transition:
     background-color var(--duration-fast) var(--ease),
@@ -247,23 +325,123 @@
   outline: 2px solid var(--color-focus-ring);
 }
 
+.todo-card .todo-text {
+  overflow-wrap: anywhere;
+}
+
+.todo-card .focus-chip {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+}
+
 .todo-column[data-status='done'] .todo-text {
   color: var(--color-text-muted);
+}
+
+/* Typing a new card: a page icon, then the name. */
+.todo-card-new {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: text;
+  color: var(--color-text-faint);
+}
+
+.todo-card-new:hover {
+  background: var(--color-card);
+}
+
+.todo-card-new:active {
+  transform: none;
+}
+
+.todo-card-new .todo-add,
+.todo-card-new .todo-add:hover,
+.todo-card-new .todo-add:focus {
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  font-weight: 500;
 }
 
 .todo-new {
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-row);
-  color: var(--color-text-faint);
+  gap: var(--space-2);
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  color: var(--status-color);
+  font-size: var(--size-base);
+  transition: background-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
 }
 
 .todo-new:hover {
   background: var(--color-row-hover);
+}
+
+.todo-new:active {
+  transform: scale(0.98);
+}
+
+/* Notion's view tabs and its blue New. */
+.todo-viewbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.todo-page-body .todo-viewbar {
+  margin-bottom: var(--space-4);
+}
+
+.todo-views {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.todo-view {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: 16px;
   color: var(--color-text-muted);
+  font-weight: 500;
+  transition: background-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.todo-view:hover {
+  background: var(--color-row-hover);
+}
+
+.todo-view:active {
+  transform: scale(0.97);
+}
+
+.todo-view[aria-checked='true'] {
+  background: var(--color-row-selected);
+  color: var(--color-text);
+}
+
+.todo-new-button {
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: 6px;
+  background: var(--color-notion-blue);
+  color: var(--color-on-accent);
+  font-weight: 500;
+  transition: background-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.todo-new-button:hover {
+  background: var(--color-notion-blue-hover);
+}
+
+.todo-new-button:active {
+  transform: scale(0.97);
 }
 
 /* Scheduling: Motion-style chips (duration, priority, deadline, when it's planned) and the schedule popover. */

@@ -26,6 +26,18 @@ test('to-do: fills the window from the menu; add, tick off, switch to board, dra
     await expect(board.getByRole('region', { name: 'In progress' }).getByRole('listitem')).toHaveText(['Fit the new spiral']);
     await page.screenshot({ animations: 'disabled', path: 'test-results/todo-board.png' });
 
+    // Notion's way to add: the column's New opens a card to type in; Enter adds it to that column.
+    await board.getByRole('region', { name: 'In progress' }).getByRole('button', { name: 'New', exact: true }).click();
+    const name = board.getByRole('textbox', { name: 'Type a name…' });
+    await expect(name).toBeFocused();
+    await page.screenshot({ animations: 'disabled', path: 'test-results/todo-board-adding.png' });
+    await name.fill('Film the hook');
+    await name.press('Enter');
+    await expect(board.getByRole('region', { name: 'In progress' }).getByRole('listitem')).toHaveText(['Fit the new spiral', 'Film the hook']);
+    await name.press('Escape');
+    await board.getByRole('region', { name: 'In progress' }).getByRole('listitem', { name: 'Film the hook' }).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Delete' }).click();
+
     await page.getByRole('radio', { name: 'List' }).click();
     await expect(page.locator('.todo-page .todo-tag')).toHaveText(['In progress']);
     await page.screenshot({ animations: 'disabled', path: 'test-results/todo-list.png' });

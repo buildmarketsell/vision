@@ -71,6 +71,7 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 
 ## To-do (`src/features/todo/`)
 - Saved on this Mac in `userData/todos.json` (Dan chose this over syncing Notion Tasks, 2026-11-19), app-wide, through `src/main/jsonListStore.ts` (shared with the Inbox). Statuses To do / In progress / Done (`src/shared/todos.ts`).
+- Looks like Notion's Tasks board (Dan, 2026-11-23: "replicate as closely as possible"): status pills with a dot (`--color-status-*`), counts and + / New in the column's status color, white cards with a hairline border, Notion's view tabs, and the blue New (`--color-notion-blue`) at the right end of the board's last column (`.todo-board-frame` is as wide as the columns). New, a column's + and a column's New all open a typing card in that column (`useTodoAdding`).
 - Picking To-do in the menu fills the window with the To-do page (no sidebar panel). The page has a List / Board switch, remembered in localStorage. Board: drag cards between columns; right-click a row or card to rename, move or delete; double-click to rename.
 
 ## Notion view (`src/features/notion/`)
@@ -87,6 +88,7 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - Main fetches 14 days (`singleEvents=true`, Google expands repeats), cached 3 minutes; the view refreshes every 5. New events: `toGoogleEvent` in `src/shared/calendar.ts` validates the form; timed events use the Mac's time zone, all-day ends the next day (Google's rule).
 - If Google drops a sign-in (`invalid_grant`), that account shows "sign in again". Keep the Google Cloud app "In production": in Testing, Google expires sign-ins after 7 days.
 - Calendar page (Dan, 2026-11-19: "que sea mi calendario tipo como notion calendar"): picking Calendar in the menu fills the window with Notion Calendar's week (Monday first, 48px per hour, all-day row, now line, today's date in an accent circle). Prev/next/Today; click an empty slot (snapped to 30 min) or New event to add one in a popover. Layout math in `weekLayout.ts` (unit tested). Weeks come from `calendar:range` (max 62 days, cached 3 min, cleared after adding an event or changing accounts).
+- Short events are at least one line tall (20 px) and put title and time on one line (`eventBox` in `weekLayout.ts`); a 15-minute event was 10 px and cut its text in half (Dan, 2026-11-23).
 - Drag on empty space to pick a stretch (quarter hours, either direction, like Google Calendar; Dan 2026-11-19); a plain click picks an hour from the half hour. The picked stretch stays shaded while the popover is open. Math in `weekLayout.ts` (`minutesAt`, `dragRange`, `clickRange`).
 - Popovers on a page go through `createPortal(…, document.body)`: dock panes clip fixed-position children.
 - While the browser sign-in is open, the view shows "Waiting for Google…" with Cancel (3-minute limit). Before this, a sign-in Google blocked left every button silently disabled and Dan thought Save was broken (2026-11-19). Disabled buttons now look disabled (styles.css).
