@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { PlanBlock, TodoPlan } from '../../src/shared/plan';
-import { planProgress } from '../../src/shared/planProgress';
+import { DEFAULT_TODO_PLAN, type PlanBlock, type TodoPlan } from '../../src/shared/plan';
+import { planForMore, planProgress } from '../../src/shared/planProgress';
 import type { TodoItem } from '../../src/shared/todos';
 
 const HOUR = 60 * 60_000;
@@ -28,10 +28,27 @@ describe('plan progress', () => {
     expect(planProgress([todo('vsl')], [piece], [piece], NOW, true).tasks[0]?.minutes).toBe(120);
   });
 
-  it('flags a task whose planned time has all passed but is not ticked off', () => {
-    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60 } })], [], [block('vsl', NOW - 2 * HOUR, NOW - HOUR)], NOW, true);
+  it('rolls over a task whose planned time has all passed but is not ticked off: one more piece of its smallest size', () => {
+    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60, minChunk: 15 } })], [], [block('vsl', NOW - 2 * HOUR, NOW - HOUR)], NOW, true);
+    expect(progress.tasks.map((task) => [task.id, task.minutes, task.minChunk])).toEqual([['vsl', 15, 15]]);
+  });
+
+  it('rolls over 30 minutes when the task is never split', () => {
+    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60, minChunk: 0 } })], [], [block('vsl', NOW - 2 * HOUR, NOW - HOUR)], NOW, true);
+    expect(progress.tasks.map((task) => [task.id, task.minutes])).toEqual([['vsl', 30]]);
+  });
+
+  it('keeps rolling over after each extra piece passes', () => {
+    const pieces = [block('vsl', NOW - 3 * HOUR, NOW - 2 * HOUR), block('vsl', NOW - HOUR, NOW - HOUR / 2)];
+    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60 } })], [], pieces, NOW, true);
+    expect(progress.tasks.map((task) => [task.id, task.minutes])).toEqual([['vsl', 30]]);
+  });
+
+  it('plans no extra piece while a rolled-over piece is under way', () => {
+    const under = block('vsl', NOW - HOUR / 4, NOW + HOUR / 4);
+    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60 } })], [under], [block('vsl', NOW - 2 * HOUR, NOW - HOUR)], NOW, true);
     expect(progress.tasks).toEqual([]);
-    expect(progress.timeUsed.map((risk) => [risk.taskId, risk.kind])).toEqual([['vsl', 'time-used']]);
+    expect(progress.started).toEqual([under]);
   });
 
   it('forgets past pieces of to-dos taken off the calendar, and plans nothing for done ones', () => {
@@ -42,5 +59,28 @@ describe('plan progress', () => {
 
   it('keeps nothing under way when planning is off', () => {
     expect(planProgress([todo('vsl')], [block('vsl', NOW - HOUR, NOW + HOUR)], [], NOW, false).started).toEqual([]);
+  });
+});
+
+describe('needs more time (Not yet)', () => {
+  it('sets the plan so exactly the asked time is still to plan, keeping time already worked', () => {
+    const past = block('vsl', NOW - 2 * HOUR, NOW - HOUR);
+    const next = planForMore(todo('vsl'), [past, block('vsl', NOW + HOUR, NOW + 3 * HOUR)], NOW, 30);
+    expect(next.minutes).toBe(90);
+    expect(planProgress([todo('vsl', { plan: next })], [], [past], NOW, true).tasks.map((task) => task.minutes)).toEqual([30]);
+  });
+
+  it('counts the passed part of a block under way as worked', () => {
+    const under = block('vsl', NOW - HOUR / 2, NOW + HOUR / 2);
+    const next = planForMore(todo('vsl'), [under], NOW, 60);
+    expect(next.minutes).toBe(90);
+  });
+
+  it('gives a to-do without a plan the default plan for the asked time', () => {
+    expect(planForMore(todo('new', { plan: undefined }), [], NOW, 120)).toEqual({ ...DEFAULT_TODO_PLAN, minutes: 120 });
+  });
+
+  it('ignores other to-dos’ blocks', () => {
+    expect(planForMore(todo('vsl'), [block('other', NOW - 2 * HOUR, NOW - HOUR)], NOW, 60).minutes).toBe(60);
   });
 });

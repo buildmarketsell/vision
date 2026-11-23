@@ -35,7 +35,6 @@ export function BlockCard({ block, onClose }: { block: PlanBlock; onClose: () =>
 }
 
 function riskLine(risk: PlanRisk): string {
-  if (risk.kind === 'time-used') return 'All its planned time has passed. Mark it done, or give it more time.';
   if (risk.kind === 'no-room') return `${durationLabel(risk.unplannedMinutes)} doesn't fit in the next two weeks.`;
   const due = risk.deadline === null ? '' : `due ${shortWhen(risk.deadline)}`;
   if (risk.unplannedMinutes > 0) return `${durationLabel(risk.unplannedMinutes)} won't fit before it's ${due}.`;

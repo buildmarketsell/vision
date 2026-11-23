@@ -1,5 +1,7 @@
 /** Types shared by the main process, the preload bridge and the renderer. */
 import type { CalendarState, NewEventInput } from './calendar';
+import type { FocusAction, FocusState } from './focus';
+import type { Glance } from './glance';
 import type { PlanSettings, PlanState } from './plan';
 import type { ContentState, Platform } from './content';
 import type { SearchHit } from './fileSearch';
@@ -8,6 +10,21 @@ import type { TodoChange, TodoItem, TodoStatus } from './todos';
 import type { Database } from './databases';
 import type { Page } from './pages';
 import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions, ChatStartResult, PastConversation } from './claudeChat';
+
+/** What windows need to draw focus: the state (to-do rows count on their own), the glance, and whether the island is on. */
+export interface FocusView {
+  state: FocusState;
+  glance: Glance;
+  island: boolean;
+}
+
+/** What the island window gets: the view, and where it sits (wrapped around a notch, or at the top center). */
+export interface IslandUpdate {
+  view: FocusView;
+  notch: boolean;
+  /** Height of the macOS menu bar on that screen, in points. */
+  menuBar: number;
+}
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -192,6 +209,23 @@ export interface VisionApi {
     /** Forgets the key or token; the daily history stays. */
     disconnect(platform: Platform): Promise<ContentState>;
   };
+  focus: {
+    view(): Promise<FocusView>;
+    /** Starts a focus on a to-do (moved to In progress) or on nothing; `minutes` null = stopwatch. */
+    start(todoId: string | null, minutes: number | null): Promise<FocusView>;
+    act(action: FocusAction): Promise<FocusView>;
+    /** Opens the join link of the meeting in heads-up. */
+    join(): void;
+    /** Hides the heads-up of the meeting in heads-up. */
+    dismissMeeting(): void;
+    setIsland(on: boolean): Promise<FocusView>;
+    /** Fires in every window when the focus or the island setting changes (not every second). */
+    onChange(callback: (view: FocusView) => void): Unsubscribe;
+    /** Island window only: the pointer is over the island, so it takes clicks. */
+    islandHover(over: boolean): void;
+    /** Island window only: every change to what it shows. */
+    onIsland(callback: (update: IslandUpdate) => void): Unsubscribe;
+  };
   chat: {
     start(options: ChatStartOptions): Promise<ChatStartResult>;
     send(id: number, message: ChatOutgoing): void;
@@ -282,4 +316,13 @@ export const IPC = {
   contentConnectYouTube: 'content:connectYouTube',
   contentConnectInstagram: 'content:connectInstagram',
   contentDisconnect: 'content:disconnect',
+  focusView: 'focus:view',
+  focusStart: 'focus:start',
+  focusAct: 'focus:act',
+  focusJoin: 'focus:join',
+  focusDismissMeeting: 'focus:dismissMeeting',
+  focusSetIsland: 'focus:setIsland',
+  focusChanged: 'focus:changed',
+  islandHover: 'island:hover',
+  islandUpdate: 'island:update',
 } as const;

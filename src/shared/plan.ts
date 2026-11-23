@@ -51,11 +51,11 @@ export interface PlanBlock {
   end: number;
 }
 
-/** A to-do the plan can't fit (late, or no room in the next two weeks), or whose planned time has passed without it being ticked off. */
+/** A to-do the plan can't fit: late, or no room in the next two weeks. */
 export interface PlanRisk {
   taskId: string;
   title: string;
-  kind: 'late' | 'no-room' | 'time-used';
+  kind: 'late' | 'no-room';
   deadline: number | null;
   /** When its last block ends, if any part was planned. */
   plannedEnd: number | null;
@@ -80,6 +80,8 @@ export const CHUNKS: ReadonlyArray<{ value: number; label: string }> = [
   { value: 60, label: '1 hour' },
 ];
 export const MAX_PLAN_MINUTES = 40 * 60;
+/** The plan a to-do gets when Dan first schedules it (the To-do page) or says it needs more time (a focus check-in). */
+export const DEFAULT_TODO_PLAN: TodoPlan = { minutes: 60, priority: 'medium', hours: 'personal', deadline: null, hardDeadline: false, minChunk: 30 };
 /** How far ahead the plan looks, in days. */
 export const PLAN_DAYS = 14;
 

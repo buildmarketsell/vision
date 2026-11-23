@@ -1,0 +1,306 @@
+/*
+ * The island under the notch. Its black is the notch's own (hardware), so it doesn't follow VISION's themes; only the
+ * accent (primary buttons, progress) is Dan's. Animations: transform and opacity only, calmer under reduced motion.
+ */
+:root {
+  --island-black: #000;
+  --island-text: #fff;
+  --island-text-muted: rgba(255, 255, 255, 0.62);
+  --island-control: rgba(255, 255, 255, 0.13);
+  --island-control-hover: rgba(255, 255, 255, 0.21);
+  --island-control-pressed: rgba(255, 255, 255, 0.28);
+  --island-track: rgba(255, 255, 255, 0.2);
+  --island-meeting: #5aa9ff;
+  --island-radius: 14px;
+  --island-panel-radius: 22px;
+  --island-ear: 10px;
+  /* How far the island hangs below the menu bar under a notch. */
+  --island-drop: 26px;
+}
+
+html,
+body.island-page {
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: var(--font-ui, -apple-system, BlinkMacSystemFont, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+.island {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 340px;
+  transform: translateX(-50%);
+  color: var(--island-text);
+  animation: island-in var(--duration-base, 200ms) var(--ease, ease-out);
+  transform-origin: top center;
+}
+
+.island[data-notch='true'] {
+  /* As wide as the notch: it hangs below it and never reaches the menu bar's items beside it. */
+  width: 190px;
+}
+
+.island-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: var(--island-bar);
+  padding: 0 var(--space-4, 16px);
+  background: var(--island-black);
+  border-radius: 0 0 var(--island-radius) var(--island-radius);
+}
+
+/* Under a notch the top part hides behind the notch itself; the clock sits in the drop below the menu bar. */
+.island[data-notch='true'] .island-bar {
+  height: calc(var(--island-bar) + var(--island-drop));
+  padding: var(--island-bar) var(--space-3, 12px) 0;
+}
+
+/* Concave "ears" where the island meets the top of the screen, like the notch's own corners. */
+.island-bar::before,
+.island-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: var(--island-ear);
+  height: var(--island-ear);
+}
+
+.island-bar::before {
+  left: calc(-1 * var(--island-ear));
+  background: radial-gradient(circle at 0 100%, transparent calc(var(--island-ear) - 0.5px), var(--island-black) var(--island-ear));
+}
+
+.island-bar::after {
+  right: calc(-1 * var(--island-ear));
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--island-ear) - 0.5px), var(--island-black) var(--island-ear));
+}
+
+.island-wing {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.island-wing-right {
+  justify-content: flex-end;
+}
+
+.island-bar-title {
+  flex: 3;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 var(--space-2, 8px);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--island-text-muted);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-clock {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.island-clock[data-paused='true'] {
+  color: var(--island-text-muted);
+}
+
+.island-ring {
+  width: 18px;
+  height: 18px;
+  transform: rotate(-90deg);
+}
+
+.island-ring circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.island-ring-track {
+  stroke: var(--island-track);
+}
+
+.island-ring-fill {
+  stroke: var(--color-accent, #f26b3a);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.island-ring[data-paused='true'] .island-ring-fill {
+  stroke: var(--island-text-muted);
+}
+
+.island-ring[data-spinning='true'] {
+  animation: island-spin 2.4s linear infinite;
+}
+
+.island-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: var(--island-black);
+}
+
+.island-badge[data-tone='accent'] {
+  background: var(--color-accent, #f26b3a);
+  color: var(--color-on-accent, #fff);
+}
+
+.island-badge[data-tone='meeting'] {
+  background: var(--island-meeting);
+}
+
+/*
+ * The controls: a card just below the island, wider than it. The panel's transparent top padding bridges the gap, so
+ * moving the pointer down to the buttons doesn't count as leaving. Opening only moves transform and opacity.
+ */
+.island-panel {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 340px;
+  padding-top: var(--space-2, 8px);
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px) scale(0.96);
+  transform-origin: top center;
+  pointer-events: none;
+  transition:
+    opacity var(--duration-fast, 120ms) var(--ease, ease-out),
+    transform var(--duration-base, 200ms) var(--ease, ease-out);
+}
+
+.island[data-open='true'] .island-panel {
+  opacity: 1;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.island-card {
+  padding: var(--space-3, 12px) var(--space-4, 16px) var(--space-4, 16px);
+  background: var(--island-black);
+  border-radius: var(--island-panel-radius);
+}
+
+.island-check-in {
+  margin-top: var(--space-3, 12px);
+  padding-top: var(--space-3, 12px);
+  border-top: 1px solid var(--island-control);
+}
+
+.island-title {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-sub {
+  margin-top: 2px; /* Title and subtitle read as one block; off the 4 pt scale on purpose. */
+  font-size: 12px;
+  color: var(--island-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.island-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-3, 12px);
+}
+
+.island-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  height: 28px;
+  padding: 0 var(--space-3, 12px);
+  border: 0;
+  border-radius: 14px;
+  background: var(--island-control);
+  color: var(--island-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background var(--duration-fast, 120ms) var(--ease, ease-out), transform var(--duration-fast, 120ms) var(--ease, ease-out);
+}
+
+.island-button:hover {
+  background: var(--island-control-hover);
+}
+
+.island-button:active {
+  background: var(--island-control-pressed);
+  transform: scale(0.95);
+}
+
+.island-button:focus-visible {
+  outline: 2px solid var(--color-accent, #f26b3a);
+  outline-offset: 2px;
+}
+
+.island-button[data-primary='true'] {
+  background: var(--color-accent, #f26b3a);
+  color: var(--color-on-accent, #fff);
+}
+
+.island-button[data-primary='true']:hover {
+  background: var(--color-accent-hover, #e35a28);
+}
+
+@keyframes island-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.9);
+  }
+}
+
+@keyframes island-spin {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island {
+    animation-name: island-fade;
+  }
+
+  .island-panel,
+  .island[data-open='true'] .island-panel {
+    transform: translateX(-50%);
+  }
+
+  .island-ring-fill {
+    transition: none;
+  }
+
+  .island-ring[data-spinning='true'] {
+    animation: none;
+  }
+
+  @keyframes island-fade {
+    from {
+      opacity: 0;
+    }
+  }
+}

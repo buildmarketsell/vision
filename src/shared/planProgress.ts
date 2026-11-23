@@ -1,24 +1,26 @@
 /**
  * How much of each to-do is still to plan. Time VISION planned that has already passed counts as worked, so a 3-hour
  * task done in 1-hour pieces shrinks after each piece instead of being planned in full again. A to-do whose planned
- * time has all passed but isn't ticked off is flagged, so Dan marks it done or gives it more time.
+ * time has all passed but isn't ticked off rolls over: it gets one more piece at the next free moment, again and again
+ * until Dan ticks it off (Dan, 2026-11-23).
  */
 import type { PlanTask } from './autoSchedule';
-import type { PlanBlock, PlanRisk } from './plan';
+import { DEFAULT_TODO_PLAN, MAX_PLAN_MINUTES, type PlanBlock, type TodoPlan } from './plan';
 import type { TodoItem } from './todos';
 
 const MINUTE_MS = 60_000;
 /** Past blocks are kept this long: the week page shows them as a record. */
 const KEEP_PAST_MS = 30 * 24 * 60 * MINUTE_MS;
+/** The extra piece for a to-do that is never split (its smallest piece is the whole task). */
+const ROLLOVER_UNSPLIT_MINUTES = 30;
 
 export interface Progress {
   /** Blocks that have ended, for to-dos that still have a plan. */
   past: PlanBlock[];
   /** Blocks under way right now: they stay where they are. */
   started: PlanBlock[];
-  /** What's left to plan, per open to-do. */
+  /** What's left to plan, per open to-do (a rolled-over one asks for one more piece). */
   tasks: PlanTask[];
-  timeUsed: PlanRisk[];
 }
 
 const blockKey = (block: PlanBlock) => `${block.taskId}|${block.start}`;
@@ -36,13 +38,24 @@ export function planProgress(todos: TodoItem[], previous: PlanBlock[], past: Pla
   const started = enabled ? previous.filter((block) => block.start <= now && block.end > now && openIds.has(block.taskId)) : [];
 
   const tasks: PlanTask[] = [];
-  const timeUsed: PlanRisk[] = [];
   for (const todo of open) {
     if (!todo.plan) continue;
     const worked = minutesIn(keptPast, todo.id);
-    const left = Math.round(todo.plan.minutes - worked - minutesIn(started, todo.id));
-    if (left > 0) tasks.push({ ...todo.plan, minutes: left, id: todo.id, title: todo.text, createdAt: todo.createdAt });
-    else if (worked >= todo.plan.minutes) timeUsed.push({ taskId: todo.id, title: todo.text, kind: 'time-used', deadline: todo.plan.deadline, plannedEnd: null, unplannedMinutes: 0 });
+    const underWay = minutesIn(started, todo.id);
+    const left = Math.round(todo.plan.minutes - worked - underWay);
+    const rollover = worked >= todo.plan.minutes && underWay === 0 ? todo.plan.minChunk || ROLLOVER_UNSPLIT_MINUTES : 0;
+    const minutes = left > 0 ? left : rollover;
+    if (minutes > 0) tasks.push({ ...todo.plan, minutes, id: todo.id, title: todo.text, createdAt: todo.createdAt });
   }
-  return { past: keptPast, started, tasks, timeUsed };
+  return { past: keptPast, started, tasks };
+}
+
+/**
+ * The plan for a to-do Dan says needs `minutes` more (a focus check-in's "Not yet"): exactly that much is left to plan
+ * from now on. Time its blocks already took (including the passed part of one under way) stays counted as worked.
+ */
+export function planForMore(todo: TodoItem, blocks: PlanBlock[], now: number, minutes: number): TodoPlan {
+  const plan = todo.plan ?? DEFAULT_TODO_PLAN;
+  const worked = blocks.filter((block) => block.taskId === todo.id && block.start < now).reduce((sum, block) => sum + (Math.min(block.end, now) - block.start) / MINUTE_MS, 0);
+  return { ...plan, minutes: Math.min(MAX_PLAN_MINUTES, Math.round(worked + minutes)) };
 }

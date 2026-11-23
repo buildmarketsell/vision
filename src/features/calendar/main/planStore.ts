@@ -5,6 +5,7 @@ import type { CalendarEvent } from '../../../shared/calendar';
 import { IPC } from '../../../shared/ipc';
 import { normalizePlanSettings, PLAN_DAYS, type PlanBlock, type PlanRisk, type PlanState } from '../../../shared/plan';
 import { planProgress } from '../../../shared/planProgress';
+import { calendarBridge } from '../../../main/calendarBridge';
 import { logError } from '../../../main/log';
 import { createDocumentStore } from '../../../main/documentStore';
 import { todoList } from '../../../main/todoList';
@@ -115,7 +116,7 @@ async function planOnce(): Promise<void> {
     hours: byId.get(block.taskId)?.plan?.hours ?? block.hours ?? 'personal',
   });
   const coming = [...progress.started, ...result.blocks].map(titled).sort((a, b) => a.start - b.start);
-  const risks: PlanRisk[] = settings.enabled ? [...result.risks, ...progress.timeUsed] : [];
+  const risks: PlanRisk[] = settings.enabled ? result.risks : [];
 
   let error: string | undefined;
   try {
@@ -152,6 +153,7 @@ function replanSoon(): void {
 const currentState = (): PlanState => state ?? { settings: loadSaved().settings, blocks: [...loadSaved().past, ...loadSaved().blocks], risks: [], plannedAt: null };
 
 export function registerPlan(): void {
+  calendarBridge.providePlanBlocks(() => currentState().blocks);
   ipcMain.handle(IPC.planState, () => {
     if (!state) void replan();
     return currentState();

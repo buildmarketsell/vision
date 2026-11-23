@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { useAppTheme } from '../../../renderer/core/appTheme';
+import { followFocus, useFocusStore } from '../../../renderer/core/focus';
 import { useTerminalTheme, type TerminalAppearance } from '../../../renderer/core/terminalTheme';
 import { THEMES, type VisionTheme } from '../../../renderer/themes';
 import { ColorSettings } from './ColorSettings';
@@ -37,6 +39,24 @@ function ThemePicker() {
   );
 }
 
+/** The island under the notch; the menu bar item stays either way. */
+function FocusSettings() {
+  useEffect(followFocus, []);
+  const island = useFocusStore((store) => store.view?.island ?? true);
+  return (
+    <div className="flex items-center gap-2 px-3 py-1">
+      <span className="flex-1">Island under the notch</span>
+      <div className="segmented" role="radiogroup" aria-label="Island under the notch">
+        {[true, false].map((on) => (
+          <button key={String(on)} role="radio" aria-checked={island === on} data-active={island === on} onClick={() => void window.vision.focus.setIsland(on)}>
+            {on ? 'On' : 'Off'}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Settings in the sidebar. New settings and app features get their own section here. */
 export function SettingsView() {
   const { appearance, setAppearance } = useTerminalTheme();
@@ -57,6 +77,8 @@ export function SettingsView() {
           ))}
         </div>
       </div>
+      <div className="section-label">Focus</div>
+      <FocusSettings />
     </div>
   );
 }

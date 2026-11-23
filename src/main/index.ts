@@ -1,11 +1,11 @@
-import { app, BrowserWindow } from 'electron';
+import { app } from 'electron';
 import { APP_NAME } from '../shared/app';
 import { registerAppHandlers } from './appHandlers';
 import { buildAppMenu } from './menu';
 import { mainFeatures } from './registry';
 import { resolveShellPath } from './shellEnv';
 import { flushAppState, loadAppState } from './stateStore';
-import { createWindow, restoreSession, setQuitting } from './windows';
+import { allWindowContexts, createWindow, restoreSession, setQuitting } from './windows';
 import { registerFsHandlers } from './workspace/fsHandlers';
 import { registerImageProtocol, registerImageScheme } from './workspace/imageProtocol';
 import { registerPreviewProtocol } from './workspace/previewProtocol';
@@ -36,7 +36,8 @@ app.whenReady().then(() => {
   restoreSession();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow(null);
+    // Counts VISION's own windows only: the focus island is a window too, but not one Dan can use.
+    if (allWindowContexts().length === 0) createWindow(null);
   });
 });
 
