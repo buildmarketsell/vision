@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actOnFocus, clockLabel, focusedMs, NO_FOCUS, startFocus, tickFocus, type FocusState } from '../../src/shared/focus';
+import { actOnFocus, clockLabel, focusedMs, NO_FOCUS, normalizeFocusSaved, startFocus, tickFocus, type FocusState } from '../../src/shared/focus';
 
 const MIN = 60_000;
 const T0 = 1_000_000_000_000;
@@ -90,5 +90,18 @@ describe('clock label', () => {
     expect(clockLabel(18 * MIN + 42_000)).toBe('18:42');
     expect(clockLabel(59_999)).toBe('1:00');
     expect(clockLabel(65 * MIN + 3_000)).toBe('1:05:03');
+  });
+});
+
+describe('saved focus', () => {
+  it('reads back what was saved', () => {
+    const state = countdown();
+    const record = actOnFocus(state, { kind: 'stop' }, T0 + MIN).finished;
+    expect(normalizeFocusSaved(JSON.parse(JSON.stringify({ state, log: [record], island: false })))).toEqual({ state, log: [record], island: false });
+  });
+
+  it('starts clean from a damaged file, with the island on', () => {
+    expect(normalizeFocusSaved({ state: { focus: { id: 3 } }, log: [{ bad: true }], island: 'yes' })).toEqual({ state: NO_FOCUS, log: [], island: true });
+    expect(normalizeFocusSaved(null)).toEqual({ state: NO_FOCUS, log: [], island: true });
   });
 });

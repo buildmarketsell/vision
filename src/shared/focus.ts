@@ -153,3 +153,46 @@ export function clockLabel(ms: number): string {
   const seconds = String(total % 60).padStart(2, '0');
   return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}` : `${minutes}:${seconds}`;
 }
+
+/** What's saved in userData/focus.json: the focus (so it survives a restart), the log for stats, and whether the island is on. */
+export interface FocusSaved {
+  state: FocusState;
+  log: FocusRecord[];
+  island: boolean;
+}
+
+/** Finished focuses kept for the stats. */
+export const MAX_FOCUS_LOG = 5_000;
+
+type Obj = Record<string, unknown>;
+const isObj = (value: unknown): value is Obj => typeof value === 'object' && value !== null && !Array.isArray(value);
+const isTime = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+const isText = (value: unknown): value is string => typeof value === 'string' && value.length <= MAX_FOCUS_TITLE;
+const OUTCOMES: FocusOutcome[] = ['done', 'not-yet', 'stopped', 'ended'];
+
+function toFocus(raw: unknown): Focus | null {
+  if (!isObj(raw)) return null;
+  const { id, todoId, title, lengthMs, startedAt, runningSince, bankedMs } = raw;
+  if (!isText(id) || !(todoId === null || isText(todoId)) || !isText(title) || !(lengthMs === null || isTime(lengthMs))) return null;
+  if (!isTime(startedAt) || !(runningSince === null || isTime(runningSince)) || !isTime(bankedMs)) return null;
+  return { id, todoId, title, lengthMs, startedAt, runningSince, bankedMs };
+}
+
+function toRecord(raw: unknown): FocusRecord[] {
+  if (!isObj(raw)) return [];
+  const { id, todoId, title, countdown, startedAt, endedAt, focusedMs: focused, outcome } = raw;
+  if (!isText(id) || !(todoId === null || isText(todoId)) || !isText(title) || typeof countdown !== 'boolean') return [];
+  if (!isTime(startedAt) || !isTime(endedAt) || !isTime(focused) || !OUTCOMES.includes(outcome as FocusOutcome)) return [];
+  return [{ id, todoId, title, countdown, startedAt, endedAt, focusedMs: focused, outcome: outcome as FocusOutcome }];
+}
+
+/** The saved file as VISION can use it: anything malformed is dropped, never trusted. */
+export function normalizeFocusSaved(raw: unknown): FocusSaved {
+  const value = isObj(raw) ? raw : {};
+  const state = isObj(value['state']) ? value['state'] : {};
+  return {
+    state: { focus: toFocus(state['focus']), checkIn: toFocus(state['checkIn']) },
+    log: (Array.isArray(value['log']) ? value['log'].flatMap(toRecord) : []).slice(-MAX_FOCUS_LOG),
+    island: typeof value['island'] === 'boolean' ? value['island'] : true,
+  };
+}
