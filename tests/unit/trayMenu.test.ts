@@ -41,9 +41,16 @@ describe('menu bar menu', () => {
     expect(labels(trayMenu({ kind: 'check-in', title: 'Focus', hasTodo: false }))).toEqual(["Time's up: Focus", 'Finish', '+5 min', '—', 'Open VISION']);
   });
 
+  it('never changes while only the clocks move, so an open menu stays open', () => {
+    const at = (clock: string): Glance => ({ kind: 'meeting', id: 'm', title: 'Call', clock, joinUrl: null, focus: { clock, paused: false } });
+    expect(trayMenu(at('4:12'))).toEqual(trayMenu(at('4:11')));
+    const focus = (clock: string): Glance => ({ kind: 'focus', title: 'VSL', clock, progress: 0.5, paused: false, hasTodo: true });
+    expect(trayMenu(focus('10:00'))).toEqual(trayMenu(focus('9:59')));
+  });
+
   it('puts the meeting first, then the running focus', () => {
     const items = trayMenu({ kind: 'meeting', id: 'm', title: 'Call with Kilo', clock: '4:12', joinUrl: 'https://meet.google.com/x', focus: { clock: '10:00', paused: false } });
-    expect(labels(items)).toEqual(['Call with Kilo in 4:12', 'Join', 'Hide', '—', 'Focus 10:00', 'Pause', 'Stop', '—', 'Open VISION']);
-    expect(labels(trayMenu({ kind: 'meeting', id: 'm', title: 'Call', clock: 'Now', joinUrl: null, focus: null }))).toEqual(['Call now', 'Hide', '—', 'Open VISION']);
+    expect(labels(items)).toEqual(['Call with Kilo', 'Join', 'Hide', '—', 'Focus running', 'Pause', 'Stop', '—', 'Open VISION']);
+    expect(labels(trayMenu({ kind: 'meeting', id: 'm', title: 'Call', clock: 'Now', joinUrl: null, focus: null }))).toEqual(['Call (now)', 'Hide', '—', 'Open VISION']);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actOnFocus, clockLabel, focusedMs, NO_FOCUS, normalizeFocusSaved, startFocus, tickFocus, type FocusState } from '../../src/shared/focus';
+import { actOnFocus, clockLabel, focusedMs, NO_FOCUS, normalizeFocusSaved, startFocus, tickFocus, toFocusAction, toFocusMinutes, type FocusState } from '../../src/shared/focus';
 
 const MIN = 60_000;
 const T0 = 1_000_000_000_000;
@@ -103,5 +103,26 @@ describe('saved focus', () => {
   it('starts clean from a damaged file, with the island on', () => {
     expect(normalizeFocusSaved({ state: { focus: { id: 3 } }, log: [{ bad: true }], island: 'yes' })).toEqual({ state: NO_FOCUS, log: [], island: true });
     expect(normalizeFocusSaved(null)).toEqual({ state: NO_FOCUS, log: [], island: true });
+  });
+});
+
+describe('actions from a window', () => {
+  it('accepts the known actions', () => {
+    expect(toFocusAction({ kind: 'pause' })).toEqual({ kind: 'pause' });
+    expect(toFocusAction({ kind: 'not-yet', minutes: 60 })).toEqual({ kind: 'not-yet', minutes: 60 });
+  });
+
+  it('refuses anything else', () => {
+    expect(toFocusAction({ kind: 'explode' })).toBeNull();
+    expect(toFocusAction({ kind: 'not-yet', minutes: 0 })).toBeNull();
+    expect(toFocusAction({ kind: 'not-yet', minutes: 1.5 })).toBeNull();
+    expect(toFocusAction({ kind: 'not-yet', minutes: 100_000 })).toBeNull();
+    expect(toFocusAction('pause')).toBeNull();
+  });
+
+  it('accepts focus lengths from 1 minute to 8 hours, or null for a stopwatch', () => {
+    expect(toFocusMinutes(25)).toBe(25);
+    expect(toFocusMinutes(null)).toBeNull();
+    for (const bad of [0, -5, 2.5, 481, '25', undefined]) expect(toFocusMinutes(bad)).toBe(false);
   });
 });

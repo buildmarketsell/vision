@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import { CALENDAR_DAYS_AHEAD, toGoogleEvent, toNewEventInput, type CalendarAccount, type CalendarEvent, type CalendarInfo, type CalendarState } from '../../../shared/calendar';
 import { IPC, type Result } from '../../../shared/ipc';
+import { calendarBridge } from '../../../main/calendarBridge';
 import { logError } from '../../../main/log';
 import { KeychainUnavailableError } from '../../../main/secrets';
 import { loadConfig, saveConfig } from './calendarConfig';
@@ -133,6 +134,10 @@ export function forgetCachedWeeks(): void {
 const asText = (value: unknown, max = 500) => (typeof value === 'string' && value.trim().length > 0 && value.length <= max ? value.trim() : null);
 
 export function registerCalendar(): void {
+  calendarBridge.provideEvents(async () => {
+    const state = await currentState(false);
+    return state.kind === 'ready' ? state.events : [];
+  });
   ipcMain.handle(IPC.calendarState, (_event, force: unknown) => currentState(force === true));
   ipcMain.handle(IPC.calendarRange, (_event, from: unknown, to: unknown, force: unknown) => rangeState(from, to, force === true));
 

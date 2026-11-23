@@ -97,6 +97,17 @@ const api: VisionApi = {
     connectInstagram: (token) => ipcRenderer.invoke(IPC.contentConnectInstagram, token),
     disconnect: (platform) => ipcRenderer.invoke(IPC.contentDisconnect, platform),
   },
+  focus: {
+    view: () => ipcRenderer.invoke(IPC.focusView),
+    start: (todoId, minutes) => ipcRenderer.invoke(IPC.focusStart, todoId, minutes),
+    act: (action) => ipcRenderer.invoke(IPC.focusAct, action),
+    join: () => ipcRenderer.send(IPC.focusJoin),
+    dismissMeeting: () => ipcRenderer.send(IPC.focusDismissMeeting),
+    setIsland: (on) => ipcRenderer.invoke(IPC.focusSetIsland, on),
+    onChange: (callback) => subscribe(IPC.focusChanged, callback),
+    islandHover: (over) => ipcRenderer.send(IPC.islandHover, over),
+    onIsland: (callback) => subscribe(IPC.islandUpdate, callback),
+  },
   chat: {
     start: (options) => ipcRenderer.invoke(IPC.chatStart, options),
     send: (id, message) => ipcRenderer.send(IPC.chatSend, id, message),

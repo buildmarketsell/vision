@@ -67,11 +67,12 @@ export function trayMenu(glance: Glance): TrayItem[] {
       ];
     case 'meeting':
       return [
-        { label: glance.clock === 'Now' ? `${glance.title} now` : `${glance.title} in ${glance.clock}` },
+        // No clocks in the menu: it would change every second, and a rebuilt menu closes under the pointer.
+        { label: glance.clock === 'Now' ? `${glance.title} (now)` : glance.title },
         ...(glance.joinUrl ? [{ label: 'Join', run: { type: 'join' } as const, bold: true }] : []),
         { label: 'Hide', run: { type: 'dismiss' } },
         SEPARATOR,
-        ...(glance.focus ? [{ label: `Focus ${glance.focus.clock}` }, glance.focus.paused ? act('Resume', { kind: 'resume' }) : act('Pause', { kind: 'pause' }), act('Stop', { kind: 'stop' }), SEPARATOR] : []),
+        ...(glance.focus ? [{ label: glance.focus.paused ? 'Focus paused' : 'Focus running' }, glance.focus.paused ? act('Resume', { kind: 'resume' }) : act('Pause', { kind: 'pause' }), act('Stop', { kind: 'stop' }), SEPARATOR] : []),
         OPEN,
       ];
   }

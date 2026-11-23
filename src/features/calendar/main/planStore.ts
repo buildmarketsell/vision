@@ -5,6 +5,7 @@ import type { CalendarEvent } from '../../../shared/calendar';
 import { IPC } from '../../../shared/ipc';
 import { normalizePlanSettings, PLAN_DAYS, type PlanBlock, type PlanRisk, type PlanState } from '../../../shared/plan';
 import { planProgress } from '../../../shared/planProgress';
+import { calendarBridge } from '../../../main/calendarBridge';
 import { logError } from '../../../main/log';
 import { createDocumentStore } from '../../../main/documentStore';
 import { todoList } from '../../../main/todoList';
@@ -152,6 +153,7 @@ function replanSoon(): void {
 const currentState = (): PlanState => state ?? { settings: loadSaved().settings, blocks: [...loadSaved().past, ...loadSaved().blocks], risks: [], plannedAt: null };
 
 export function registerPlan(): void {
+  calendarBridge.providePlanBlocks(() => currentState().blocks);
   ipcMain.handle(IPC.planState, () => {
     if (!state) void replan();
     return currentState();

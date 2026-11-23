@@ -196,3 +196,23 @@ export function normalizeFocusSaved(raw: unknown): FocusSaved {
     island: typeof value['island'] === 'boolean' ? value['island'] : true,
   };
 }
+
+const SIMPLE_ACTIONS = ['pause', 'resume', 'add', 'stop', 'done'] as const;
+const isWholeIn = (value: unknown, min: number, max: number): value is number => typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
+
+/** An action sent by a window, or null if it isn't one. */
+export function toFocusAction(raw: unknown): FocusAction | null {
+  if (!isObj(raw)) return null;
+  const kind = raw['kind'];
+  const simple = SIMPLE_ACTIONS.find((name) => name === kind);
+  if (simple) return { kind: simple };
+  // Up to 40 hours, the most a plan can hold.
+  if (kind === 'not-yet' && isWholeIn(raw['minutes'], 5, 40 * 60)) return { kind, minutes: raw['minutes'] };
+  return null;
+}
+
+/** A focus length sent by a window: whole minutes, null for a stopwatch, or false if it isn't valid. */
+export function toFocusMinutes(raw: unknown): number | null | false {
+  if (raw === null) return null;
+  return isWholeIn(raw, 1, MAX_FOCUS_MINUTES) ? raw : false;
+}
