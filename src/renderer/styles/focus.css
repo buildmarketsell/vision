@@ -1,0 +1,136 @@
+/* The focus picker (popover) and the live chip on the to-do being focused on. */
+.focus-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.focus-picker-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-text-muted);
+}
+
+.focus-picker-title {
+  overflow: hidden;
+  color: var(--color-text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-picker-lengths {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.focus-picker-length {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-radius: 10px;
+  background: var(--color-row-hover);
+  color: var(--color-text);
+  transition: background var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.focus-picker-length:hover {
+  background: var(--color-row-pressed);
+}
+
+.focus-picker-length:active {
+  transform: scale(0.96);
+}
+
+.focus-picker-length[data-default='true'] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.focus-picker-length:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.focus-picker-number {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.focus-picker-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.focus-picker-custom {
+  flex: 1;
+  min-width: 0;
+}
+
+.focus-picker-stopwatch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-2);
+  margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-2));
+  border-radius: 6px;
+  color: var(--color-text-muted);
+}
+
+.focus-picker-stopwatch:hover {
+  background: var(--color-row-hover);
+  color: var(--color-text);
+}
+
+.focus-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-chip[data-paused='true'] {
+  background: var(--color-row-hover);
+  color: var(--color-text-muted);
+}
+
+.focus-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: focus-chip-pulse 2s var(--ease) infinite;
+}
+
+.focus-chip[data-paused='true'] .focus-chip-dot {
+  animation: none;
+}
+
+@keyframes focus-chip-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-chip-dot {
+    animation: none;
+  }
+}

@@ -5,6 +5,7 @@ import { editorFeature } from './editor';
 import { explorerFeature } from './explorer';
 import { calendarFeature } from './calendar';
 import { contentFeature } from './content';
+import { focusFeature } from './focus';
 import { inboxFeature } from './inbox';
 import { settingsFeature } from './settings';
 import { todoFeature } from './todo';
@@ -16,4 +17,4 @@ import { notionFeature } from './notion';
  * Order matters: the menu and the Workspace tabs (Files, Claude, Calendar) follow this order (Workspace first, Dan's order 2026-11-19), and the first file handler
  * that matches a file wins, so the editor (matches everything) stays last.
  */
-export const features: Feature[] = [explorerFeature, todoFeature, boardFeature, notionFeature, claudeTerminalFeature, calendarFeature, contentFeature, inboxFeature, settingsFeature, editorFeature];
+export const features: Feature[] = [explorerFeature, todoFeature, boardFeature, notionFeature, claudeTerminalFeature, calendarFeature, contentFeature, inboxFeature, focusFeature, settingsFeature, editorFeature];

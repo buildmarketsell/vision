@@ -2,6 +2,7 @@ import { useState, type DragEvent } from 'react';
 import { Plus } from 'lucide-react';
 import { TODO_COLUMNS, type TodoItem, type TodoStatus } from '../../../shared/todos';
 import { ContextMenu } from '../../../renderer/components/ContextMenu';
+import { FocusChip, useFocusPicker } from '../../../renderer/components/FocusPicker';
 import { AddTodo, openMenuAt, StatusTag, TodoText, todoMenu, type MenuState } from './TodoParts';
 import type { RunTodo } from './todoStore';
 import type { PlanState } from '../../../shared/plan';
@@ -36,6 +37,7 @@ function Card({ todo, run, onMenu, editing, setEditing, plan, onSchedule }: {
       onContextMenu={(event) => openMenuAt(event, todo, onMenu)}
     >
       <TodoText todo={todo} editing={editing} onStop={() => setEditing(null)} run={run} />
+      <FocusChip todoId={todo.id} />
       <PlanChips todo={todo} plan={plan} onEdit={(x, y) => onSchedule(todo, x, y)} />
     </li>
   );
@@ -92,6 +94,7 @@ export function TodoBoard({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
   const [editing, setEditing] = useState<string | null>(null);
   const plan = usePlan();
   const planEditor = usePlanEditor(run);
+  const focusPicker = useFocusPicker();
   return (
     <div className="todo-board page-wide">
       {TODO_COLUMNS.map((column) => (
@@ -108,8 +111,9 @@ export function TodoBoard({ todos, run }: { todos: TodoItem[]; run: RunTodo }) {
           onSchedule={planEditor.open}
         />
       ))}
-      {menu && <ContextMenu x={menu.x} y={menu.y} items={todoMenu(menu.todo, run, () => setEditing(menu.todo.id), () => planEditor.open(menu.todo, menu.x, menu.y))} onClose={() => setMenu(null)} />}
+      {menu && <ContextMenu x={menu.x} y={menu.y} items={todoMenu(menu.todo, run, () => setEditing(menu.todo.id), () => planEditor.open(menu.todo, menu.x, menu.y), () => focusPicker.open(menu.todo.id, menu.todo.text, menu.x, menu.y))} onClose={() => setMenu(null)} />}
       {planEditor.editor}
+      {focusPicker.picker}
     </div>
   );
 }
