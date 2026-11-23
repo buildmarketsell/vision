@@ -8,13 +8,16 @@ const MINUTE_MS = 60_000;
 export const HEADS_UP_BEFORE_MS = 5 * MINUTE_MS;
 export const HEADS_UP_AFTER_MS = 10 * MINUTE_MS;
 
-/** A timed event that takes time: not all-day, not marked free, not one of VISION's own blocks. */
-export const isMeeting = (event: CalendarEvent) => !event.allDay && !event.free && !event.taskId;
+/** A timed event that takes time and Dan didn't decline: not all-day, not marked free, not one of VISION's own blocks. */
+export const isMeeting = (event: CalendarEvent) => !event.allDay && !event.free && !event.taskId && !event.declined;
 
-/** The meeting in heads-up at `now` (the one that starts first), unless Dan hid it. */
+/** One key per meeting, the same in every calendar it shows up in (an invite to two of Dan's accounts is one meeting). */
+export const meetingKey = (event: CalendarEvent) => `${event.start}|${event.title}`;
+
+/** The meeting in heads-up at `now` (the one that starts first), unless Dan hid it (by `meetingKey`). */
 export function headsUpMeeting(events: CalendarEvent[], now: number, dismissed: ReadonlySet<string>): CalendarEvent | null {
   const inHeadsUp = (event: CalendarEvent) => now >= event.start - HEADS_UP_BEFORE_MS && now < Math.min(event.start + HEADS_UP_AFTER_MS, event.end);
-  return events.filter((event) => isMeeting(event) && !dismissed.has(event.id) && inHeadsUp(event)).sort((a, b) => a.start - b.start)[0] ?? null;
+  return events.filter((event) => isMeeting(event) && !dismissed.has(meetingKey(event)) && inHeadsUp(event)).sort((a, b) => a.start - b.start)[0] ?? null;
 }
 
 const MEETING_HOSTS = ['meet.google.com', 'zoom.us', 'teams.microsoft.com', 'teams.live.com'];
@@ -36,6 +39,12 @@ export function safeJoinLink(raw: unknown): string | null {
 type Obj = Record<string, unknown>;
 const isObj = (value: unknown): value is Obj => typeof value === 'object' && value !== null && !Array.isArray(value);
 const LINK = /https:\/\/[^\s"'<>()]+/g;
+
+/** Dan answered No to this Google Calendar event (his own entry in the attendees). */
+export function selfDeclined(entry: Obj): boolean {
+  const attendees = Array.isArray(entry['attendees']) ? entry['attendees'] : [];
+  return attendees.some((attendee) => isObj(attendee) && attendee['self'] === true && attendee['responseStatus'] === 'declined');
+}
 
 /** The join link of a Google Calendar event: Meet's own link, a video entry in its conference data, else a meeting address in its location or description. */
 export function joinLinkFrom(entry: Obj): string | null {

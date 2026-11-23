@@ -94,9 +94,9 @@
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1);
   height: 20px;
-  padding: 0 8px;
+  padding: 0 var(--space-2);
   border-radius: 10px;
   background: var(--color-accent-soft);
   color: var(--color-accent);

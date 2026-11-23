@@ -13,9 +13,15 @@ let listening = false;
 export function followFocus(): void {
   if (listening) return;
   listening = true;
-  const set = (view: FocusView) => useFocusStore.setState({ view });
-  window.vision.focus.view().then(set, () => undefined);
-  window.vision.focus.onChange(set);
+  // Listen first: a change that arrives while the first answer is on its way is newer, so that answer is then dropped.
+  let changed = false;
+  window.vision.focus.onChange((view) => {
+    changed = true;
+    useFocusStore.setState({ view });
+  });
+  window.vision.focus.view().then((view) => {
+    if (!changed) useFocusStore.setState({ view });
+  }, () => undefined);
 }
 
 /** Starts a focus; `minutes` null = stopwatch. */

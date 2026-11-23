@@ -1,5 +1,5 @@
 import type { CalendarEvent, CalendarInfo, GoogleEventBody } from '../../../shared/calendar';
-import { joinLinkFrom } from '../../../shared/meetings';
+import { joinLinkFrom, selfDeclined } from '../../../shared/meetings';
 import { GoogleError, googleEndpoints, SignInExpiredError } from './googleAuth';
 
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -119,6 +119,7 @@ export function toCalendarEvent(entry: Obj, calendar: CalendarInfo): CalendarEve
   return {
     ...(taskId ? { taskId } : {}),
     ...(joinUrl ? { joinUrl } : {}),
+    ...(selfDeclined(entry) ? { declined: true } : {}),
     ...(entry['transparency'] === 'transparent' ? { free: true } : {}),
     id: `${calendar.key}|${id}`,
     calendarKey: calendar.key,

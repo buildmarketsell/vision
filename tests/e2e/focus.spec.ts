@@ -66,7 +66,17 @@ test('focus: start on a to-do, see it in progress and in the island, then answer
     await expect(reel.getByRole('button', { name: 'Schedule of "Edit the reel"' })).toContainText('1h');
     await expect(island.getByRole('status')).toHaveCount(0);
 
-    // The log for the stats has both focuses.
+    // A check-in can be closed with Stop, leaving the to-do as it is.
+    await reel.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Focus…' }).click();
+    await picker.getByRole('textbox', { name: 'Other length, in minutes' }).fill('1');
+    await picker.getByRole('textbox', { name: 'Other length, in minutes' }).press('Enter');
+    await expect(island.getByRole('button', { name: 'Not yet' })).toBeVisible({ timeout: 10_000 });
+    await island.getByRole('button', { name: 'Stop' }).click();
+    await expect(island.getByRole('status')).toHaveCount(0);
+    await expect(todos.getByRole('list', { name: 'To-dos' }).getByRole('listitem')).toHaveText([/Edit the reel/]);
+
+    // Nothing left running.
     const view = await page.evaluate(() => window.vision.focus.view());
     expect(view.glance).toEqual({ kind: 'idle' });
   } finally {

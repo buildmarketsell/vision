@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CalendarEvent } from '../../src/shared/calendar';
 import { glance } from '../../src/shared/glance';
 import { NO_FOCUS, startFocus, tickFocus, actOnFocus } from '../../src/shared/focus';
-import { headsUpMeeting, joinLinkFrom, safeJoinLink } from '../../src/shared/meetings';
+import { headsUpMeeting, joinLinkFrom, meetingKey, selfDeclined, safeJoinLink } from '../../src/shared/meetings';
 
 const MIN = 60_000;
 const T0 = 1_000_000_000_000;
@@ -25,11 +25,30 @@ describe('heads-up', () => {
 
   it('skips all-day events, events marked free, VISION’s own blocks and dismissed meetings', () => {
     const events = [event('holiday', T0, { allDay: true }), event('free', T0, { free: true }), event('block', T0, { taskId: 'vsl' }), event('hidden', T0)];
-    expect(headsUpMeeting(events, T0 - MIN, new Set(['hidden']))).toBeNull();
+    expect(headsUpMeeting(events, T0 - MIN, new Set([`${T0}|hidden`]))).toBeNull();
+  });
+
+  it('skips meetings Dan declined', () => {
+    expect(headsUpMeeting([event('nope', T0, { declined: true })], T0 - MIN, new Set())).toBeNull();
+  });
+
+  it('treats the same meeting in two calendars as one, so Hide hides both', () => {
+    const work = event('w', T0, { title: 'Call with Kilo', calendarKey: 'work|primary' });
+    const home = event('h', T0, { title: 'Call with Kilo', calendarKey: 'home|primary' });
+    expect(meetingKey(work)).toBe(meetingKey(home));
+    expect(headsUpMeeting([work, home], T0 - MIN, new Set([meetingKey(work)]))).toBeNull();
   });
 
   it('picks the meeting that starts first', () => {
     expect(headsUpMeeting([event('later', T0 + 2 * MIN), event('first', T0)], T0 - MIN, new Set())?.id).toBe('first');
+  });
+});
+
+describe('declined', () => {
+  it('reads Dan’s own answer from the attendees', () => {
+    expect(selfDeclined({ attendees: [{ email: 'a@x.com', responseStatus: 'declined' }, { self: true, responseStatus: 'declined' }] })).toBe(true);
+    expect(selfDeclined({ attendees: [{ self: true, responseStatus: 'accepted' }] })).toBe(false);
+    expect(selfDeclined({})).toBe(false);
   });
 });
 
@@ -86,7 +105,12 @@ describe('glance', () => {
     expect(glance(running, call, T0 + 5 * MIN + 48_000)).toMatchObject({ kind: 'meeting', title: 'Call with Kilo', clock: '4:12', joinUrl: 'https://meet.google.com/abc', focus: { clock: '19:12' } });
   });
 
+  it('keeps a pending check-in reachable during a meeting', () => {
+    const atCheckIn = tickFocus(running, T0 + 25 * MIN).state;
+    expect(glance(atCheckIn, event('Call', T0 + 28 * MIN), T0 + 25 * MIN)).toMatchObject({ kind: 'meeting', checkIn: { title: 'Write VSL', hasTodo: true } });
+  });
+
   it('says Now once the meeting has started', () => {
-    expect(glance(NO_FOCUS, event('Call', T0), T0 + MIN)).toMatchObject({ kind: 'meeting', clock: 'Now', joinUrl: null, focus: null });
+    expect(glance(NO_FOCUS, event('Call', T0), T0 + MIN)).toMatchObject({ kind: 'meeting', clock: 'Now', joinUrl: null, focus: null, checkIn: null });
   });
 });

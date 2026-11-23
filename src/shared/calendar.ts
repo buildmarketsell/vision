@@ -29,6 +29,8 @@ export interface CalendarEvent {
   free?: boolean;
   /** Its Google Meet, Zoom or Teams address (checked by `safeJoinLink`). */
   joinUrl?: string;
+  /** Dan declined it: no heads-up. */
+  declined?: boolean;
 }
 
 export interface CalendarAccount {

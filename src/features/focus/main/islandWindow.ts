@@ -1,28 +1,19 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { join } from 'node:path';
 import { IPC, type FocusView, type IslandUpdate } from '../../../shared/ipc';
+import { islandPlacement } from './islandPlacement';
 
 /** Room for the island at its widest (hovered, with buttons); everything outside the island is see-through and lets clicks through. */
 const WIDTH = 460;
 const HEIGHT = 200;
-/** Menu bars on MacBooks with a notch are taller (about 37 pt) than on other screens (24–25 pt). */
-const NOTCH_MENU_BAR = 30;
 const HEADLESS = process.env['VISION_HEADLESS'] === '1';
 
 let island: BrowserWindow | null = null;
 let ready = false;
 let latest: FocusView | null = null;
 
-/** The screen with the menu bar; a built-in screen with a tall menu bar has a notch. */
-function placement() {
-  const display = screen.getPrimaryDisplay();
-  const menuBar = display.workArea.y - display.bounds.y;
-  return {
-    bounds: { x: Math.round(display.bounds.x + (display.bounds.width - WIDTH) / 2), y: display.bounds.y, width: WIDTH, height: HEIGHT },
-    notch: display.internal && menuBar >= NOTCH_MENU_BAR,
-    menuBar: menuBar > 0 ? menuBar : 24,
-  };
-}
+/** The screen with the menu bar. */
+const placement = () => islandPlacement(screen.getPrimaryDisplay(), WIDTH, HEIGHT);
 
 function send(): void {
   if (!island || island.isDestroyed() || !ready || !latest) return;

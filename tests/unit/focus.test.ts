@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actOnFocus, clockLabel, focusedMs, NO_FOCUS, normalizeFocusSaved, startFocus, tickFocus, toFocusAction, toFocusMinutes, type FocusState } from '../../src/shared/focus';
+import { actOnFocus, clockLabel, focusedMs, NO_FOCUS, normalizeFocusSaved, pauseAtLastAlive, startFocus, tickFocus, toFocusAction, toFocusMinutes, type FocusState } from '../../src/shared/focus';
 
 const MIN = 60_000;
 const T0 = 1_000_000_000_000;
@@ -97,12 +97,12 @@ describe('saved focus', () => {
   it('reads back what was saved', () => {
     const state = countdown();
     const record = actOnFocus(state, { kind: 'stop' }, T0 + MIN).finished;
-    expect(normalizeFocusSaved(JSON.parse(JSON.stringify({ state, log: [record], island: false })))).toEqual({ state, log: [record], island: false });
+    expect(normalizeFocusSaved(JSON.parse(JSON.stringify({ state, log: [record], island: false, aliveAt: T0 })))).toEqual({ state, log: [record], island: false, aliveAt: T0 });
   });
 
   it('starts clean from a damaged file, with the island on', () => {
-    expect(normalizeFocusSaved({ state: { focus: { id: 3 } }, log: [{ bad: true }], island: 'yes' })).toEqual({ state: NO_FOCUS, log: [], island: true });
-    expect(normalizeFocusSaved(null)).toEqual({ state: NO_FOCUS, log: [], island: true });
+    expect(normalizeFocusSaved({ state: { focus: { id: 3 } }, log: [{ bad: true }], island: 'yes' })).toEqual({ state: NO_FOCUS, log: [], island: true, aliveAt: null });
+    expect(normalizeFocusSaved(null)).toEqual({ state: NO_FOCUS, log: [], island: true, aliveAt: null });
   });
 });
 
@@ -124,5 +124,33 @@ describe('actions from a window', () => {
     expect(toFocusMinutes(25)).toBe(25);
     expect(toFocusMinutes(null)).toBeNull();
     for (const bad of [0, -5, 2.5, 481, '25', undefined]) expect(toFocusMinutes(bad)).toBe(false);
+  });
+});
+
+describe('fixes from review', () => {
+  it('Stop at a check-in closes it without touching the to-do, recorded as ended', () => {
+    const atCheckIn = tickFocus(countdown(25), T0 + 25 * MIN).state;
+    const stopped = actOnFocus(atCheckIn, { kind: 'stop' }, T0 + 40 * MIN);
+    expect(stopped.state).toEqual(NO_FOCUS);
+    expect(stopped.finished).toMatchObject({ id: 'f1', outcome: 'ended', focusedMs: 25 * MIN });
+  });
+
+  it('after a restart, time while VISION was closed is not focus time: the focus is paused when VISION was last alive', () => {
+    const state = countdown(25);
+    const back = pauseAtLastAlive(state, T0 + 10 * MIN);
+    expect(back.focus?.runningSince).toBeNull();
+    expect(focusedMs(back.focus, T0 + 600 * MIN)).toBe(10 * MIN);
+  });
+
+  it('leaves a paused focus, or one with no known last-alive time, as it is', () => {
+    const paused = actOnFocus(countdown(25), { kind: 'pause' }, T0 + 5 * MIN).state;
+    expect(pauseAtLastAlive(paused, T0 + 50 * MIN)).toBe(paused);
+    const running = countdown(25);
+    expect(pauseAtLastAlive(running, null)).toBe(running);
+  });
+
+  it('saves when VISION was last alive', () => {
+    expect(normalizeFocusSaved({ aliveAt: T0 }).aliveAt).toBe(T0);
+    expect(normalizeFocusSaved({ aliveAt: 'x' }).aliveAt).toBeNull();
   });
 });

@@ -3,6 +3,7 @@
  * A meeting in heads-up comes first (a running focus keeps going underneath), then a check-in, then a focus.
  */
 import type { CalendarEvent } from './calendar';
+import { meetingKey } from './meetings';
 import { clockLabel, focusedMs, remainingMs, type FocusState } from './focus';
 
 export type Glance =
@@ -26,6 +27,8 @@ export type Glance =
       clock: string;
       joinUrl: string | null;
       focus: { clock: string; paused: boolean } | null;
+      /** A countdown that ended and still waits for an answer, kept reachable during the meeting. */
+      checkIn: { title: string; hasTodo: boolean } | null;
     };
 
 export function glance(state: FocusState, meeting: CalendarEvent | null, now: number): Glance {
@@ -35,11 +38,12 @@ export function glance(state: FocusState, meeting: CalendarEvent | null, now: nu
   if (meeting) {
     return {
       kind: 'meeting',
-      id: meeting.id,
+      id: meetingKey(meeting),
       title: meeting.title,
       clock: now < meeting.start ? clockLabel(meeting.start - now) : 'Now',
       joinUrl: meeting.joinUrl ?? null,
       focus: focus ? { clock: focusClock, paused: focus.runningSince === null } : null,
+      checkIn: checkIn ? { title: checkIn.title, hasTodo: checkIn.todoId !== null } : null,
     };
   }
   if (checkIn) return { kind: 'check-in', title: checkIn.title, hasTodo: checkIn.todoId !== null };

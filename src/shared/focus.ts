@@ -60,6 +60,7 @@ export type FocusAction =
   | { kind: 'resume' }
   /** +5 min: longer countdown, or five more minutes after a check-in. */
   | { kind: 'add' }
+  /** Stop a focus, or close a check-in without changing the to-do. */
   | { kind: 'stop' }
   /** Finish and tick the to-do off. */
   | { kind: 'done' }
@@ -127,6 +128,8 @@ export function actOnFocus(state: FocusState, action: FocusAction, now: number):
       if (checkIn) return { state: { focus: { ...checkIn, lengthMs: checkIn.bankedMs + ADD_MS, runningSince: now }, checkIn: null } };
       return unchanged;
     case 'stop':
+      // At a check-in, Stop closes it and leaves the to-do as it is.
+      if (checkIn) return { state: NO_FOCUS, finished: record(checkIn, 'ended', now) };
       return focus ? { state: NO_FOCUS, finished: record(focus, 'stopped', now) } : unchanged;
     case 'done':
     case 'not-yet': {
@@ -159,6 +162,15 @@ export interface FocusSaved {
   state: FocusState;
   log: FocusRecord[];
   island: boolean;
+  /** When VISION was last running with a focus going (saved every minute), to pause it there after a quit or crash. */
+  aliveAt: number | null;
+}
+
+/** After a restart: a focus that was running stops counting at the moment VISION was last alive, and waits paused. */
+export function pauseAtLastAlive(state: FocusState, aliveAt: number | null): FocusState {
+  const { focus } = state;
+  if (!focus || focus.runningSince === null || aliveAt === null) return state;
+  return { ...state, focus: frozen(focus, Math.max(aliveAt, focus.runningSince)) };
 }
 
 /** Finished focuses kept for the stats. */
@@ -194,6 +206,7 @@ export function normalizeFocusSaved(raw: unknown): FocusSaved {
     state: { focus: toFocus(state['focus']), checkIn: toFocus(state['checkIn']) },
     log: (Array.isArray(value['log']) ? value['log'].flatMap(toRecord) : []).slice(-MAX_FOCUS_LOG),
     island: typeof value['island'] === 'boolean' ? value['island'] : true,
+    aliveAt: isTime(value['aliveAt']) ? value['aliveAt'] : null,
   };
 }
 

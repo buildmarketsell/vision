@@ -2,10 +2,10 @@ import { app, BrowserWindow, ipcMain, Notification, powerMonitor, shell } from '
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import type { CalendarEvent } from '../../../shared/calendar';
-import { actOnFocus, MAX_FOCUS_LOG, MAX_FOCUS_TITLE, normalizeFocusSaved, startFocus, tickFocus, toFocusAction, toFocusMinutes, type FocusAction, type FocusChange, type FocusSaved } from '../../../shared/focus';
+import { actOnFocus, MAX_FOCUS_LOG, MAX_FOCUS_TITLE, normalizeFocusSaved, pauseAtLastAlive, startFocus, tickFocus, toFocusAction, toFocusMinutes, type FocusAction, type FocusChange, type FocusSaved } from '../../../shared/focus';
 import { glance } from '../../../shared/glance';
 import { IPC, type FocusView } from '../../../shared/ipc';
-import { headsUpMeeting, safeJoinLink } from '../../../shared/meetings';
+import { headsUpMeeting, meetingKey, safeJoinLink } from '../../../shared/meetings';
 import { planForMore } from '../../../shared/planProgress';
 import { applyTodoChange, type TodoChange } from '../../../shared/todos';
 import { calendarBridge } from '../../../main/calendarBridge';
@@ -21,6 +21,7 @@ const HEADLESS = process.env['VISION_HEADLESS'] === '1';
 /** Meetings are read again this often (the Calendar caches Google for 3 minutes, so this costs little). */
 const MEETINGS_MS = 60_000;
 const TICK_MS = 1_000;
+const ALIVE_EVERY_MS = 60_000;
 /** Tests shorten a minute so a countdown ends in seconds. */
 const TEST_MINUTE_MS = Number(process.env['VISION_FOCUS_TEST_MINUTE_MS']) || 0;
 
@@ -95,7 +96,9 @@ function start(todoId: unknown, minutes: unknown): FocusView {
   const todo = typeof todoId === 'string' ? todoList.load().find((item) => item.id === todoId) : null;
   if (todoId !== null && !todo) return view();
   const scaled = length !== null && TEST_MINUTE_MS ? (length * TEST_MINUTE_MS) / 60_000 : length;
-  apply(startFocus(saved().state, { id: randomUUID(), todoId: todo?.id ?? null, title: (todo?.text ?? 'Focus').slice(0, MAX_FOCUS_TITLE), minutes: scaled }, Date.now()));
+  const now = Date.now();
+  apply(startFocus(saved().state, { id: randomUUID(), todoId: todo?.id ?? null, title: (todo?.text ?? 'Focus').slice(0, MAX_FOCUS_TITLE), minutes: scaled }, now));
+  save({ aliveAt: now });
   if (todo && todo.status !== 'doing') changeTodo(todo.id, { status: 'doing' });
   return broadcast();
 }
@@ -115,14 +118,15 @@ function act(action: FocusAction): FocusView {
   return broadcast();
 }
 
-function joinMeeting(): void {
-  const link = safeJoinLink(headsUpMeeting(meetings, Date.now(), dismissed)?.joinUrl);
+/** Opens a meeting's link (checked again here: only https on Meet, Zoom or Teams); by default the one in heads-up. */
+function joinMeeting(meeting = headsUpMeeting(meetings, Date.now(), dismissed)): void {
+  const link = safeJoinLink(meeting?.joinUrl);
   if (link) void shell.openExternal(link);
 }
 
 function dismissMeeting(): void {
   const meeting = headsUpMeeting(meetings, Date.now(), dismissed);
-  if (meeting) dismissed.add(meeting.id);
+  if (meeting) dismissed.add(meetingKey(meeting));
   broadcast();
 }
 
@@ -146,21 +150,29 @@ function tick(): void {
   const ticked = tickFocus(saved().state, now);
   if (ticked.ended) {
     apply(ticked);
-    const title = ticked.state.checkIn?.title ?? 'Focus';
-    const hasTodo = ticked.state.checkIn?.todoId !== null;
+    const ended = ticked.state.checkIn;
+    const title = ended?.title ?? 'Focus';
+    const hasTodo = ended?.todoId !== null;
+    // An old notification answers only the check-in it was about, never a focus started since.
+    const answer = (action: FocusAction) => () => {
+      if (saved().state.checkIn?.id === ended?.id) act(action);
+    };
     notify("Time's up", hasTodo ? `${title}: done?` : `${title} is over.`, [
-      { text: hasTodo ? 'Done' : 'Finish', run: () => act({ kind: 'done' }) },
-      { text: '+5 min', run: () => act({ kind: 'add' }) },
+      { text: hasTodo ? 'Done' : 'Finish', run: answer({ kind: 'done' }) },
+      { text: '+5 min', run: answer({ kind: 'add' }) },
     ]);
     broadcast();
     return;
   }
   const meeting = headsUpMeeting(meetings, now, dismissed);
-  if (meeting && !announced.has(meeting.id) && now < meeting.start) {
-    announced.add(meeting.id);
+  if (meeting && !announced.has(meetingKey(meeting)) && now < meeting.start) {
+    announced.add(meetingKey(meeting));
     const minutes = Math.max(1, Math.round((meeting.start - now) / 60_000));
-    notify(meeting.title, `Starts in ${minutes} min`, meeting.joinUrl ? [{ text: 'Join', run: joinMeeting }] : []);
+    notify(meeting.title, `Starts in ${minutes} min`, meeting.joinUrl ? [{ text: 'Join', run: () => joinMeeting(meeting) }] : []);
   }
+  // Remembered every minute while a focus runs, so after a quit or crash it stops counting about where VISION stopped.
+  const running = saved().state.focus;
+  if (running && running.runningSince !== null && now - (saved().aliveAt ?? 0) >= ALIVE_EVERY_MS) save({ aliveAt: now });
   refreshGlance(view(now));
 }
 
@@ -180,7 +192,7 @@ export function registerFocus(): void {
     const action = toFocusAction(raw);
     return action ? act(action) : view();
   });
-  ipcMain.on(IPC.focusJoin, joinMeeting);
+  ipcMain.on(IPC.focusJoin, () => joinMeeting());
   ipcMain.on(IPC.focusDismissMeeting, dismissMeeting);
   ipcMain.handle(IPC.focusSetIsland, (_event, on: unknown) => {
     if (typeof on === 'boolean') save({ island: on });
@@ -198,10 +210,14 @@ export function registerFocus(): void {
     broadcast();
   });
 
-  // Time away from the Mac isn't focus time (Black Hole does the same).
+  // Time away from the Mac isn't focus time (Black Hole does the same); neither is time VISION is closed.
+  const restored = pauseAtLastAlive(saved().state, saved().aliveAt);
+  if (restored !== saved().state) save({ state: restored });
   const pause = () => act({ kind: 'pause' });
   powerMonitor.on('suspend', pause);
   powerMonitor.on('lock-screen', pause);
+  powerMonitor.on('shutdown', pause);
+  app.on('before-quit', pause);
 
   void app.whenReady().then(() => {
     if (!HEADLESS) tray = createFocusTray(runFromTray);

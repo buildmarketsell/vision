@@ -21,7 +21,7 @@ describe('menu bar title', () => {
 
   it('asks at a check-in and counts down to a meeting', () => {
     expect(trayTitle({ kind: 'check-in', title: 'Write VSL', hasTodo: true })).toBe('Done?  Write VSL');
-    expect(trayTitle({ kind: 'meeting', id: 'm', title: 'Call with Kilo', clock: '4:12', joinUrl: null, focus: null })).toBe('4:12  Call with Kilo');
+    expect(trayTitle({ kind: 'meeting', id: 'm', title: 'Call with Kilo', clock: '4:12', joinUrl: null, focus: null, checkIn: null })).toBe('4:12  Call with Kilo');
   });
 });
 
@@ -29,6 +29,7 @@ describe('menu bar menu', () => {
   it('offers the focus lengths when idle', () => {
     expect(labels(trayMenu({ kind: 'idle' }))).toEqual(['Focus 15 min', 'Focus 25 min', 'Focus 50 min', 'Stopwatch', '—', 'Open VISION']);
     expect(trayMenu({ kind: 'idle' })[1]).toMatchObject({ run: { type: 'start', minutes: 25 } });
+    expect(trayMenu({ kind: 'idle' })[1]).not.toHaveProperty('bold');
   });
 
   it('controls a running focus, with Done only for a to-do', () => {
@@ -40,22 +41,27 @@ describe('menu bar menu', () => {
 
   it('asks the check-in, with Not yet choices for a to-do', () => {
     const items = trayMenu({ kind: 'check-in', title: 'Write VSL', hasTodo: true });
-    expect(labels(items)).toEqual(["Time's up: Write VSL", 'Done', '+5 min', 'Not yet', '—', 'Open VISION']);
+    expect(labels(items)).toEqual(["Time's up: Write VSL", 'Done', '+5 min', 'Not yet', 'Stop', '—', 'Open VISION']);
     const notYet = items[3];
     expect(notYet && 'submenu' in notYet ? labels(notYet.submenu ?? []) : []).toEqual(['30 min more', '1 hour more', '2 hours more']);
-    expect(labels(trayMenu({ kind: 'check-in', title: 'Focus', hasTodo: false }))).toEqual(["Time's up: Focus", 'Finish', '+5 min', '—', 'Open VISION']);
+    expect(labels(trayMenu({ kind: 'check-in', title: 'Focus', hasTodo: false }))).toEqual(["Time's up: Focus", 'Finish', '+5 min', 'Stop', '—', 'Open VISION']);
   });
 
   it('never changes while only the clocks move, so an open menu stays open', () => {
-    const at = (clock: string): Glance => ({ kind: 'meeting', id: 'm', title: 'Call', clock, joinUrl: null, focus: { clock, paused: false } });
+    const at = (clock: string): Glance => ({ kind: 'meeting', id: 'm', title: 'Call', clock, joinUrl: null, focus: { clock, paused: false }, checkIn: null });
     expect(trayMenu(at('4:12'))).toEqual(trayMenu(at('4:11')));
     const focus = (clock: string): Glance => ({ kind: 'focus', title: 'VSL', clock, progress: 0.5, paused: false, hasTodo: true });
     expect(trayMenu(focus('10:00'))).toEqual(trayMenu(focus('9:59')));
   });
 
+  it('keeps the check-in answers in the menu during a meeting', () => {
+    const items = trayMenu({ kind: 'meeting', id: 'm', title: 'Call', clock: '4:00', joinUrl: null, focus: null, checkIn: { title: 'Write VSL', hasTodo: true } });
+    expect(labels(items)).toEqual(['Call', 'Hide', '—', "Time's up: Write VSL", 'Done', '+5 min', 'Not yet', 'Stop', '—', 'Open VISION']);
+  });
+
   it('puts the meeting first, then the running focus', () => {
-    const items = trayMenu({ kind: 'meeting', id: 'm', title: 'Call with Kilo', clock: '4:12', joinUrl: 'https://meet.google.com/x', focus: { clock: '10:00', paused: false } });
+    const items = trayMenu({ kind: 'meeting', id: 'm', title: 'Call with Kilo', clock: '4:12', joinUrl: 'https://meet.google.com/x', focus: { clock: '10:00', paused: false }, checkIn: null });
     expect(labels(items)).toEqual(['Call with Kilo', 'Join', 'Hide', '—', 'Focus running', 'Pause', 'Stop', '—', 'Open VISION']);
-    expect(labels(trayMenu({ kind: 'meeting', id: 'm', title: 'Call', clock: 'Now', joinUrl: null, focus: null }))).toEqual(['Call (now)', 'Hide', '—', 'Open VISION']);
+    expect(labels(trayMenu({ kind: 'meeting', id: 'm', title: 'Call', clock: 'Now', joinUrl: null, focus: null, checkIn: null }))).toEqual(['Call (now)', 'Hide', '—', 'Open VISION']);
   });
 });

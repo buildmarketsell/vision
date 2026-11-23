@@ -59,20 +59,7 @@ function Panel({ glance, askMore, setAskMore }: { glance: Exclude<Glance, { kind
       <>
         <div className="island-title">{glance.title}</div>
         <div className="island-sub">{askMore ? 'How much more does it need?' : glance.hasTodo ? "Time's up. Is it done?" : "Time's up."}</div>
-        <div className="island-actions">
-          {askMore ? (
-            <>
-              {MORE_TIME_CHOICES.map((minutes) => <Button key={minutes} label={moreLabel(minutes)} onClick={() => act({ kind: 'not-yet', minutes })} />)}
-              <Button label="Back" onClick={() => setAskMore(false)} />
-            </>
-          ) : (
-            <>
-              <Button label={glance.hasTodo ? 'Done' : 'Finish'} icon={<Check {...ICON} />} primary onClick={() => act({ kind: 'done' })} />
-              <Button label="5 min" icon={<Plus {...ICON} />} onClick={() => act({ kind: 'add' })} />
-              {glance.hasTodo && <Button label="Not yet" onClick={() => setAskMore(true)} />}
-            </>
-          )}
-        </div>
+        <CheckInActions hasTodo={glance.hasTodo} askMore={askMore} setAskMore={setAskMore} />
       </>
     );
   }
@@ -87,7 +74,35 @@ function Panel({ glance, askMore, setAskMore }: { glance: Exclude<Glance, { kind
         {glance.joinUrl && <Button label="Join" icon={<Video {...ICON} />} primary onClick={() => window.vision.focus.join()} />}
         <Button label="Hide" icon={<X {...ICON} />} onClick={() => window.vision.focus.dismissMeeting()} />
       </div>
+      {glance.checkIn && (
+        // A countdown that ended just before the meeting still waits for its answer.
+        <div className="island-check-in">
+          <div className="island-sub">{askMore ? 'How much more does it need?' : `Time's up: ${glance.checkIn.title}`}</div>
+          <CheckInActions hasTodo={glance.checkIn.hasTodo} askMore={askMore} setAskMore={setAskMore} />
+        </div>
+      )}
     </>
+  );
+}
+
+/** Done, +5 min, Not yet (then how much more), and Stop, which closes the check-in without changing the to-do. */
+function CheckInActions({ hasTodo, askMore, setAskMore }: { hasTodo: boolean; askMore: boolean; setAskMore: (on: boolean) => void }) {
+  return (
+    <div className="island-actions">
+      {askMore ? (
+        <>
+          {MORE_TIME_CHOICES.map((minutes) => <Button key={minutes} label={moreLabel(minutes)} onClick={() => act({ kind: 'not-yet', minutes })} />)}
+          <Button label="Back" onClick={() => setAskMore(false)} />
+        </>
+      ) : (
+        <>
+          <Button label={hasTodo ? 'Done' : 'Finish'} icon={<Check {...ICON} />} primary onClick={() => act({ kind: 'done' })} />
+          <Button label="5 min" icon={<Plus {...ICON} />} onClick={() => act({ kind: 'add' })} />
+          {hasTodo && <Button label="Not yet" onClick={() => setAskMore(true)} />}
+          <Button label="Stop" icon={<Square size={11} strokeWidth={2.5} />} onClick={() => act({ kind: 'stop' })} />
+        </>
+      )}
+    </div>
   );
 }
 

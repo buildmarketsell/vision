@@ -2,7 +2,7 @@
  * The menu bar item: its text and its menu, worked out from the glance. Pure (no Electron), so it is unit tested;
  * `focusTray.ts` turns it into the real tray.
  */
-import { DEFAULT_FOCUS_MINUTES, FOCUS_LENGTHS, MORE_TIME_CHOICES, type FocusAction } from '../../../shared/focus';
+import { FOCUS_LENGTHS, MORE_TIME_CHOICES, type FocusAction } from '../../../shared/focus';
 import type { Glance } from '../../../shared/glance';
 
 export type TrayRun =
@@ -12,7 +12,7 @@ export type TrayRun =
   | { type: 'dismiss' }
   | { type: 'open' };
 
-export type TrayItem = { separator: true } | { label: string; run?: TrayRun; submenu?: TrayItem[]; bold?: boolean };
+export type TrayItem = { separator: true } | { label: string; run?: TrayRun; submenu?: TrayItem[] };
 
 /** Long names would push other menu bar items under the notch, so the title is kept short. */
 const TITLE_CHARS = 18;
@@ -47,11 +47,22 @@ function focusControls(paused: boolean, countdown: boolean, hasTodo: boolean): T
   ];
 }
 
+/** The check-in's answers; Stop closes it without changing the to-do. */
+function checkInItems(title: string, hasTodo: boolean): TrayItem[] {
+  return [
+    { label: `Time's up: ${title}` },
+    act(hasTodo ? 'Done' : 'Finish', { kind: 'done' }),
+    act('+5 min', { kind: 'add' }),
+    ...(hasTodo ? [{ label: 'Not yet', submenu: MORE_TIME_CHOICES.map((minutes) => act(moreLabel(minutes), { kind: 'not-yet', minutes })) }] : []),
+    act('Stop', { kind: 'stop' }),
+  ];
+}
+
 export function trayMenu(glance: Glance): TrayItem[] {
   switch (glance.kind) {
     case 'idle':
       return [
-        ...FOCUS_LENGTHS.map((minutes): TrayItem => ({ label: `Focus ${minutes} min`, run: { type: 'start', minutes }, bold: minutes === DEFAULT_FOCUS_MINUTES })),
+        ...FOCUS_LENGTHS.map((minutes): TrayItem => ({ label: `Focus ${minutes} min`, run: { type: 'start', minutes } })),
         { label: 'Stopwatch', run: { type: 'start', minutes: null } },
         SEPARATOR,
         OPEN,
@@ -59,21 +70,15 @@ export function trayMenu(glance: Glance): TrayItem[] {
     case 'focus':
       return [{ label: glance.title }, ...focusControls(glance.paused, glance.progress !== null, glance.hasTodo), SEPARATOR, OPEN];
     case 'check-in':
-      return [
-        { label: `Time's up: ${glance.title}` },
-        act(glance.hasTodo ? 'Done' : 'Finish', { kind: 'done' }),
-        act('+5 min', { kind: 'add' }),
-        ...(glance.hasTodo ? [{ label: 'Not yet', submenu: MORE_TIME_CHOICES.map((minutes) => act(moreLabel(minutes), { kind: 'not-yet', minutes })) }] : []),
-        SEPARATOR,
-        OPEN,
-      ];
+      return [...checkInItems(glance.title, glance.hasTodo), SEPARATOR, OPEN];
     case 'meeting':
       return [
         // No clocks in the menu: it would change every second, and a rebuilt menu closes under the pointer.
         { label: glance.clock === 'Now' ? `${glance.title} (now)` : glance.title },
-        ...(glance.joinUrl ? [{ label: 'Join', run: { type: 'join' } as const, bold: true }] : []),
+        ...(glance.joinUrl ? [{ label: 'Join', run: { type: 'join' } as const }] : []),
         { label: 'Hide', run: { type: 'dismiss' } },
         SEPARATOR,
+        ...(glance.checkIn ? [...checkInItems(glance.checkIn.title, glance.checkIn.hasTodo), SEPARATOR] : []),
         ...(glance.focus ? [{ label: glance.focus.paused ? 'Focus paused' : 'Focus running' }, glance.focus.paused ? act('Resume', { kind: 'resume' }) : act('Pause', { kind: 'pause' }), act('Stop', { kind: 'stop' }), SEPARATOR] : []),
         OPEN,
       ];
