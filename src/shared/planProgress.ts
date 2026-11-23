@@ -5,7 +5,7 @@
  * until Dan ticks it off (Dan, 2026-11-23).
  */
 import type { PlanTask } from './autoSchedule';
-import type { PlanBlock } from './plan';
+import { DEFAULT_TODO_PLAN, MAX_PLAN_MINUTES, type PlanBlock, type TodoPlan } from './plan';
 import type { TodoItem } from './todos';
 
 const MINUTE_MS = 60_000;
@@ -48,4 +48,14 @@ export function planProgress(todos: TodoItem[], previous: PlanBlock[], past: Pla
     if (minutes > 0) tasks.push({ ...todo.plan, minutes, id: todo.id, title: todo.text, createdAt: todo.createdAt });
   }
   return { past: keptPast, started, tasks };
+}
+
+/**
+ * The plan for a to-do Dan says needs `minutes` more (a focus check-in's "Not yet"): exactly that much is left to plan
+ * from now on. Time its blocks already took (including the passed part of one under way) stays counted as worked.
+ */
+export function planForMore(todo: TodoItem, blocks: PlanBlock[], now: number, minutes: number): TodoPlan {
+  const plan = todo.plan ?? DEFAULT_TODO_PLAN;
+  const worked = blocks.filter((block) => block.taskId === todo.id && block.start < now).reduce((sum, block) => sum + (Math.min(block.end, now) - block.start) / MINUTE_MS, 0);
+  return { ...plan, minutes: Math.min(MAX_PLAN_MINUTES, Math.round(worked + minutes)) };
 }

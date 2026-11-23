@@ -80,6 +80,8 @@ export const CHUNKS: ReadonlyArray<{ value: number; label: string }> = [
   { value: 60, label: '1 hour' },
 ];
 export const MAX_PLAN_MINUTES = 40 * 60;
+/** The plan a to-do gets when Dan first schedules it (the To-do page) or says it needs more time (a focus check-in). */
+export const DEFAULT_TODO_PLAN: TodoPlan = { minutes: 60, priority: 'medium', hours: 'personal', deadline: null, hardDeadline: false, minChunk: 30 };
 /** How far ahead the plan looks, in days. */
 export const PLAN_DAYS = 14;
 

@@ -1,13 +1,12 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { CHUNKS, DURATIONS, durationLabel, HOURS_NAMES, PRIORITIES, type PlanState, type TodoPlan } from '../../../shared/plan';
+import { CHUNKS, DEFAULT_TODO_PLAN, DURATIONS, durationLabel, HOURS_NAMES, PRIORITIES, type PlanState, type TodoPlan } from '../../../shared/plan';
 import type { TodoItem } from '../../../shared/todos';
 import { shortWhen } from '../../../renderer/core/usePlan';
 import type { RunTodo } from './todoStore';
 
 const WIDTH = 320;
 const HEIGHT = 420;
-const NEW_PLAN: TodoPlan = { minutes: 60, priority: 'medium', hours: 'personal', deadline: null, hardDeadline: false, minChunk: 30 };
 
 const pad = (value: number) => String(value).padStart(2, '0');
 const dateInput = (ms: number | null) => {
@@ -36,7 +35,7 @@ function Choice<T extends string | number>({ label, value, options, onChange }: 
 
 /** Duration, priority, hours, deadline: what the Calendar needs to plan this to-do. */
 function PlanForm({ todo, run, onClose }: { todo: TodoItem; run: RunTodo; onClose: () => void }) {
-  const [plan, setPlan] = useState<TodoPlan>(todo.plan ?? NEW_PLAN);
+  const [plan, setPlan] = useState<TodoPlan>(todo.plan ?? DEFAULT_TODO_PLAN);
   const set = (change: Partial<TodoPlan>) => setPlan({ ...plan, ...change });
   const save = (event: FormEvent) => {
     event.preventDefault();
