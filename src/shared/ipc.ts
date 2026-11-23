@@ -9,7 +9,18 @@ import type { InboxMessage } from './inbox';
 import type { TodoChange, TodoItem, TodoStatus } from './todos';
 import type { Database } from './databases';
 import type { Page } from './pages';
+import type { Agent, AgentChange, AgentStatus, NewAgentInput } from './agents';
+import type { Routine, RoutineInput } from './routines';
+import type { ChatAction } from './chat/chatReducer';
+import type { ChatState } from './chat/chatTypes';
 import type { ChatEventMessage, ChatExitMessage, ChatOutgoing, ChatStartOptions, ChatStartResult, PastConversation } from './claudeChat';
+
+/** One change to an agent's chat; `version` counts every change since VISION started, so a window skips what its snapshot already had. */
+export interface AgentChatUpdate {
+  agentId: string;
+  version: number;
+  action: ChatAction;
+}
 
 /** What windows need to draw focus: the state (to-do rows count on their own), the glance, and whether the island is on. */
 export interface FocusView {
@@ -226,6 +237,35 @@ export interface VisionApi {
     /** Island window only: every change to what it shows. */
     onIsland(callback: (update: IslandUpdate) => void): Unsubscribe;
   };
+  agents: {
+    list(): Promise<Agent[]>;
+    create(input: NewAgentInput): Promise<Agent | null>;
+    /** Each returns every agent after the change. */
+    update(id: string, change: AgentChange): Promise<Agent[]>;
+    /** Deletes the agent and its routines (its saved chat stays in Claude Code's history). */
+    remove(id: string): Promise<Agent[]>;
+    /** macOS folder picker; null if cancelled. */
+    pickFolder(): Promise<string | null>;
+    statuses(): Promise<Record<string, AgentStatus>>;
+    /** The agent's chat as it is now, with the version its later updates count from. */
+    chat(id: string): Promise<{ state: ChatState; version: number } | null>;
+    send(id: string, message: ChatOutgoing): void;
+    freshChat(id: string): void;
+    markRead(id: string): void;
+    onChange(callback: (agents: Agent[]) => void): Unsubscribe;
+    onStatus(callback: (statuses: Record<string, AgentStatus>) => void): Unsubscribe;
+    onUpdate(callback: (update: AgentChatUpdate) => void): Unsubscribe;
+    /** A notification was clicked: show this agent. */
+    onOpen(callback: (agentId: string) => void): Unsubscribe;
+  };
+  routines: {
+    list(): Promise<Routine[]>;
+    /** Adds (no id) or changes a routine; returns every routine. */
+    save(input: RoutineInput): Promise<Routine[]>;
+    remove(id: string): Promise<Routine[]>;
+    runNow(id: string): Promise<Routine[]>;
+    onChange(callback: (routines: Routine[]) => void): Unsubscribe;
+  };
   chat: {
     start(options: ChatStartOptions): Promise<ChatStartResult>;
     send(id: number, message: ChatOutgoing): void;
@@ -275,6 +315,25 @@ export const IPC = {
   ptyKill: 'claude-terminal:kill',
   ptyData: 'claude-terminal:data',
   ptyExit: 'claude-terminal:exit',
+  agentsList: 'agents:list',
+  agentsCreate: 'agents:create',
+  agentsUpdate: 'agents:update',
+  agentsRemove: 'agents:remove',
+  agentsPickFolder: 'agents:pick-folder',
+  agentsStatuses: 'agents:statuses',
+  agentsChat: 'agents:chat',
+  agentsSend: 'agents:send',
+  agentsFreshChat: 'agents:fresh-chat',
+  agentsMarkRead: 'agents:mark-read',
+  agentsChanged: 'agents:changed',
+  agentsStatusChanged: 'agents:status-changed',
+  agentsChatUpdate: 'agents:chat-update',
+  agentsOpen: 'agents:open',
+  routinesList: 'routines:list',
+  routinesSave: 'routines:save',
+  routinesRemove: 'routines:remove',
+  routinesRunNow: 'routines:run-now',
+  routinesChanged: 'routines:changed',
   chatStart: 'claude-chat:start',
   chatSend: 'claude-chat:send',
   chatStop: 'claude-chat:stop',
