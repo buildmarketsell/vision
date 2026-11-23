@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, allDayOn, clickRange, clockTime, dragRange, layoutDay, minutesAt, startOfWeek, weekDays } from '../../src/features/calendar/renderer/weekLayout';
+import { addDays, allDayOn, clickRange, clockTime, dragRange, eventBox, layoutDay, minutesAt, startOfWeek, weekDays } from '../../src/features/calendar/renderer/weekLayout';
 import type { CalendarEvent } from '../../src/shared/calendar';
 
 const at = (day: number, hour: number, minute = 0) => new Date(2026, 10, day, hour, minute).getTime();
@@ -61,5 +61,18 @@ describe('drag to pick a time', () => {
     expect(clickRange(23 * HOUR + 30, HOUR)).toEqual({ start: 1410, end: 1440 });
     expect(clockTime(990)).toBe('16:30');
     expect(clockTime(1440)).toBe('23:59');
+  });
+});
+
+describe('event box', () => {
+  it('draws an event at its length, leaving a 2 px gap below', () => {
+    expect(eventBox(60, 48)).toEqual({ height: 46, compact: false });
+  });
+
+  it('keeps short events tall enough for one readable line, drawn compact (title and time on one line)', () => {
+    expect(eventBox(15, 48)).toEqual({ height: 20, compact: true });
+    expect(eventBox(30, 48)).toEqual({ height: 22, compact: true });
+    expect(eventBox(45, 48)).toEqual({ height: 34, compact: true });
+    expect(eventBox(50, 48).compact).toBe(false);
   });
 });

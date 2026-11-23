@@ -4,7 +4,7 @@ import type { CalendarEvent } from '../../../shared/calendar';
 import type { PlanBlock } from '../../../shared/plan';
 import { useNow } from '../../../renderer/core/useNow';
 import { timeRange } from './agenda';
-import { allDayOn, clickRange, clockTime, DRAG_SNAP_MINUTES, dragRange, layoutDay, minutesAt, startOfDay } from './weekLayout';
+import { allDayOn, clickRange, clockTime, DRAG_SNAP_MINUTES, dragRange, eventBox, layoutDay, minutesAt, startOfDay } from './weekLayout';
 
 /** Pixels per hour; must match `--hour` in calendar-page.css. */
 export const HOUR_PX = 48;
@@ -117,9 +117,10 @@ function DayColumn({ day, events, blocks, now, pending, onPick, onBlock }: {
   return (
     <div className="week-column" data-today={today} onPointerDown={onPointerDown} aria-label={new Date(day).toDateString()}>
       {layoutDay(events, day).map(({ event, top, height, column, columns }) => {
+        const box = eventBox(height, HOUR_PX);
         const style = {
           top: (top / 60) * HOUR_PX,
-          height: (height / 60) * HOUR_PX - 2,
+          height: box.height,
           left: `calc(${(column / columns) * 100}% + 2px)`,
           width: `calc(${100 / columns}% - 4px)`,
           ['--event-color' as string]: event.color,
@@ -127,14 +128,14 @@ function DayColumn({ day, events, blocks, now, pending, onPick, onBlock }: {
         const block = blocks.get(event.id);
         if (block) {
           return (
-            <button key={event.id} className="week-event" data-planned data-past={block.end <= now} data-short={height < 40} style={style} aria-label={`Planned: ${event.title}, ${timeRange(event)}`} onClick={(click) => onBlock({ block, x: click.clientX, y: click.clientY })}>
+            <button key={event.id} className="week-event" data-planned data-past={block.end <= now} data-short={box.compact} style={style} aria-label={`Planned: ${event.title}, ${timeRange(event)}`} onClick={(click) => onBlock({ block, x: click.clientX, y: click.clientY })}>
               <span className="week-event-title"><Circle size={10} strokeWidth={2.25} aria-hidden /> {event.title}</span>
               <span className="week-event-time">{timeRange(event)}</span>
             </button>
           );
         }
         return (
-          <div key={event.id} className="week-event" data-short={height < 40} data-past-plan={event.taskId !== undefined} style={style} title={`${event.title}\n${timeRange(event)}${event.location ? `\n${event.location}` : ''}`}>
+          <div key={event.id} className="week-event" data-short={box.compact} data-past-plan={event.taskId !== undefined} style={style} title={`${event.title}\n${timeRange(event)}${event.location ? `\n${event.location}` : ''}`}>
             <span className="week-event-title">{event.title}</span>
             <span className="week-event-time">{timeRange(event)}</span>
           </div>

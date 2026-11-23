@@ -3,7 +3,7 @@ import { startFakeGoogle } from './fixtures/fake-google';
 import { connectFakeGoogle, launch, makeFixture } from './helpers';
 
 test('calendar page: Calendar in the menu fills the window with the week, see events, click an empty slot to add one', async () => {
-  const google = await startFakeGoogle();
+  const google = await startFakeGoogle({ quarterHour: true });
   const { userData } = makeFixture();
   const { app, page } = await launch(userData, undefined, { VISION_GOOGLE_TEST_BASE: google.base });
   try {
@@ -17,6 +17,18 @@ test('calendar page: Calendar in the menu fills the window with the week, see ev
     await expect(calendar.locator('.week-event', { hasText: 'Call with the garage' })).toBeVisible();
     await expect(calendar.locator('.week-day-head[data-today="true"]')).toHaveCount(1);
     await expect(calendar.locator('.week-now')).toHaveCount(1);
+    // A 15-minute event is one readable line: its title isn't cut off at the top or bottom.
+    const visit = calendar.locator('.week-event', { hasText: 'Visita Inmobiliaria' });
+    await visit.scrollIntoViewIfNeeded();
+    await expect(visit).toHaveAttribute('data-short', 'true');
+    const fits = await visit.evaluate((box) => {
+      const title = box.querySelector('.week-event-title')?.getBoundingClientRect();
+      const outer = box.getBoundingClientRect();
+      return !!title && title.top >= outer.top && title.bottom <= outer.bottom;
+    });
+    expect(fits).toBe(true);
+    const visitBox = await visit.boundingBox();
+    if (visitBox) await page.screenshot({ path: 'test-results/calendar-short-event.png', clip: { x: visitBox.x - 40, y: visitBox.y - 60, width: visitBox.width + 80, height: 140 } });
     await page.screenshot({ animations: 'disabled', path: 'test-results/calendar-week.png' });
 
     const today = calendar.locator('.week-column[data-today="true"]');

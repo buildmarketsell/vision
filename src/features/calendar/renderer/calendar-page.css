@@ -182,11 +182,20 @@
   color: var(--color-text-muted);
 }
 
+/* Short events: title and time share one line, centered in the box (at least 20 px tall, see `eventBox`). */
 .week-event[data-short='true'] {
   flex-direction: row;
-  gap: 6px;
-  padding-top: 1px;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1;
   white-space: nowrap;
+}
+
+.week-event[data-short='true'] .week-event-time {
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 /* The stretch being picked: drag on empty space, like Google Calendar. */

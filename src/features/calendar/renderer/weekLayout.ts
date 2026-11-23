@@ -121,3 +121,14 @@ export function clockTime(minutes: number): string {
   const clamped = Math.min(minutes, DAY_MINUTES - 1);
   return `${String(Math.floor(clamped / 60)).padStart(2, '0')}:${String(clamped % 60).padStart(2, '0')}`;
 }
+
+/** One line of event text plus padding: short events never get smaller than this, like Google and Notion Calendar. */
+const MIN_EVENT_PX = 20;
+/** Below this, title and time don't fit on two lines and share one. */
+const TWO_LINES_PX = 36;
+
+/** How tall an event of `minutes` is drawn, and whether it is compact (one line). */
+export function eventBox(minutes: number, hourPx: number): { height: number; compact: boolean } {
+  const height = Math.max(MIN_EVENT_PX, (minutes / 60) * hourPx - 2);
+  return { height, compact: height < TWO_LINES_PX };
+}

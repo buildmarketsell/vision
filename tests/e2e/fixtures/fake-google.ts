@@ -23,7 +23,8 @@ function body(request: IncomingMessage): Promise<string> {
 
 /** `blockSignIn` acts like Google's "Access blocked" page: it never sends the browser back. */
 /** `meetingInMinutes`: also a Google Meet call that starts that many minutes from now (for the focus heads-up). */
-export async function startFakeGoogle({ blockSignIn = false, meetingInMinutes = null as number | null } = {}): Promise<FakeGoogle> {
+/** `quarterHour`: also a 15-minute event two hours from now (short events must stay readable on the week page). */
+export async function startFakeGoogle({ blockSignIn = false, meetingInMinutes = null as number | null, quarterHour = false } = {}): Promise<FakeGoogle> {
   const created: Array<Record<string, unknown>> = [];
   const deleted: string[] = [];
   const patched: Array<Record<string, unknown>> = [];
@@ -36,6 +37,7 @@ export async function startFakeGoogle({ blockSignIn = false, meetingInMinutes = 
     'dan@example.com': [
       { id: 'garage', summary: 'Call with the garage', location: 'Technowagen', start: { dateTime: at(2) }, end: { dateTime: at(3) } },
       { id: 'plan', summary: 'Weekly Plan', start: { dateTime: at(26) }, end: { dateTime: at(27) } },
+      ...(quarterHour ? [{ id: 'visit', summary: 'Visita Inmobiliaria', start: { dateTime: at(2) }, end: { dateTime: new Date(Date.parse(at(2)) + 15 * 60_000).toISOString() } }] : []),
       ...(meetingInMinutes === null
         ? []
         : [{ id: 'kilo', summary: 'Call with Kilo', hangoutLink: 'https://meet.google.com/abc-defg-hij', start: { dateTime: new Date(Date.now() + meetingInMinutes * 60_000).toISOString() }, end: { dateTime: new Date(Date.now() + (meetingInMinutes + 30) * 60_000).toISOString() } }]),
