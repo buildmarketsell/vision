@@ -28,10 +28,27 @@ describe('plan progress', () => {
     expect(planProgress([todo('vsl')], [piece], [piece], NOW, true).tasks[0]?.minutes).toBe(120);
   });
 
-  it('flags a task whose planned time has all passed but is not ticked off', () => {
-    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60 } })], [], [block('vsl', NOW - 2 * HOUR, NOW - HOUR)], NOW, true);
+  it('rolls over a task whose planned time has all passed but is not ticked off: one more piece of its smallest size', () => {
+    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60, minChunk: 15 } })], [], [block('vsl', NOW - 2 * HOUR, NOW - HOUR)], NOW, true);
+    expect(progress.tasks.map((task) => [task.id, task.minutes, task.minChunk])).toEqual([['vsl', 15, 15]]);
+  });
+
+  it('rolls over 30 minutes when the task is never split', () => {
+    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60, minChunk: 0 } })], [], [block('vsl', NOW - 2 * HOUR, NOW - HOUR)], NOW, true);
+    expect(progress.tasks.map((task) => [task.id, task.minutes])).toEqual([['vsl', 30]]);
+  });
+
+  it('keeps rolling over after each extra piece passes', () => {
+    const pieces = [block('vsl', NOW - 3 * HOUR, NOW - 2 * HOUR), block('vsl', NOW - HOUR, NOW - HOUR / 2)];
+    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60 } })], [], pieces, NOW, true);
+    expect(progress.tasks.map((task) => [task.id, task.minutes])).toEqual([['vsl', 30]]);
+  });
+
+  it('plans no extra piece while a rolled-over piece is under way', () => {
+    const under = block('vsl', NOW - HOUR / 4, NOW + HOUR / 4);
+    const progress = planProgress([todo('vsl', { plan: { ...plan, minutes: 60 } })], [under], [block('vsl', NOW - 2 * HOUR, NOW - HOUR)], NOW, true);
     expect(progress.tasks).toEqual([]);
-    expect(progress.timeUsed.map((risk) => [risk.taskId, risk.kind])).toEqual([['vsl', 'time-used']]);
+    expect(progress.started).toEqual([under]);
   });
 
   it('forgets past pieces of to-dos taken off the calendar, and plans nothing for done ones', () => {

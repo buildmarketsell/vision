@@ -115,7 +115,7 @@ async function planOnce(): Promise<void> {
     hours: byId.get(block.taskId)?.plan?.hours ?? block.hours ?? 'personal',
   });
   const coming = [...progress.started, ...result.blocks].map(titled).sort((a, b) => a.start - b.start);
-  const risks: PlanRisk[] = settings.enabled ? [...result.risks, ...progress.timeUsed] : [];
+  const risks: PlanRisk[] = settings.enabled ? result.risks : [];
 
   let error: string | undefined;
   try {

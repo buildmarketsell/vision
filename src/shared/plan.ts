@@ -51,11 +51,11 @@ export interface PlanBlock {
   end: number;
 }
 
-/** A to-do the plan can't fit (late, or no room in the next two weeks), or whose planned time has passed without it being ticked off. */
+/** A to-do the plan can't fit: late, or no room in the next two weeks. */
 export interface PlanRisk {
   taskId: string;
   title: string;
-  kind: 'late' | 'no-room' | 'time-used';
+  kind: 'late' | 'no-room';
   deadline: number | null;
   /** When its last block ends, if any part was planned. */
   plannedEnd: number | null;
