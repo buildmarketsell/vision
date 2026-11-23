@@ -1,6 +1,6 @@
 import { registerClaudeChat } from '../features/claude-terminal/main/chatProcess';
 import { registerClaudeTerminal } from '../features/claude-terminal/main/ptyHandlers';
-import { registerTranscripts } from '../features/claude-terminal/main/transcripts';
+import { registerTranscripts } from './claude/transcripts';
 import { registerEmbedFrames } from '../features/board/main/embedFrames';
 import { registerCalendar } from '../features/calendar/main/calendarStore';
 import { registerPlan } from '../features/calendar/main/planStore';

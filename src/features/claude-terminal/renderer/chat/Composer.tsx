@@ -5,7 +5,7 @@ import { ActionsMenu } from './ActionsMenu';
 import { MODE_LABELS } from './actions';
 import { ComposerMenu } from './ComposerMenu';
 import { ContextMeter, ModelPicker } from './ComposerControls';
-import type { SessionInfo } from './sessionInfo';
+import type { SessionInfo } from '../../../../shared/chat/sessionInfo';
 import type { Draft } from './useDraft';
 import { useSlashMenu } from './useSlashMenu';
 

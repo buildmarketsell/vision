@@ -3,7 +3,7 @@ import type { PastConversation } from '../../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../../renderer/components/ClaudeLogo';
 import { CopyButton } from '../../../../renderer/components/CopyButton';
 import { baseName, useWorkspace } from '../../../../renderer/core/workspaceStore';
-import type { ChatItem, ChatState } from './chatTypes';
+import type { ChatItem, ChatState } from '../../../../shared/chat/chatTypes';
 import { Banners } from './Banners';
 import { Composer } from './Composer';
 import { useDraft } from './useDraft';

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useLatest } from '../../../../renderer/core/useLatest';
 import { DEFAULT_EFFORT, DEFAULT_MODEL, type ChatImage, type EffortLevel, type PermissionMode } from '../../../../shared/claudeChat';
 import { recordChatEvent } from '../usage/usageStore';
-import { reduceClaudeEvent, reduceLocal } from './chatReducer';
-import { emptyChatState, type ChatState, type LocalAction } from './chatTypes';
+import { reduceClaudeEvent, reduceLocal } from '../../../../shared/chat/chatReducer';
+import { emptyChatState, type ChatState, type LocalAction } from '../../../../shared/chat/chatTypes';
 
 type Action = LocalAction | { type: 'claude'; event: unknown } | { type: 'replace'; state: ChatState };
 

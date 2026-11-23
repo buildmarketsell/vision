@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { useNow } from '../../../../renderer/core/useNow';
 import { useUsage } from '../usage/usageStore';
 import { chatBanners } from './chatBanners';
-import type { McpServer } from './sessionInfo';
+import type { McpServer } from '../../../../shared/chat/sessionInfo';
 
 /** Usage and connection bars above the composer. Dismissing one hides it in this tab until its content changes. */
 export function Banners({ servers }: { servers: McpServer[] }) {

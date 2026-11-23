@@ -2,7 +2,7 @@ import { ipcMain, type WebContents } from 'electron';
 import { spawn, type IPty } from 'node-pty';
 import { IPC, type PtyStartResult } from '../../../shared/ipc';
 import { isSessionId } from '../../../shared/claudeChat';
-import { locateClaude, NOT_FOUND_MESSAGE } from './claudeExecutable';
+import { locateClaude, NOT_FOUND_MESSAGE } from '../../../main/claude/claudeExecutable';
 import { onWindowClosed, windowContextFor } from '../../../main/windows';
 import { logError } from '../../../main/log';
 

@@ -4,7 +4,7 @@ import type { EffortLevel, PermissionMode } from '../../../../shared/claudeChat'
 import { runCommand } from '../../../../renderer/core/commands';
 import { buildActions, filterActions, type ActionItem } from './actions';
 import { EffortControl } from './ComposerControls';
-import type { SessionInfo } from './sessionInfo';
+import type { SessionInfo } from '../../../../shared/chat/sessionInfo';
 import type { Draft } from './useDraft';
 
 interface ActionsMenuProps {

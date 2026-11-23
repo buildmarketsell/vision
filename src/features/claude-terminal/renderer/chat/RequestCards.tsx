@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ShieldQuestion, MessageCircleQuestion } from 'lucide-react';
-import type { PermissionRequest, QuestionRequest, ToolCall } from './chatTypes';
-import { describeTool } from './eventParsing';
+import type { PermissionRequest, QuestionRequest, ToolCall } from '../../../../shared/chat/chatTypes';
+import { describeTool } from '../../../../shared/chat/eventParsing';
 import { ToolDetail } from './ToolRow';
 
 function permissionTitle(toolName: string): string {

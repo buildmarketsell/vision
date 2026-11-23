@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { blockedReason, reduceClaudeEvent } from '../../src/features/claude-terminal/renderer/chat/chatReducer';
-import { emptyChatState } from '../../src/features/claude-terminal/renderer/chat/chatTypes';
+import { blockedReason, reduceClaudeEvent } from '../../src/shared/chat/chatReducer';
+import { emptyChatState } from '../../src/shared/chat/chatTypes';
 
 const AUTO_MODE_MESSAGE =
   'Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Undermining Oversight]. If you have other tasks that do not depend on this action, continue working on those.';

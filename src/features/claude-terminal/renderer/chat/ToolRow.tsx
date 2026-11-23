@@ -3,8 +3,8 @@ import { Check, ChevronRight, CircleSlash, X } from 'lucide-react';
 import { openFile } from '../../../../renderer/core/dockActions';
 import { useWorkspace } from '../../../../renderer/core/workspaceStore';
 import { afterSingleClick, cancelSingleClick, FileLinkMenu, type FileLinkTarget } from '../../../../renderer/components/FileLinkMenu';
-import type { ToolCall } from './chatTypes';
-import { asArr, asObj, asStr, describeTool, toolFilePath } from './eventParsing';
+import type { ToolCall } from '../../../../shared/chat/chatTypes';
+import { asArr, asObj, asStr, describeTool, toolFilePath } from '../../../../shared/chat/eventParsing';
 
 const MAX_PREVIEW_LINES = 60;
 

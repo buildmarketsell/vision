@@ -1,4 +1,4 @@
-import type { ChatItem } from './chatTypes';
+import type { ChatItem } from '../../../../shared/chat/chatTypes';
 
 /**
  * Text copied from the chat, ready for a document: each paragraph break becomes exactly one empty line.

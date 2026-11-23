@@ -1,5 +1,5 @@
 import type { UsageWindow } from '../usage/usageStore';
-import type { McpServer } from './sessionInfo';
+import type { McpServer } from '../../../../shared/chat/sessionInfo';
 
 /**
  * The bars above the composer, like Claude Code in VS Code: usage limits and connection problems.

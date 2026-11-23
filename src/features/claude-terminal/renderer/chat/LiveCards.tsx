@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNow } from '../../../../renderer/core/useNow';
 import { Check, ChevronRight, Circle } from 'lucide-react';
-import type { Todo } from './chatTypes';
+import type { Todo } from '../../../../shared/chat/chatTypes';
 
 /** Playful verbs for the working line, one picked per turn, the way Claude Code does it. */
 const WORKING_VERBS = [
