@@ -92,8 +92,9 @@ function Panel({ glance, askMore, setAskMore }: { glance: Exclude<Glance, { kind
 }
 
 /**
- * The island: a black shape around the MacBook's notch (top center on other screens), after Black Hole and the iPhone's
- * Dynamic Island. Shows a running focus or a meeting heads-up; hovering opens the controls below it. A check-in and a
+ * The island: the MacBook's notch growing down a little (top center on other screens), after Black Hole and the iPhone's
+ * Dynamic Island. It hangs below the notch instead of beside it: wings beside the notch covered the menu bar's own items
+ * (2026-11-23). Shows a running focus or a meeting heads-up; hovering opens the controls in a card below it. A check-in and a
  * meeting that has started open on their own, so the answer or Join is one click away.
  */
 export function Island() {
@@ -145,11 +146,13 @@ export function Island() {
     >
       <div className="island-bar">
         <span className="island-wing">{left}</span>
-        {update.notch ? <span className="island-notch" aria-hidden /> : <span className="island-bar-title">{glance.title}</span>}
+        {!update.notch && <span className="island-bar-title">{glance.title}</span>}
         <span className="island-wing island-wing-right">{right}</span>
       </div>
       <div className="island-panel" aria-hidden={!open} inert={!open}>
-        <Panel glance={glance} askMore={askMore} setAskMore={setAskMore} />
+        <div className="island-card">
+          <Panel glance={glance} askMore={askMore} setAskMore={setAskMore} />
+        </div>
       </div>
     </div>
   );

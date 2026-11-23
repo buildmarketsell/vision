@@ -14,6 +14,11 @@ describe('menu bar title', () => {
     expect(trayTitle({ kind: 'focus', title: 'Focus', clock: '3:10', progress: null, paused: true, hasTodo: false })).toBe('Paused 3:10  Focus');
   });
 
+  it('keeps only the clock while the island shows the name', () => {
+    expect(trayTitle({ kind: 'focus', title: 'Write VSL', clock: '18:42', progress: 0.2, paused: false, hasTodo: true }, false)).toBe('18:42');
+    expect(trayTitle({ kind: 'check-in', title: 'Write VSL', hasTodo: true }, false)).toBe('Done?');
+  });
+
   it('asks at a check-in and counts down to a meeting', () => {
     expect(trayTitle({ kind: 'check-in', title: 'Write VSL', hasTodo: true })).toBe('Done?  Write VSL');
     expect(trayTitle({ kind: 'meeting', id: 'm', title: 'Call with Kilo', clock: '4:12', joinUrl: null, focus: null })).toBe('4:12  Call with Kilo');

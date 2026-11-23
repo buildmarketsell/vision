@@ -18,16 +18,18 @@ export type TrayItem = { separator: true } | { label: string; run?: TrayRun; sub
 const TITLE_CHARS = 18;
 const short = (text: string) => (text.length > TITLE_CHARS ? `${text.slice(0, TITLE_CHARS - 1).trimEnd()}…` : text);
 
-export function trayTitle(glance: Glance): string {
+/** With the island on, the name is already there: the menu bar keeps only the clock, so it takes less room next to the notch. */
+export function trayTitle(glance: Glance, withName = true): string {
+  const name = (title: string) => (withName ? `  ${short(title)}` : '');
   switch (glance.kind) {
     case 'idle':
       return '';
     case 'focus':
-      return `${glance.paused ? 'Paused ' : ''}${glance.clock}  ${short(glance.title)}`;
+      return `${glance.paused ? 'Paused ' : ''}${glance.clock}${name(glance.title)}`;
     case 'check-in':
-      return `Done?  ${short(glance.title)}`;
+      return `Done?${name(glance.title)}`;
     case 'meeting':
-      return `${glance.clock}  ${short(glance.title)}`;
+      return `${glance.clock}${name(glance.title)}`;
   }
 }
 

@@ -51,7 +51,7 @@ function refreshGlance(current: FocusView): void {
   const key = JSON.stringify(current.glance) + current.island;
   if (key === lastGlance) return;
   lastGlance = key;
-  tray?.update(current.glance);
+  tray?.update(current.glance, current.island);
   updateIsland(current);
 }
 

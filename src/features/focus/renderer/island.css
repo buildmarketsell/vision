@@ -14,6 +14,8 @@
   --island-radius: 14px;
   --island-panel-radius: 22px;
   --island-ear: 10px;
+  /* How far the island hangs below the menu bar under a notch. */
+  --island-drop: 26px;
 }
 
 html,
@@ -39,8 +41,8 @@ body.island-page {
 }
 
 .island[data-notch='true'] {
-  /* 200 pt of notch with a wing on each side. */
-  width: 380px;
+  /* As wide as the notch: it hangs below it and never reaches the menu bar's items beside it. */
+  width: 190px;
 }
 
 .island-bar {
@@ -54,8 +56,10 @@ body.island-page {
   border-radius: 0 0 var(--island-radius) var(--island-radius);
 }
 
-.island[data-open='true'] .island-bar {
-  border-radius: 0;
+/* Under a notch the top part hides behind the notch itself; the clock sits in the drop below the menu bar. */
+.island[data-notch='true'] .island-bar {
+  height: calc(var(--island-bar) + var(--island-drop));
+  padding: var(--island-bar) 12px 0;
 }
 
 /* Concave "ears" where the island meets the top of the screen, like the notch's own corners. */
@@ -87,11 +91,6 @@ body.island-page {
 
 .island-wing-right {
   justify-content: flex-end;
-}
-
-.island-notch {
-  flex: none;
-  width: 200px;
 }
 
 .island-bar-title {
@@ -166,17 +165,18 @@ body.island-page {
   background: var(--island-meeting);
 }
 
-/* The controls slide out from under the bar; they're always there, so opening only moves transform and opacity. */
+/*
+ * The controls: a card just below the island, wider than it. The panel's transparent top padding bridges the gap, so
+ * moving the pointer down to the buttons doesn't count as leaving. Opening only moves transform and opacity.
+ */
 .island-panel {
   position: absolute;
-  top: calc(var(--island-bar) - 1px);
-  left: 0;
-  right: 0;
-  padding: 10px 16px 16px;
-  background: var(--island-black);
-  border-radius: 0 0 var(--island-panel-radius) var(--island-panel-radius);
+  top: 100%;
+  left: 50%;
+  width: 340px;
+  padding-top: 6px;
   opacity: 0;
-  transform: translateY(-10px) scaleY(0.92);
+  transform: translateX(-50%) translateY(-8px) scale(0.96);
   transform-origin: top center;
   pointer-events: none;
   transition:
@@ -186,8 +186,14 @@ body.island-page {
 
 .island[data-open='true'] .island-panel {
   opacity: 1;
-  transform: none;
+  transform: translateX(-50%);
   pointer-events: auto;
+}
+
+.island-card {
+  padding: 12px 16px 14px;
+  background: var(--island-black);
+  border-radius: var(--island-panel-radius);
 }
 
 .island-title {
@@ -273,8 +279,9 @@ body.island-page {
     animation-name: island-fade;
   }
 
-  .island-panel {
-    transform: none;
+  .island-panel,
+  .island[data-open='true'] .island-panel {
+    transform: translateX(-50%);
   }
 
   .island-ring-fill {

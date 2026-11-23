@@ -24,12 +24,12 @@ function toTemplate(items: TrayItem[], run: (what: TrayRun) => void): MenuItemCo
 }
 
 /** The menu bar item: always there (the eye), with the clock and task while a focus or heads-up runs. */
-export function createFocusTray(run: (what: TrayRun) => void): { update: (glance: Glance) => void; popUp: () => void } {
+export function createFocusTray(run: (what: TrayRun) => void): { update: (glance: Glance, island: boolean) => void; popUp: () => void } {
   tray = new Tray(icon());
   tray.setToolTip('VISION focus');
-  const update = (glance: Glance) => {
+  const update = (glance: Glance, island: boolean) => {
     if (!tray) return;
-    const title = trayTitle(glance);
+    const title = trayTitle(glance, !island);
     // Digits keep their width, so the text doesn't jiggle every second.
     if (title !== lastTitle) tray.setTitle(title, { fontType: 'monospacedDigit' });
     lastTitle = title;
