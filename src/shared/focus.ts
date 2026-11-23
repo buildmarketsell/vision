@@ -123,7 +123,7 @@ export function actOnFocus(state: FocusState, action: FocusAction, now: number):
     case 'resume':
       return focus && focus.runningSince === null ? { state: { ...state, focus: { ...focus, runningSince: now } } } : unchanged;
     case 'add':
-      if (focus?.lengthMs != null) return { state: { ...state, focus: { ...focus, lengthMs: focus.lengthMs + ADD_MS } } };
+      if (focus && focus.lengthMs !== null) return { state: { ...state, focus: { ...focus, lengthMs: focus.lengthMs + ADD_MS } } };
       if (checkIn) return { state: { focus: { ...checkIn, lengthMs: checkIn.bankedMs + ADD_MS, runningSince: now }, checkIn: null } };
       return unchanged;
     case 'stop':
