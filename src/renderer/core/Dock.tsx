@@ -6,6 +6,7 @@ import { allSidebarViews, allTabTypes } from './featureIndex';
 import { useActiveViewStore } from './activeView';
 import { openDefaultPanels, setDockApi } from './dockActions';
 import { PanelTab } from './PanelTab';
+import { EmptyDock } from './EmptyDock';
 
 const visionTheme: DockviewTheme = {
   ...themeLight,
@@ -92,6 +93,7 @@ export function Dock({ savedLayout, onLayoutChange }: DockProps) {
       components={components as Record<string, FunctionComponent<IDockviewPanelProps>>}
       defaultTabComponent={PanelTab as FunctionComponent}
       onReady={onReady}
+      watermarkComponent={EmptyDock}
       disableFloatingGroups
     />
   );

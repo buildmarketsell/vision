@@ -8,6 +8,7 @@
 @import './styles/grain.css';
 @import './styles/theme-reveal.css';
 @import './styles/dock.css';
+@import './styles/empty-dock.css';
 @import './styles/terminal.css';
 @import './styles/sidebar.css';
 @import './styles/chat.css';

@@ -188,6 +188,12 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - Video files dropped or pasted on a board are copied to `videos/` next to the board (a file already inside the board's folder is linked in place) and stored as an embeddable whose link is the relative path; `boardMedia.tsx` draws a native `<video>` through `vision-file://` (which streams videos with Range). Pasted files are read in `onPasteCapture`: once Excalidraw awaits, the clipboard's files are gone.
 - Frames: `board/main/embedFrames.ts` drops X-Frame-Options and CSP `frame-ancestors` for sub-frames only, so most sites load, and adds a Referer to YouTube embeds (without one the built app gets YouTube error 153). CSP has `frame-src https: http:` and `media-src vision-file:`. Test: `tests/e2e/boardMedia.spec.ts`.
 
+## Empty workspace (Dan, 2026-11-23)
+- With every tab closed, the dock's watermark (`watermarkComponent` in `Dock.tsx`) shows `core/EmptyDock.tsx`: a moving contour map with one centered "New Claude chat" button (runs `claude.new`, same as ⌘T). Its top 36px is a drag region so the window still moves.
+- The map is KokonutUI's Topo Background (MIT, credit lines in each file), split into `components/topo/`: `noise.ts`, `contours.ts` (marching squares, elevation labels), `topoField.ts` (drift, cursor hill, click ripples), `topoRenderer.ts` (canvas loop; stops while hidden, still under reduced motion), `TopoBackground.tsx`. Lines use the CSS `color` of `.topo` (`--color-text-muted`), so themes follow.
+- The Claude mark on the orange button takes the button's text color (`--color-claude` overridden in `empty-dock.css`), or it vanishes.
+- Test: `emptyDock.spec.ts`. The e2e tests run the built app: `npm run build` before running one spec alone.
+
 ## Rebuild and restart (Dan's routine)
 - When a change is done and tested, merge it into `main` and push. Then offer to rebuild and restart: restarting closes Dan's open chats, so ask first (he has said yes every time so far).
 - Restart: quit VISION, `npm run dist` (with `ELECTRON_RUN_AS_NODE` unset), copy it to Applications (`ditto dist/mac-arm64/VISION.app /Applications/VISION.app`), then open `/Applications/VISION.app` with a clean environment (`env -i HOME=… USER=… SHELL=… LANG=… PATH=/usr/bin:/bin:/usr/sbin:/sbin open …`). Launched straight from a Claude Code session, VISION inherits its `CLAUDE_CODE_*` variables and the Claude panes inside it warn "Transcript saving is off".

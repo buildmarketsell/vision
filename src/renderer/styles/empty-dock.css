@@ -1,0 +1,59 @@
+/* Empty workspace (every tab closed): topo map with a button to start Claude. */
+
+.empty-dock {
+  position: absolute;
+  inset: 0;
+  background: var(--color-card);
+}
+
+/* The window still moves by its top row when there's no tab strip. */
+.empty-dock-top {
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--title-bar-height);
+  z-index: 1;
+}
+
+.topo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  overflow: hidden;
+  color: var(--color-text-muted);
+}
+
+.topo-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms var(--ease);
+  /* Faded at the top and bottom so the map sits into the page. */
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+}
+
+.empty-dock-start {
+  /* The Claude mark would vanish orange-on-orange; it takes the button's text color. */
+  --color-claude: var(--color-on-accent);
+  position: relative;
+  height: 40px;
+  padding: 0 var(--space-4);
+  font-size: var(--size-base);
+}
+
+.empty-dock-key {
+  margin-left: var(--space-1);
+  font-family: inherit;
+  font-size: var(--size-small);
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topo-canvas {
+    transition: none;
+  }
+}
