@@ -1,5 +1,5 @@
 import { registerCommands } from './commands';
-import type { DefaultPanel, Feature, SearchProvider, SidebarView, TabType, WorkspaceTab } from './feature';
+import type { DashboardCard, DefaultPanel, Feature, SearchProvider, SidebarView, TabType, WorkspaceTab } from './feature';
 
 let installed: Feature[] = [];
 
@@ -36,4 +36,8 @@ export function allDefaultPanels(): DefaultPanel[] {
 
 export function allSearchProviders(): SearchProvider[] {
   return installed.flatMap((feature) => feature.searchProviders ?? []);
+}
+
+export function allDashboardCards(): DashboardCard[] {
+  return installed.flatMap((feature) => feature.dashboardCards ?? []);
 }

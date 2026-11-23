@@ -86,6 +86,19 @@ export interface SearchProvider {
   search: (query: string) => Promise<SearchItem[]>;
 }
 
+/** A card a feature puts on the Dashboard; Dan picks which show and in what order. */
+export interface DashboardCard {
+  id: string;
+  title: string;
+  icon: ReactNode;
+  /** The card's body; the Dashboard draws the frame and title. */
+  component: ComponentType;
+  /** The menu view the title opens ("todo", "calendar"…). */
+  view?: string;
+  /** Takes the whole row. */
+  wide?: boolean;
+}
+
 export interface Feature {
   id: string;
   name: string;
@@ -96,4 +109,5 @@ export interface Feature {
   defaultPanels?: DefaultPanel[];
   commands?: Command[];
   searchProviders?: SearchProvider[];
+  dashboardCards?: DashboardCard[];
 }

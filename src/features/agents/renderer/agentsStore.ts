@@ -55,8 +55,12 @@ export function startAgentsSync(): void {
 }
 
 export function openAgent(id: string): void {
+  openAgentsPlace({ kind: 'agent', id });
+}
+
+export function openAgentsPlace(place: AgentsPlace): void {
   useActiveViewStore.getState().select(AGENTS_VIEW);
-  useAgents.getState().go({ kind: 'agent', id });
+  useAgents.getState().go(place);
 }
 
 export function moodOf(agent: Agent, status: AgentStatus | undefined): AgentMood {

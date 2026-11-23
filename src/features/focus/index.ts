@@ -1,4 +1,7 @@
+import { createElement } from 'react';
+import { Timer } from 'lucide-react';
 import type { Feature } from '../../renderer/core/feature';
+import { FocusCard } from './renderer/FocusCard';
 import { startFocus, useFocusStore } from '../../renderer/core/focus';
 import { DEFAULT_FOCUS_MINUTES } from '../../shared/focus';
 
@@ -6,6 +9,7 @@ import { DEFAULT_FOCUS_MINUTES } from '../../shared/focus';
 export const focusFeature: Feature = {
   id: 'focus',
   name: 'Focus',
+  dashboardCards: [{ id: 'focus', title: 'Focus', icon: createElement(Timer, { size: 14, strokeWidth: 1.75 }), component: FocusCard }],
   commands: [
     { id: 'focus.start', title: `Start focus (${DEFAULT_FOCUS_MINUTES} min)`, run: () => void startFocus(null, DEFAULT_FOCUS_MINUTES) },
     { id: 'focus.stopwatch', title: 'Start stopwatch', run: () => void startFocus(null, null) },

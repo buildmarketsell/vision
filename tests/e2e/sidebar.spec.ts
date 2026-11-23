@@ -17,7 +17,7 @@ test('the menu sits left and the open feature on the right; each hides with its 
     const right = page.locator('.dock-corner-right .dv-tabs-and-actions-container');
     await expect(page.locator('.dv-tabs-and-actions-container').first()).toHaveCSS('height', '36px');
     const names = await menu(page).getByRole('tab').allTextContents();
-    expect(names.slice(0, 5)).toEqual(['Workspace', 'To-do', 'Boards', 'Database', 'Calendar']);
+    expect(names.slice(0, 5)).toEqual(['Workspace', 'Dashboard', 'To-do', 'Boards', 'Database']);
     expect(names.at(-1)).toBe('Settings');
     expect(names).not.toContain('Claude');
     await expect(sidebar.getByRole('button', { name: 'Open Folder' })).toBeVisible();

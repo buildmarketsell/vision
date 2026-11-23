@@ -46,7 +46,7 @@ test('page frame: To-do, Content, Settings and the Boards home are centered with
       await page.setViewportSize({ width, height: 900 });
       for (const menuOpen of [true, false]) {
         const state = `${width}px, menu ${menuOpen ? 'open' : 'hidden'}`;
-        for (const name of ['To-do', 'Content', 'Settings', 'Boards']) {
+        for (const name of ['To-do', 'Content', 'Settings', 'Boards', 'Dashboard']) {
           await openPage(page, name, menuOpen);
           const { area, title, column } = await frame(page);
           expect(column, `${name}, ${state}: the title must be a .page-title inside a .page-column`).not.toBeNull();
