@@ -10,6 +10,17 @@ async function islandPage(app: ElectronApplication): Promise<Page> {
   return island;
 }
 
+/** The open card sits fully inside the island's window (the real size, not one the test picks), its buttons on one line. */
+async function expectCardFits(island: Page): Promise<void> {
+  await expect(island.locator('.island-panel')).toHaveCSS('opacity', '1');
+  const fit = await island.evaluate(() => {
+    const card = document.querySelector('.island-card')?.getBoundingClientRect();
+    const rows = new Set([...document.querySelectorAll('.island-card > .island-actions > .island-button')].map((button) => Math.round(button.getBoundingClientRect().top)));
+    return { inside: !!card && card.bottom <= window.innerHeight && card.right <= window.innerWidth && card.left >= 0, rows: rows.size };
+  });
+  expect(fit).toEqual({ inside: true, rows: 1 });
+}
+
 // A focus "minute" lasts 1 second here, so countdowns end during the test.
 const FAST = { VISION_FOCUS_TEST_MINUTE_MS: '1000' };
 
@@ -40,15 +51,15 @@ test('focus: start on a to-do, see it in progress and in the island, then answer
     await page.screenshot({ animations: 'disabled', path: 'test-results/focus-todo-chip.png' });
 
     const island = await islandPage(app);
-    await island.setViewportSize({ width: 460, height: 200 });
     await expect(island.getByRole('status', { name: /Focus: Write the advertorial/ })).toBeVisible();
     await island.locator('.island').hover();
-    await expect(island.locator('.island-panel')).toHaveCSS('opacity', '1');
+    await expectCardFits(island);
     await island.screenshot({ path: 'test-results/focus-island.png' });
 
     // The countdown ends: the check-in opens on its own; Done ticks the to-do off.
     await expect(island.getByRole('button', { name: 'Done' })).toBeVisible({ timeout: 10_000 });
     await expect(row.locator('.focus-chip')).toHaveText(/Done\?/);
+    await expectCardFits(island);
     await island.screenshot({ path: 'test-results/focus-island-check-in.png' });
     await island.getByRole('button', { name: 'Done' }).click();
     await expect(todos.getByRole('list', { name: 'To-dos' }).getByRole('listitem')).toHaveText([/Edit the reel/]);
@@ -120,12 +131,11 @@ test('heads-up: five minutes before a meeting the island counts down and Join op
     });
     await connectFakeGoogle(page.getByRole('complementary', { name: 'Sidebar' }));
     const island = await islandPage(app);
-    await island.setViewportSize({ width: 460, height: 200 });
     const status = island.getByRole('status', { name: 'Call with Kilo' });
     await expect(status).toBeVisible({ timeout: 15_000 });
     await expect(island.locator('.island-clock')).toHaveText(/^[23]:\d\d$/);
     await island.locator('.island').hover();
-    await expect(island.locator('.island-panel')).toHaveCSS('opacity', '1');
+    await expectCardFits(island);
     await island.screenshot({ path: 'test-results/focus-island-meeting.png' });
     await island.getByRole('button', { name: 'Join' }).click();
     await expect.poll(() => app.evaluate(() => (globalThis as { opened?: string[] }).opened)).toEqual(['https://meet.google.com/abc-defg-hij']);
