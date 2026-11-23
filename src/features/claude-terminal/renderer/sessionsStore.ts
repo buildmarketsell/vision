@@ -91,3 +91,10 @@ export function focusOrStartClaude(): string | null {
   newClaudeSession();
   return null;
 }
+
+/** Goes to the tab already showing this saved conversation, or continues it in a new tab. */
+export function openConversation(item: { sessionId: string; title: string }): void {
+  const openId = panelForConversation(item.sessionId);
+  if (openId) focusPanel(openId);
+  else newClaudeSession(item.sessionId, item.title);
+}

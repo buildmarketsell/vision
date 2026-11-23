@@ -6,10 +6,12 @@ import { useWorkspace } from './core/workspaceStore';
 import { FolderMissing, Welcome } from './components/Welcome';
 import { draggedTreePaths } from './core/treeDrag';
 import { Workspace } from './components/Workspace';
+import { PALETTE_COMMAND, usePalette } from './core/palette/paletteResults';
 
 function useAppCommands(): void {
   useEffect(() => {
     registerCommands([
+      { id: PALETTE_COMMAND, title: 'Search VISION', shortcut: 'Mod+K', run: () => usePalette.getState().toggle() },
       { id: 'tab.close', title: 'Close Tab', shortcut: 'Mod+W', run: closeActivePanel },
       { id: 'view.toggleMenu', title: 'Toggle Menu', shortcut: 'Mod+\\', run: () => useWorkspace.getState().toggleMenu() },
       { id: 'view.toggleSidebar', title: 'Toggle Sidebar', shortcut: 'Mod+Shift+|', run: () => useWorkspace.getState().toggleSidebar() },

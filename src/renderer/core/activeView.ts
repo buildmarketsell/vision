@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { allSidebarViews } from './featureIndex';
 
 const ACTIVE_VIEW_KEY = 'vision.sidebarView';
 
@@ -22,3 +23,12 @@ export const useActiveViewStore = create<{ stored: string | null; select: (id: s
     }
   },
 }));
+
+/** Brings the panes back when a full-page view (To-do, Calendar…) covers them, so a tab being opened is seen. */
+export function showPanes(): void {
+  const views = allSidebarViews();
+  const { stored, select } = useActiveViewStore.getState();
+  if (!views.find((view) => view.id === stored)?.main) return;
+  const panesView = views.find((view) => !view.main);
+  if (panesView) select(panesView.id);
+}

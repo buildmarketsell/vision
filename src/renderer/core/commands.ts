@@ -6,6 +6,11 @@ export function registerCommands(commands: Command[]): void {
   for (const command of commands) registry.set(command.id, command);
 }
 
+/** Every registered command, for the ⌘K search box. */
+export function allCommands(): Command[] {
+  return [...registry.values()];
+}
+
 export function runCommand(id: string): void {
   void registry.get(id)?.run();
 }

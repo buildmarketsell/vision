@@ -194,6 +194,13 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - The Claude mark on the orange button takes the button's text color (`--color-claude` overridden in `empty-dock.css`), or it vanishes.
 - Test: `emptyDock.spec.ts`. The e2e tests run the built app: `npm run build` before running one spec alone.
 
+## ⌘K search (Dan, 2026-11-23: "something like [Raycast] so i can search for anything in the app")
+- ⌘K (command `palette.open`, registered in `App.tsx`) toggles `core/palette/CommandPalette.tsx`: one big field, grouped results, footer with the keys; ↑↓ Enter Esc. Portaled to the body; mounted only while open, so each ⌘K starts empty.
+- Empty: Places (every menu view) and Commands (every registered command, with its shortcut). Typing: matching places and commands, then each feature's `searchProviders` (`SearchProvider` in `core/feature.ts`), asked 120 ms after typing stops, 6 results per section. Ranking is pure in `src/shared/palette.ts` (unit tested): every word must match, accents ignored.
+- Providers today: Files (`fs.search`, same as ⌘P), Past chats, Pages, To-dos. **A new feature adds its own provider to its manifest** so ⌘K finds its things; never add feature logic to the palette.
+- Results that open a tab call `showPanes()` (`core/activeView.ts`) first, so a full-page view (To-do, Calendar) doesn't hide the new tab.
+- Test: `palette.spec.ts`.
+
 ## Rebuild and restart (Dan's routine)
 - When a change is done and tested, merge it into `main` and push. Then offer to rebuild and restart: restarting closes Dan's open chats, so ask first (he has said yes every time so far).
 - Restart: quit VISION, `npm run dist` (with `ELECTRON_RUN_AS_NODE` unset), copy it to Applications (`ditto dist/mac-arm64/VISION.app /Applications/VISION.app`), then open `/Applications/VISION.app` with a clean environment (`env -i HOME=… USER=… SHELL=… LANG=… PATH=/usr/bin:/bin:/usr/sbin:/sbin open …`). Launched straight from a Claude Code session, VISION inherits its `CLAUDE_CODE_*` variables and the Claude panes inside it warn "Transcript saving is off".

@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar';
 import { useActiveView } from './SidebarViews';
 import { ErrorBoundary } from './ErrorBoundary';
 import { allSidebarViews } from '../core/featureIndex';
+import { CommandPalette } from '../core/palette/CommandPalette';
 
 const SAVE_LAYOUT_DELAY_MS = 500;
 
@@ -86,6 +87,7 @@ export function Workspace({ layout }: { layout: FolderLayout | null }) {
         </main>
       )}
       <Sidebar />
+      <CommandPalette />
     </div>
   );
 }

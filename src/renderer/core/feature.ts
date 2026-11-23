@@ -67,6 +67,25 @@ export interface Command {
   run: () => void | Promise<void>;
 }
 
+/** One result in the ⌘K search box. */
+export interface SearchItem {
+  id: string;
+  title: string;
+  /** Muted text after the title, e.g. a file's folder. */
+  detail?: string;
+  /** What it is, shown on the right: "File", "Chat", "Page"… */
+  kind: string;
+  icon?: ReactNode;
+  run: () => void;
+}
+
+/** A feature's own results in the ⌘K search box, shown under `title`. Called as Dan types (debounced). */
+export interface SearchProvider {
+  id: string;
+  title: string;
+  search: (query: string) => Promise<SearchItem[]>;
+}
+
 export interface Feature {
   id: string;
   name: string;
@@ -76,4 +95,5 @@ export interface Feature {
   fileHandlers?: FileHandler[];
   defaultPanels?: DefaultPanel[];
   commands?: Command[];
+  searchProviders?: SearchProvider[];
 }
