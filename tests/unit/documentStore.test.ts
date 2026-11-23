@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -89,13 +89,67 @@ describe('document store', () => {
     expect(doc.get()).toEqual({ count: 0 });
   });
 
-  it('keeps saving after the disk refused a write', async () => {
-    const doc = createDocumentStore<Doc>({ path: () => join(folder, 'missing', 'doc.json'), read });
+  it('the same store keeps saving after the disk refused a write', async () => {
+    let target = join(folder, 'missing', 'doc.json');
+    const doc = createDocumentStore<Doc>({ path: () => target, read });
     await expect(doc.set({ count: 1 })).rejects.toThrow();
-    path = join(folder, 'doc.json');
-    const ok = store();
-    await ok.set({ count: 2 });
+    target = path;
+    await doc.set({ count: 2 });
     expect(await onDisk()).toEqual({ count: 2 });
+  });
+
+  it('flush retries a save that failed', async () => {
+    let target = join(folder, 'missing', 'doc.json');
+    const doc = createDocumentStore<Doc>({ path: () => target, read });
+    await expect(doc.set({ count: 4 })).rejects.toThrow();
+    target = path;
+    await doc.flush();
+    expect(await onDisk()).toEqual({ count: 4 });
+  });
+
+  it('flush never puts back an older failed save over a newer one', async () => {
+    let target = join(folder, 'missing', 'doc.json');
+    const doc = createDocumentStore<Doc>({ path: () => target, read });
+    const failing = doc.set({ count: 1 });
+    target = path;
+    await doc.set({ count: 2 });
+    await failing.catch(() => undefined);
+    await doc.flush();
+    expect(await onDisk()).toEqual({ count: 2 });
+  });
+
+  it('saves the value as it was when set, even if it is changed in place afterwards', async () => {
+    const doc = store();
+    const value = { count: 1 };
+    const saving = doc.set(value);
+    value.count = 99;
+    await saving;
+    expect(await onDisk()).toEqual({ count: 1 });
+  });
+
+  it('still saves when a listener throws', async () => {
+    const doc = store();
+    doc.onChange(() => {
+      throw new Error('window closed');
+    });
+    let saving: Promise<void> | undefined;
+    expect(() => {
+      saving = doc.set({ count: 3 });
+    }).toThrow('window closed');
+    await doc.flush();
+    await saving?.catch(() => undefined);
+    expect(await onDisk()).toEqual({ count: 3 });
+  });
+
+  it('moves aside a file it cannot open, rather than overwriting it', async () => {
+    await mkdir(path);
+    await writeFile(join(path, 'inside.txt'), 'keep me', 'utf8');
+    const doc = store();
+    expect(doc.get()).toEqual({ count: 0 });
+    await doc.set({ count: 1 });
+    const kept = (await readdir(folder)).filter((name) => name.startsWith('doc.json.damaged-'));
+    expect(kept).toHaveLength(1);
+    expect(await readFile(join(folder, kept[0] ?? '', 'inside.txt'), 'utf8')).toBe('keep me');
   });
 
   it('tells listeners about every change', async () => {
