@@ -21,12 +21,15 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - "Latest value" refs: use `useLatest` (`src/renderer/core/useLatest.ts`), never `ref.current = x` during render.
 
 ## Folder layout
-- `src/main/`: app start (`index.ts`), windows and session restore (`windows.ts`), menu, saved state (`appState.ts` pure, `stateStore.ts` disk), login-shell PATH (`shellEnv.ts`), path checks (`paths.ts`), file system and watcher (`workspace/`).
+- `src/main/`: app start (`index.ts`), windows and session restore (`windows.ts`), menu, saved state (`appState.ts` pure, `stateStore.ts` disk), files in userData (`documentStore.ts`), login-shell PATH (`shellEnv.ts`), path checks (`paths.ts`), file system and watcher (`workspace/`).
 - `src/preload/index.ts`: the only bridge; exposes `window.vision` (type `VisionApi` in `src/shared/ipc.ts`).
 - `src/shared/`: types, IPC channel names (`IPC`), constants (`app.ts`).
 - `src/renderer/`: `App.tsx`, `theme.ts` (all design tokens), `styles.css`, `core/` (feature types and index, commands and shortcuts, dock and its actions, workspace store, tab status), `components/` (Sidebar, Markdown, Welcome, Workspace, ErrorBoundary, ContextMenu, fileIcons).
 - `src/features/<name>/`: `index.ts` (manifest), `renderer/`, optional `main/`.
 - `tests/unit/` (vitest), `tests/e2e/` (Playwright driving Electron, with `fixtures/fake-claude.mjs`, which fakes both the terminal and the stream-json chat).
+
+## Saving to disk
+- Every JSON file in userData goes through `createDocumentStore` (`src/main/documentStore.ts`, unit tested in a temp folder): one write at a time through a temp file, mode 600, secrets encrypted in its `write`, a failed save never blocks later ones and is retried at quit, and a file that can't be read is moved aside as `<name>.damaged-<time>` instead of being overwritten. Lists that windows show use `createJsonListStore` on top of it. Never write your own readFileSync/writeFile store (before 2026-11-23 there were five copies, and one failed save stopped all later saves of that file).
 
 ## Adding a feature
 1. Create `src/features/<name>/index.ts` exporting a `Feature` (see `src/renderer/core/feature.ts`).

@@ -1,13 +1,12 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { autoSchedule } from '../../../shared/autoSchedule';
 import type { CalendarEvent } from '../../../shared/calendar';
 import { IPC } from '../../../shared/ipc';
-import { DEFAULT_PLAN_SETTINGS, normalizePlanSettings, PLAN_DAYS, type PlanBlock, type PlanRisk, type PlanState } from '../../../shared/plan';
+import { normalizePlanSettings, PLAN_DAYS, type PlanBlock, type PlanRisk, type PlanState } from '../../../shared/plan';
 import { planProgress } from '../../../shared/planProgress';
 import { logError } from '../../../main/log';
-import { writePrivateJson } from '../../../main/secrets';
+import { createDocumentStore } from '../../../main/documentStore';
 import { todoList } from '../../../main/todoList';
 import { eventsForPlan, forgetCachedWeeks, onCalendarChanged } from './calendarStore';
 import { GoogleError, SignInExpiredError } from './googleAuth';
@@ -30,14 +29,10 @@ interface Saved {
   mirroredTo: string | null;
 }
 
-let saved: Saved | null = null;
 let state: PlanState | null = null;
 let running: Promise<void> | null = null;
 let again = false;
 let settleTimer: ReturnType<typeof setTimeout> | null = null;
-let writing: Promise<void> = Promise.resolve();
-
-const filePath = () => join(app.getPath('userData'), 'plan.json');
 
 const isBlock = (value: unknown): value is PlanBlock => {
   const block = value as Partial<PlanBlock> | null;
@@ -45,22 +40,18 @@ const isBlock = (value: unknown): value is PlanBlock => {
 };
 const blocksIn = (raw: unknown) => (Array.isArray(raw) ? raw.filter(isBlock) : []);
 
-function loadSaved(): Saved {
-  if (saved) return saved;
-  try {
-    const raw = JSON.parse(readFileSync(filePath(), 'utf8')) as Record<string, unknown>;
-    saved = { settings: normalizePlanSettings(raw['settings']), blocks: blocksIn(raw['blocks']), past: blocksIn(raw['past']), mirroredTo: typeof raw['mirroredTo'] === 'string' ? raw['mirroredTo'] : null };
-  } catch {
-    saved = { settings: DEFAULT_PLAN_SETTINGS, blocks: [], past: [], mirroredTo: null };
-  }
-  return saved;
-}
+const document = createDocumentStore<Saved>({
+  path: () => join(app.getPath('userData'), 'plan.json'),
+  read: (value) => {
+    const raw = (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>;
+    return { settings: normalizePlanSettings(raw['settings']), blocks: blocksIn(raw['blocks']), past: blocksIn(raw['past']), mirroredTo: typeof raw['mirroredTo'] === 'string' ? raw['mirroredTo'] : null };
+  },
+});
 
-/** Saves one write at a time, so two saves close together never share the temp file. */
+const loadSaved = (): Saved => document.get();
+
 function persist(change: Partial<Saved>): void {
-  const next = { ...loadSaved(), ...change };
-  saved = next;
-  writing = writing.then(() => writePrivateJson(filePath(), next)).catch((error: unknown) => logError('Could not save plan.json', error));
+  document.set({ ...loadSaved(), ...change }).catch((error: unknown) => logError('Could not save plan.json', error));
 }
 
 function broadcast(next: PlanState): void {

@@ -1,5 +1,4 @@
 import { safeStorage } from 'electron';
-import { rename, writeFile } from 'node:fs/promises';
 
 /** The Keychain can't encrypt right now; its message is shown to Dan as is. */
 export class KeychainUnavailableError extends Error {
@@ -24,8 +23,3 @@ export function decryptSecret(value: unknown): string | null {
   }
 }
 
-/** Writes JSON through a temp file, readable only by Dan's user, so a crash never leaves half a file. */
-export async function writePrivateJson(path: string, data: unknown): Promise<void> {
-  await writeFile(`${path}.tmp`, JSON.stringify(data, null, 2), { encoding: 'utf8', mode: 0o600 });
-  await rename(`${path}.tmp`, path);
-}

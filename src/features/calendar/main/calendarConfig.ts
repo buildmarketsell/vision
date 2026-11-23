@@ -1,7 +1,7 @@
 import { app } from 'electron';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { decryptSecret as decrypt, encryptSecret as encrypt, writePrivateJson } from '../../../main/secrets';
+import { createDocumentStore } from '../../../main/documentStore';
+import { decryptSecret as decrypt, encryptSecret as encrypt } from '../../../main/secrets';
 import type { GoogleClient } from './googleAuth';
 
 /** What is saved in userData/calendar.json. The client secret and sign-ins are encrypted with the macOS Keychain. */
@@ -15,11 +15,6 @@ export interface CalendarConfig {
 type Obj = Record<string, unknown>;
 const isObj = (value: unknown): value is Obj => typeof value === 'object' && value !== null && !Array.isArray(value);
 
-let config: CalendarConfig | null = null;
-let writing: Promise<void> = Promise.resolve();
-
-const configPath = () => join(app.getPath('userData'), 'calendar.json');
-
 function parse(raw: unknown): CalendarConfig {
   if (!isObj(raw)) return { client: null, accounts: [], visibility: {} };
   const client = isObj(raw['client']) && typeof raw['client']['id'] === 'string' ? { id: raw['client']['id'], secret: decrypt(raw['client']['secret']) } : null;
@@ -31,24 +26,17 @@ function parse(raw: unknown): CalendarConfig {
   return { client: client?.secret ? { id: client.id, secret: client.secret } : null, accounts, visibility };
 }
 
-export function loadConfig(): CalendarConfig {
-  if (config) return config;
-  try {
-    config = parse(JSON.parse(readFileSync(configPath(), 'utf8')));
-  } catch {
-    config = { client: null, accounts: [], visibility: {} };
-  }
-  return config;
-}
+const document = createDocumentStore<CalendarConfig>({
+  path: () => join(app.getPath('userData'), 'calendar.json'),
+  read: parse,
+  write: (config) => ({
+    client: config.client ? { id: config.client.id, secret: encrypt(config.client.secret) } : null,
+    accounts: config.accounts.map((account) => ({ email: account.email, refreshToken: encrypt(account.refreshToken) })),
+    visibility: config.visibility,
+  }),
+});
 
-/** Saves through a temp file, readable only by Dan's user. Throws if the Keychain can't encrypt. */
-export function saveConfig(next: CalendarConfig): Promise<void> {
-  const onDisk = {
-    client: next.client ? { id: next.client.id, secret: encrypt(next.client.secret) } : null,
-    accounts: next.accounts.map((account) => ({ email: account.email, refreshToken: encrypt(account.refreshToken) })),
-    visibility: next.visibility,
-  };
-  config = next;
-  writing = writing.then(() => writePrivateJson(configPath(), onDisk));
-  return writing;
-}
+export const loadConfig = (): CalendarConfig => document.get();
+
+/** Saves with secrets encrypted, readable only by Dan's user. Throws if the Keychain can't encrypt. */
+export const saveConfig = (next: CalendarConfig): Promise<void> => document.set(next);
