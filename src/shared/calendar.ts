@@ -27,6 +27,8 @@ export interface CalendarEvent {
   taskId?: string;
   /** Marked "free" in Google: it doesn't take up time. */
   free?: boolean;
+  /** Its Google Meet, Zoom or Teams address (checked by `safeJoinLink`). */
+  joinUrl?: string;
 }
 
 export interface CalendarAccount {

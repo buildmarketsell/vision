@@ -1,4 +1,5 @@
 import type { CalendarEvent, CalendarInfo, GoogleEventBody } from '../../../shared/calendar';
+import { joinLinkFrom } from '../../../shared/meetings';
 import { GoogleError, googleEndpoints, SignInExpiredError } from './googleAuth';
 
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -114,8 +115,10 @@ export function toCalendarEvent(entry: Obj, calendar: CalendarInfo): CalendarEve
   const end = timeOf(entry['end']);
   if (!id || !start || entry['status'] === 'cancelled') return null;
   const taskId = visionTags(entry)['visionTask'];
+  const joinUrl = joinLinkFrom(entry);
   return {
     ...(taskId ? { taskId } : {}),
+    ...(joinUrl ? { joinUrl } : {}),
     ...(entry['transparency'] === 'transparent' ? { free: true } : {}),
     id: `${calendar.key}|${id}`,
     calendarKey: calendar.key,
