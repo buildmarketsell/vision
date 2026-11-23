@@ -12,7 +12,7 @@ import { Markdown } from './Markdown';
 import { PermissionCard, QuestionCard } from './RequestCards';
 import { ToolRow } from './ToolRow';
 import type { ChatSession } from './useChatSession';
-import { timeAgo } from '../timeAgo';
+import { timeAgo } from '../../../../renderer/core/timeAgo';
 import { isLastTextOfAnswer, textForDocument } from './copyText';
 
 const STICK_TO_BOTTOM_PX = 80;

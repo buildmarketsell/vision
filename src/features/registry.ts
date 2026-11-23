@@ -1,4 +1,5 @@
 import type { Feature } from '../renderer/core/feature';
+import { agentsFeature } from './agents';
 import { boardFeature } from './board';
 import { claudeTerminalFeature } from './claude-terminal';
 import { editorFeature } from './editor';
@@ -17,4 +18,4 @@ import { notionFeature } from './notion';
  * Order matters: the menu and the Workspace tabs (Files, Claude, Calendar) follow this order (Workspace first, Dan's order 2026-11-19), and the first file handler
  * that matches a file wins, so the editor (matches everything) stays last.
  */
-export const features: Feature[] = [explorerFeature, todoFeature, boardFeature, notionFeature, claudeTerminalFeature, calendarFeature, contentFeature, inboxFeature, focusFeature, settingsFeature, editorFeature];
+export const features: Feature[] = [explorerFeature, todoFeature, boardFeature, notionFeature, claudeTerminalFeature, calendarFeature, contentFeature, agentsFeature, inboxFeature, focusFeature, settingsFeature, editorFeature];

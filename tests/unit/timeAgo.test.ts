@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { timeAgo } from '../../src/features/claude-terminal/renderer/timeAgo';
+import { timeAgo } from '../../src/renderer/core/timeAgo';
 
 const NOW = Date.UTC(2026, 10, 19, 12);
 const ago = (minutes: number) => timeAgo(NOW - minutes * 60_000, NOW);

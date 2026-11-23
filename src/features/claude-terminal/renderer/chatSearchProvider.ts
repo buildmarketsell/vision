@@ -4,7 +4,7 @@ import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
 import { showPanes } from '../../../renderer/core/activeView';
 import { rankItems } from '../../../shared/palette';
 import { openConversation } from './sessionsStore';
-import { timeAgo } from './timeAgo';
+import { timeAgo } from '../../../renderer/core/timeAgo';
 
 /** The open folder's saved Claude conversations, by name. Picking one goes to its tab or continues it. */
 export const chatSearchProvider: SearchProvider = {
