@@ -21,7 +21,7 @@ VISION is Dan's personal macOS desktop app: a VS Code style workspace with Claud
 - "Latest value" refs: use `useLatest` (`src/renderer/core/useLatest.ts`), never `ref.current = x` during render.
 
 ## Folder layout
-- `src/main/`: app start (`index.ts`), windows and session restore (`windows.ts`), menu, saved state (`appState.ts` pure, `stateStore.ts` disk), files in userData (`documentStore.ts`), login-shell PATH (`shellEnv.ts`), path checks (`paths.ts`), file system and watcher (`workspace/`).
+- `src/main/`: calendar events and plan blocks for other features (`calendarBridge.ts`), app start (`index.ts`), windows and session restore (`windows.ts`), menu, saved state (`appState.ts` pure, `stateStore.ts` disk), files in userData (`documentStore.ts`), login-shell PATH (`shellEnv.ts`), path checks (`paths.ts`), file system and watcher (`workspace/`).
 - `src/preload/index.ts`: the only bridge; exposes `window.vision` (type `VisionApi` in `src/shared/ipc.ts`).
 - `src/shared/`: types, IPC channel names (`IPC`), constants (`app.ts`).
 - `src/renderer/`: `App.tsx`, `theme.ts` (all design tokens), `styles.css`, `core/` (feature types and index, commands and shortcuts, dock and its actions, workspace store, tab status), `components/` (Sidebar, Markdown, Welcome, Workspace, ErrorBoundary, ContextMenu, fileIcons).
@@ -100,6 +100,18 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - Re-plans 1.5 s after a to-do or calendar change in VISION, and every 10 minutes. Busy = timed events in visible calendars, except all-day, "free" and VISION's own blocks. If any calendar can't be read (error, expired sign-in) the last plan stays: planning without it would put tasks over meetings.
 - Blocks are copied to the Google calendar picked in Plan settings (Dan chose this so he sees them on his phone). Only events tagged `extendedProperties.private.visionBlock=1` are ever changed (`planSync.ts`); past ones stay as a record, a block under way whose to-do was finished is cut to end now. `plan.json` remembers `mirroredTo` before writing, so switching calendars or turning planning off cleans the old one. The week page draws blocks from the plan (outlined, with a circle; click → Mark done) and hides their Google copies.
 - Test: `autoSchedule.spec.ts` (fake Google now does PATCH, DELETE and the tag filter).
+
+## Focus, heads-up and the island (`src/features/focus/`, Dan 2026-11-23, after Black Hole, getblackhole.app, MIT)
+- Spec: `docs/specs/2026-11-23-focus.md`; words in `GLOSSARY.md` (focus, countdown, stopwatch, check-in, island, glance, meeting, heads-up, rollover).
+- Pure and unit tested: the focus clock (`src/shared/focus.ts`, time from timestamps, never counted by ticks), meetings and join links (`meetings.ts`), the glance that the menu bar and island both draw from (`glance.ts`), the menu bar's text and menu (`focus/main/trayMenu.ts`), notch detection (`focus/main/islandPlacement.ts`).
+- Main (`focusStore.ts`) owns the state in `userData/focus.json` (state, a log of finished focuses for the coming stats, island on/off, `aliveAt`), ticks every second, sends notifications, pauses on sleep, lock, shutdown and quit, and after a crash pauses the focus where VISION was last alive. It reaches calendar events and plan blocks through `src/main/calendarBridge.ts`, never by importing the Calendar feature.
+- Starting a focus on a to-do moves it to In progress; Done ticks it off; Not yet sets its plan so exactly the asked time is left (`planForMore`), giving a to-do without a plan `DEFAULT_TODO_PLAN`. Stop at a check-in closes it without touching the to-do.
+- Menu bar item (`focusTray.ts`): always there (eye icon). With the island on it shows only the clock; off, clock and name. Its menu never contains a clock, because a menu rebuilt every second closes under the pointer.
+- The island (`islandWindow.ts`, page `src/renderer/island.html` → `Island.tsx`, `island.css`) is a see-through, never-focused window over everything, on all Spaces and full-screen apps, that lets clicks through except over the island (`island:hover`). It hangs below the notch (as wide as the notch) instead of having wings beside it: wings covered menu bar items, including VISION's own (Dan's screen, 2026-11-23). Controls open as a card below it; a check-in and a started meeting open it on their own. Its black is the notch's own, so it doesn't follow themes; only the accent does.
+- The app's "is any window open?" check (Dock click) counts `allWindowContexts()`, not `BrowserWindow.getAllWindows()`, because the island is a window too.
+- Mac notifications have Done / +5 min / Join buttons where macOS shows them; an old notification answers only its own check-in. The island and menu bar are the reliable path.
+- Heads-up: a meeting is timed, not free, not declined, not a VISION block; from 5 min before to 10 min after its start. One meeting in two calendars is one (`meetingKey`). Join opens only https links on Meet, Zoom or Teams (`safeJoinLink`, checked again in main).
+- Tests: `focus.spec.ts` (`VISION_FOCUS_TEST_MINUTE_MS` makes a minute last 1 s; the fake Google's `meetingInMinutes` adds a Meet call). In headless runs the island window exists but never shows, and there is no menu bar item.
 
 ## Content (`src/features/content/`)
 - Menu item for Dan's content work (Dan, 2026-11-20: "we're going to add a lot of stuff there"). First part: a dashboard of YouTube and Instagram numbers (`ContentPage.tsx`), full page, no sidebar panel. New content tools go on this page or as sections next to it.

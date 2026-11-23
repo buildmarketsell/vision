@@ -17,6 +17,8 @@
 - Boards (branch `feature/boards`, 2026-11-17): Excalidraw canvas for `.excalidraw` files, New Board button in Files, autosave, tldraw-style defaults, follows the theme.
 - Boards look like tldraw (branch `feature/boards-tldraw-look`, 2026-11-17): own toolbar, style panel, menu/undo and zoom around the canvas; sticky notes; tldraw palette and canvas color.
 
+- Focus, heads-up and rollover (branch `feature/focus`, 2026-11-23, spec `docs/specs/2026-11-23-focus.md`): focus timer on a to-do (countdown 15/25/50/any or stopwatch) in the menu bar and an island under the notch, check-in when it ends (Done, +5 min, Not yet → more planned time), meeting heads-up 5 min before with Join for Meet/Zoom/Teams, and rollover of planned to-dos whose time ran out. Next: weekly stats from the saved focus log.
+
 ## Next
 - Merge `feature/notion-layout` into `main` once Dan has used it for a bit.
 - Later (Dan): notifications view and more sidebar views.
