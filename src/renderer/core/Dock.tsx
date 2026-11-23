@@ -2,8 +2,8 @@ import { useMemo, type FunctionComponent } from 'react';
 import { DockviewReact, themeLight, type DockviewApi, type DockviewReadyEvent, type DockviewTheme, type IDockviewPanelProps } from 'dockview-react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import type { TabParams } from './feature';
-import { allSidebarViews, allTabTypes } from './featureIndex';
-import { useActiveViewStore } from './activeView';
+import { allTabTypes } from './featureIndex';
+import { showPanes } from './activeView';
 import { openDefaultPanels, setDockApi } from './dockActions';
 import { PanelTab } from './PanelTab';
 import { EmptyDock } from './EmptyDock';
@@ -25,14 +25,6 @@ function withBoundary(name: string, Inner: PanelComponent): PanelComponent {
   );
   Wrapped.displayName = `Panel(${name})`;
   return Wrapped;
-}
-
-function showPanes(): void {
-  const views = allSidebarViews();
-  const { stored, select } = useActiveViewStore.getState();
-  if (!views.find((view) => view.id === stored)?.main) return;
-  const panesView = views.find((view) => !view.main);
-  if (panesView) select(panesView.id);
 }
 
 function restoreLayout(api: DockviewApi, saved: unknown): void {

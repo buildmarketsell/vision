@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import type { PastConversation } from '../../../shared/claudeChat';
 import { ClaudeLogo } from '../../../renderer/components/ClaudeLogo';
-import { focusPanel, getDockApi, onDockReady } from '../../../renderer/core/dockActions';
-import { CLAUDE_TAB, newClaudeSession, panelForConversation, useClaudeSessions } from './sessionsStore';
+import { getDockApi, onDockReady } from '../../../renderer/core/dockActions';
+import { CLAUDE_TAB, newClaudeSession, openConversation, useClaudeSessions } from './sessionsStore';
 import { timeAgo } from './timeAgo';
 import { UsagePanel } from './usage/UsagePanel';
 
@@ -51,12 +51,6 @@ function usePastConversations(): PastConversation[] | null {
     };
   }, [activity]);
   return past;
-}
-
-function openConversation(item: PastConversation): void {
-  const openId = panelForConversation(item.sessionId);
-  if (openId) focusPanel(openId);
-  else newClaudeSession(item.sessionId, item.title);
 }
 
 /** Sidebar view for Claude: usage on top, then past chats to pick up again. */

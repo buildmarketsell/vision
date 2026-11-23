@@ -6,6 +6,7 @@ import { setRevealHandler } from '../../renderer/core/reveal';
 import { ExplorerView, startCreate } from './renderer/ExplorerView';
 import { useFileSearch } from './renderer/FileSearch';
 import { revealPath, showFilesPanel } from './renderer/revealPath';
+import { fileSearchProvider } from './renderer/fileSearchProvider';
 
 setRevealHandler((path) => void revealPath(path));
 
@@ -14,6 +15,7 @@ export const explorerFeature: Feature = {
   name: 'Explorer',
   sidebarViews: [{ id: 'explorer', title: 'Workspace', icon: createElement(Files, { size: 16, strokeWidth: 1.5 }), component: WorkspacePanel, header: WorkspaceTabStrip }],
   workspaceTabs: [{ id: 'files', title: 'Files', icon: createElement(Files, { size: 16, strokeWidth: 1.5 }), component: ExplorerView }],
+  searchProviders: [fileSearchProvider],
   commands: [
     { id: 'explorer.newFile', title: 'New File', run: () => startCreate('newFile') },
     { id: 'explorer.newFolder', title: 'New Folder', run: () => startCreate('newDir') },

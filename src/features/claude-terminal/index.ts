@@ -5,6 +5,7 @@ import { ClaudePanel } from './renderer/ClaudePanel';
 import { SessionsView } from './renderer/SessionsView';
 import { CLAUDE_TAB, DEFAULT_TITLE, focusOrStartClaude, newClaudeSession } from './renderer/sessionsStore';
 import { focusClaudeTerminal } from './renderer/useClaudeTerminal';
+import { chatSearchProvider } from './renderer/chatSearchProvider';
 
 export const claudeTerminalFeature: Feature = {
   id: 'claude-terminal',
@@ -20,6 +21,7 @@ export const claudeTerminalFeature: Feature = {
       icon: () => createElement(ClaudeLogo, { size: 15 }),
     },
   ],
+  searchProviders: [chatSearchProvider],
   defaultPanels: [{ id: 'claude:first', tabType: CLAUDE_TAB, title: DEFAULT_TITLE }],
   commands: [
     {
