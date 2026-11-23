@@ -28,8 +28,9 @@ export function applyRoutineInput(routines: Routine[], input: unknown, newId: st
   const picked = Object.fromEntries(Object.entries(raw).filter(([key]) => allowed.includes(key)));
   const existing = typeof raw['id'] === 'string' ? routines.find((routine) => routine.id === raw['id']) : undefined;
   const base = existing ?? { id: newId, repeat: 'daily', time: '09:00', weekday: 1, enabled: true, createdAt: now, lastRunAt: null };
-  // A changed time counts from now, so moving 09:00 to 08:00 at 08:30 doesn't fire at once.
-  const timing = existing && (picked['time'] !== undefined || picked['repeat'] !== undefined || picked['weekday'] !== undefined) ? { lastRunAt: now } : {};
+  // A changed time counts from now, so moving 09:00 to 08:00 at 08:30 doesn't fire at once; so does resuming a paused routine.
+  const resumed = existing && !existing.enabled && picked['enabled'] === true;
+  const timing = existing && (resumed || picked['time'] !== undefined || picked['repeat'] !== undefined || picked['weekday'] !== undefined) ? { lastRunAt: now } : {};
   const routine = normalizeRoutines([{ ...base, ...picked, ...timing }])[0];
   if (!routine) return routines;
   return existing ? routines.map((item) => (item.id === routine.id ? routine : item)) : [...routines, routine].slice(-MAX_ROUTINES);

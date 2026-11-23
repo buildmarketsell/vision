@@ -23,7 +23,7 @@ function faceOf(value: unknown): AgentFace | undefined {
   const face = typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
   const shape = FACE_SHAPES.find((item) => item === face['shape']);
   const colour = face['colour'];
-  return shape && typeof colour === 'number' && colour >= 0 && colour < FACE_COLOURS.length ? { shape, colour } : undefined;
+  return shape && typeof colour === 'number' && Number.isInteger(colour) && colour >= 0 && colour < FACE_COLOURS.length ? { shape, colour } : undefined;
 }
 
 async function createAgent(input: unknown) {

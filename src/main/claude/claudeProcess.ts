@@ -80,11 +80,14 @@ function forwardLines(child: ChildProcessWithoutNullStreams, onEvent: (event: un
       const line = buffer.slice(0, newline).trim();
       buffer = buffer.slice(newline + 1);
       if (line) {
+        // Only the parse is guarded: an error inside onEvent must not send the same line a second time.
+        let event: unknown;
         try {
-          onEvent(JSON.parse(line));
+          event = JSON.parse(line);
         } catch {
-          onEvent({ type: 'vision_unparsed', text: line.slice(0, 2000) });
+          event = { type: 'vision_unparsed', text: line.slice(0, 2000) };
         }
+        onEvent(event);
       }
       newline = buffer.indexOf('\n');
     }

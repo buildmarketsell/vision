@@ -139,4 +139,11 @@ describe('changes from the window', () => {
     expect(dueRoutines(moved, at(23, 7, 45))).toEqual([]);
     expect(applyRoutineInput(added, { prompt: '' }, 'r10', at(23, 7))).toBe(added);
   });
+
+  it('resuming a paused routine counts from now, so runs missed while paused do not fire at once', () => {
+    const paused = [routine({ enabled: false, lastRunAt: at(20, 9) })];
+    const resumed = applyRoutineInput(paused, { id: 'r1', enabled: true }, 'unused', at(23, 15));
+    expect(dueRoutines(resumed, at(23, 15, 1))).toEqual([]);
+    expect(dueRoutines(resumed, at(24, 9))).toHaveLength(1);
+  });
 });

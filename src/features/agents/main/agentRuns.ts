@@ -9,6 +9,7 @@ import { reduceChat, reduceClaudeEvent, type ChatAction } from '../../../shared/
 import { emptyChatState, type ChatState } from '../../../shared/chat/chatTypes';
 import { asObj } from '../../../shared/chat/eventParsing';
 import { startClaude, toClaudeMessage, type ClaudeRun } from '../../../main/claude/claudeProcess';
+import { allWindowContexts } from '../../../main/windows';
 import { readConversation, transcriptDirFor } from '../../../main/claude/transcripts';
 import { agentList, changeAgent, findAgent } from './agentStore';
 
@@ -29,6 +30,8 @@ interface Runtime {
   starting: Promise<ClaudeRun | null> | null;
   /** The process being stopped on purpose (idle, fresh chat, settings changed): its exit is not an error. */
   stopping: ClaudeRun | null;
+  /** Stopped while its process was still starting: stop that process as soon as it exists. */
+  cancelStart: boolean;
   idleTimer: ReturnType<typeof setTimeout> | null;
   failed: boolean;
   repliedAt: number | null;
@@ -64,7 +67,7 @@ async function runtimeFor(agent: Agent): Promise<Runtime> {
   if (existing) return existing;
   const state = await loadState(agent);
   const runtime = runtimes.get(agent.id) ?? {
-    state, run: null, starting: null, stopping: null, idleTimer: null, failed: false, repliedAt: null, handoff: false, restartWhenIdle: false, fromRoutine: false, needsYou: 0,
+    state, run: null, starting: null, stopping: null, cancelStart: false, idleTimer: null, failed: false, repliedAt: null, handoff: false, restartWhenIdle: false, fromRoutine: false, needsYou: 0,
   };
   runtimes.set(agent.id, runtime);
   return runtime;
@@ -79,10 +82,10 @@ function preview(state: ChatState): string | null {
 }
 
 function statusOf(runtime: Runtime | undefined): AgentStatus {
-  if (!runtime) return { phase: 'off', needsYou: 0, failed: false, preview: null, repliedAt: null };
+  if (!runtime) return { phase: 'off', needsYou: 0, failed: false, preview: null, repliedAt: null, handingOff: false };
   const { state } = runtime;
   const phase = runtime.starting ? 'starting' : !runtime.run ? 'off' : state.phase === 'working' ? 'working' : state.phase === 'stopped' ? 'stopped' : 'idle';
-  return { phase, needsYou: state.permissions.length + state.questions.length, failed: runtime.failed, preview: preview(state), repliedAt: runtime.repliedAt };
+  return { phase, needsYou: state.permissions.length + state.questions.length, failed: runtime.failed, preview: preview(state), repliedAt: runtime.repliedAt, handingOff: runtime.handoff };
 }
 
 export function agentStatuses(): Record<string, AgentStatus> {
@@ -101,11 +104,13 @@ function notify(agentId: string, title: string, body: string): void {
   if (HEADLESS || !Notification.isSupported() || BrowserWindow.getFocusedWindow()) return;
   const notification = new Notification({ title, body, sound: 'Glass' });
   notification.on('click', () => {
-    const window = BrowserWindow.getAllWindows().find((item) => !item.webContents.isDestroyed() && item.isVisible()) ?? BrowserWindow.getAllWindows()[0];
-    if (!window) return;
-    window.show();
-    window.focus();
-    window.webContents.send(IPC.agentsOpen, agentId);
+    // App windows only: the focus island is a BrowserWindow too, always visible and never focused.
+    const contexts = allWindowContexts().filter((context) => !context.webContents.isDestroyed());
+    const context = contexts.find((item) => item.window.isVisible()) ?? contexts[0];
+    if (!context) return;
+    context.window.show();
+    context.window.focus();
+    context.webContents.send(IPC.agentsOpen, agentId);
   });
   notification.show();
 }
@@ -127,6 +132,7 @@ function apply(agentId: string, runtime: Runtime, action: ChatAction): void {
 function stopRun(runtime: Runtime): void {
   if (runtime.idleTimer) clearTimeout(runtime.idleTimer);
   runtime.idleTimer = null;
+  if (runtime.starting) runtime.cancelStart = true;
   if (!runtime.run) return;
   runtime.stopping = runtime.run;
   runtime.run.stop();
@@ -176,7 +182,9 @@ function onEvent(agentId: string, runtime: Runtime, event: unknown): void {
   runtime.failed = record['is_error'] === true;
   const agent = findAgent(agentId);
   if (!agent) return;
-  if (runtime.handoff) finishHandoff(agent, runtime);
+  // A failed handoff turn wrote no note: keep the chat rather than wipe it with an older reply as the note.
+  if (runtime.handoff && runtime.failed) runtime.handoff = false;
+  else if (runtime.handoff) finishHandoff(agent, runtime);
   else if (runtime.fromRoutine) notify(agentId, `${agent.name} finished a routine`, statusOf(runtime).preview ?? 'Done.');
   runtime.fromRoutine = false;
   publishStatuses();
@@ -186,12 +194,16 @@ async function ensureRun(agent: Agent, runtime: Runtime): Promise<ClaudeRun | nu
   if (runtime.run) return runtime.run;
   if (runtime.starting) return runtime.starting;
   if (!existsSync(agent.folder)) {
+    runtime.handoff = false;
     apply(agent.id, runtime, { type: 'local/failed', message: `${agent.name}'s folder is gone (${agent.folder}). Pick another one in Details.` });
     return null;
   }
   const flags = trustFlags(agent.trust);
   const saved = sessionSaved(agent);
   let thisRun: ClaudeRun | null = null;
+  // This start reads the agent's current settings, so an older restart or stop request no longer applies.
+  runtime.restartWhenIdle = false;
+  runtime.cancelStart = false;
   runtime.starting = (async () => {
     const started = await startClaude({
       folder: agent.folder,
@@ -210,6 +222,8 @@ async function ensureRun(agent: Agent, runtime: Runtime): Promise<ClaudeRun | nu
           return;
         }
         if (runtime.run === thisRun) runtime.run = null;
+        // The handoff reply never came; otherwise the next ordinary reply would be taken as the note and wipe the chat.
+        runtime.handoff = false;
         runtime.failed = exitCode !== 0;
         apply(agent.id, runtime, { type: 'local/exited', exitCode, errorTail });
       },
@@ -217,10 +231,19 @@ async function ensureRun(agent: Agent, runtime: Runtime): Promise<ClaudeRun | nu
     runtime.starting = null;
     if (!started.ok) {
       runtime.failed = true;
+      runtime.handoff = false;
       apply(agent.id, runtime, { type: 'local/failed', message: started.message });
       return null;
     }
     thisRun = started.run;
+    // Deleted, moved to another folder or quitting while it started: never leave that process running.
+    if (runtime.cancelStart) {
+      runtime.cancelStart = false;
+      runtime.stopping = started.run;
+      started.run.stop();
+      publishStatuses();
+      return null;
+    }
     runtime.run = started.run;
     runtime.failed = false;
     publishStatuses();
@@ -244,6 +267,8 @@ export async function sendToAgent(agentId: unknown, outgoing: unknown, fromRouti
   const message = toClaudeMessage(outgoing);
   if (!agent || !record || !message || !ACCEPTED.has(String(record['kind']))) return;
   const runtime = await runtimeFor(agent);
+  // While the handoff note is written, a new message would be answered in the same turn and wiped with the old chat.
+  if (record['kind'] === 'message' && runtime.handoff && record['text'] !== HANDOFF_PROMPT) return;
   if (record['kind'] === 'message') {
     if (fromRoutine) runtime.fromRoutine = true;
     apply(agent.id, runtime, { type: 'local/sent', text: String(record['text']).trim() });
@@ -263,6 +288,7 @@ export async function freshChat(agentId: unknown): Promise<void> {
   if (runtime.handoff || runtime.state.phase === 'working') return;
   if (!runtime.state.items.some((item) => item.kind === 'user')) return;
   runtime.handoff = true;
+  publishStatuses();
   await sendToAgent(agent.id, { kind: 'message', text: HANDOFF_PROMPT });
 }
 
@@ -277,8 +303,10 @@ export async function agentSettingsChanged(before: Agent, after: Agent): Promise
     apply(after.id, fresh, { type: 'replace', state: fresh.state });
     return;
   }
-  const restart = before.job !== after.job || before.trust !== after.trust || before.model !== after.model;
-  if (!restart || !runtime.run) return;
+  // The name is in the system prompt too ("You are <name>").
+  const restart = before.name !== after.name || before.job !== after.job || before.trust !== after.trust || before.model !== after.model;
+  // A process still starting was given the old settings: restart it once it is idle.
+  if (!restart || (!runtime.run && !runtime.starting)) return;
   if (isIdle(runtime)) stopRun(runtime);
   else runtime.restartWhenIdle = true;
   publishStatuses();

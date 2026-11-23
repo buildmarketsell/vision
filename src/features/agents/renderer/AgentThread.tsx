@@ -9,7 +9,7 @@ const STICK_PX = 80;
 const MAX_COMPOSER_PX = 200;
 
 /** Bupsy's composer: one rounded box, "Message <name>", a pink round send button (a stop square while it works). */
-function Composer({ agent, working }: { agent: Agent; working: boolean }) {
+function Composer({ agent, working, handingOff }: { agent: Agent; working: boolean; handingOff: boolean }) {
   const [text, setText] = useState('');
   const ref = useRef<HTMLTextAreaElement>(null);
   useLayoutEffect(() => {
@@ -20,7 +20,7 @@ function Composer({ agent, working }: { agent: Agent; working: boolean }) {
   }, [text]);
   useEffect(() => ref.current?.focus(), [agent.id]);
   const send = () => {
-    if (!text.trim()) return;
+    if (!text.trim() || handingOff) return;
     sendToAgent(agent.id, { kind: 'message', text: text.trim() });
     setText('');
   };
@@ -32,7 +32,7 @@ function Composer({ agent, working }: { agent: Agent; working: boolean }) {
   };
   return (
     <div className="agent-composer" data-working={working}>
-      <textarea ref={ref} rows={1} value={text} placeholder={`Message ${agent.name}`} aria-label={`Message ${agent.name}`} onChange={(event) => setText(event.target.value)} onKeyDown={onKeyDown} />
+      <textarea ref={ref} rows={1} value={text} disabled={handingOff} placeholder={handingOff ? `${agent.name} is writing its handoff note…` : `Message ${agent.name}`} aria-label={`Message ${agent.name}`} onChange={(event) => setText(event.target.value)} onKeyDown={onKeyDown} />
       {working && !text.trim() ? (
         <button className="agent-send" data-stop="true" aria-label="Stop" title="Stop" onClick={() => sendToAgent(agent.id, { kind: 'interrupt' })}>
           <Square size={12} fill="currentColor" strokeWidth={0} />
@@ -106,7 +106,7 @@ export function AgentThread({ agent }: { agent: Agent }) {
         {state?.permissions.map((request) => <ApprovalCard key={request.requestId} agent={agent} request={request} />)}
         {state?.questions.map((request) => <AgentQuestionCard key={request.requestId} agent={agent} request={request} />)}
         {state && working && !waiting && <ThinkingLine agent={agent} state={state} />}
-        <Composer agent={agent} working={working} />
+        <Composer agent={agent} working={working} handingOff={status?.handingOff ?? false} />
       </div>
     </div>
   );

@@ -173,6 +173,8 @@ export interface AgentStatus {
   preview: string | null;
   /** When the agent last finished a reply. */
   repliedAt: number | null;
+  /** Writing its handoff note before a fresh chat: new messages wait. */
+  handingOff: boolean;
 }
 
 export function agentMood(status: { phase: AgentStatus['phase']; needsYou: number; failed: boolean; unread: boolean }): AgentMood {
