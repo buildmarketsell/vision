@@ -7,6 +7,7 @@ import { showPanes } from './activeView';
 import { openDefaultPanels, setDockApi } from './dockActions';
 import { PanelTab } from './PanelTab';
 import { EmptyDock } from './EmptyDock';
+import { NewTabButton } from './NewTabButton';
 
 const visionTheme: DockviewTheme = {
   ...themeLight,
@@ -85,6 +86,7 @@ export function Dock({ savedLayout, onLayoutChange }: DockProps) {
       components={components as Record<string, FunctionComponent<IDockviewPanelProps>>}
       defaultTabComponent={PanelTab as FunctionComponent}
       onReady={onReady}
+      leftHeaderActionsComponent={NewTabButton as FunctionComponent}
       watermarkComponent={EmptyDock}
       disableFloatingGroups
     />

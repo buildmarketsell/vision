@@ -142,6 +142,9 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 - Charts are bklit's "gradient glow" (Dan, 2026-11-20, bklit.com/recipes): a smooth line (monotone curve, never overshoots a reading; `chartPath.ts`, unit tested) over an accent fill that fades down and out at both sides, no grid; hover shows a dot, a tooltip card and the date as a dark pill. YouTube's chart switches Subscribers / Views (the shared `.segmented` switch). Focus the chart and use ← → to read each day. Tiles with history get bklit's "quiet sparkline". Styles in `chart.css`; colors follow the accent.
 - Tests: `VISION_CONTENT_TEST_BASE` points both APIs at `tests/e2e/fixtures/fake-social.ts`; `content.spec.ts`.
 
+## Tab bar (Dan, 2026-11-27: "the same look for the upper bar with the tabs as notion")
+- Notion's tab bar: white like the page, a hairline under it, rounded 28px tabs with no dividers; only the open tab is gray (`--color-row-selected`), others gray on hover. A "+" after the last tab opens a new Claude session like ⌘T (`NewTabButton.tsx`). Styles in `styles/dock.css`; `workspace.spec.ts` checks it.
+
 ## Workspace panel tabs (Dan, 2026-11-19)
 - The Workspace sidebar has VS Code-style tabs in its top row (`WorkspacePanel.tsx`, `header` on the view): Files, Claude, Calendar, from features' `workspaceTabs` in registry order. Files shows the folder name and its action buttons below the tabs. Calendar here is the quick "what's next" list (`CalendarView`), not the week page. Replaced the short-lived Usage button.
 
