@@ -47,3 +47,29 @@ export function sideBands(width: number, clear: number): [number, number][] {
   const side = (width - clear) / 2;
   return side > 0 ? [[0, side], [width - side, width]] : [];
 }
+
+/**
+ * The digital rain's symbols: the set from The Matrix sequels' titles, as listed by Rezmason's recreation
+ * (github.com/Rezmason/matrix, MIT): katakana, digits without 6, a lone z and a few marks.
+ */
+export const MATRIX_GLYPHS = [...'モエヤキオカ7ケサスz152ヨタワ4ネヌナ98ヒ0ホア3ウセ¦:"꞊ミラリ╌ツテニハソ▪—<>|+*コシマムメ'];
+
+/**
+ * One cell of the digital rain, the film's way (after Rezmason): symbols stay put in a grid and drops of light
+ * run down each column, a bright head with a fading trail. Each column has its own speed and spacing, so drops
+ * in a column never catch each other. Symbols change now and then, each at its own pace.
+ */
+export function rainCell(col: number, row: number, seconds: number): { brightness: number; isHead: boolean; glyph: string } {
+  const rowsPerSecond = 7 + hash(col, 11) * 9;
+  const spacing = 28 + hash(col, 12) * 36;
+  const lit = spacing * (0.45 + hash(col, 13) * 0.3);
+  const head = seconds * rowsPerSecond + hash(col, 14) * spacing;
+  const behind = (((head - row) % spacing) + spacing) % spacing;
+  const isHead = behind < 1;
+  const brightness = isHead ? 1 : behind < lit ? (1 - behind / lit) ** 1.4 : 0;
+
+  const cell = col * 4099 + row;
+  const changes = Math.floor(seconds * (0.3 + hash(cell, 15)) + hash(cell, 16) * 10);
+  const glyph = MATRIX_GLYPHS[Math.floor(hash(cell, changes + 17) * MATRIX_GLYPHS.length)] ?? '0';
+  return { brightness, isHead, glyph };
+}

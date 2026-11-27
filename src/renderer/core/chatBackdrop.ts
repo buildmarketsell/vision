@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 
-/** The animation beside the Claude chat (Dan, 2026-11-27, after Magic UI's Dither, Dot Pattern and Animated Grid Pattern). */
-export type ChatBackdrop = 'off' | 'dither' | 'dots' | 'grid';
+/** The animation beside the Claude chat (Dan, 2026-11-27, after Magic UI's Dither, Dot Pattern and Animated Grid Pattern, and the film's digital rain). */
+export type ChatBackdrop = 'off' | 'dither' | 'dots' | 'grid' | 'matrix';
 
 export const CHAT_BACKDROPS: { value: ChatBackdrop; label: string }[] = [
   { value: 'off', label: 'Off' },
   { value: 'dither', label: 'Dither' },
   { value: 'dots', label: 'Dots' },
   { value: 'grid', label: 'Grid' },
+  { value: 'matrix', label: 'Matrix' },
 ];
 
 const STORAGE_KEY = 'vision.chatBackdrop';

@@ -479,7 +479,7 @@ test('chat background: picked in Settings, drawn only beside the chat, gone when
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'test-results/chat-backdrop-dither.png' });
 
-    for (const name of ['Dots', 'Grid'] as const) {
+    for (const name of ['Dots', 'Grid', 'Matrix'] as const) {
       await page.keyboard.press('Meta+Backslash');
       await menu(page).getByRole('tab', { name: 'Settings' }).click();
       await page.getByRole('radiogroup', { name: 'Chat background' }).getByRole('radio', { name }).click();

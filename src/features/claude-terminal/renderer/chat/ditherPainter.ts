@@ -1,13 +1,10 @@
+import type { Painter } from './painter';
+
 /**
  * Dither: a glow along the bottom with haze drifting up, drawn as square dots that are on or off by an 8×8 Bayer
  * matrix, after Magic UI's Dither ("horizon"). Written fresh as one small WebGL shader.
  */
 
-/** Draws one frame in CSS pixels: `clear` is the width of the reading column kept empty in the middle. */
-export interface Painter {
-  draw: (seconds: number, width: number, height: number, clear: number, color: string) => void;
-  dispose: () => void;
-}
 
 /** Any CSS color as 0–1 RGB, read back from a one-pixel canvas so theme colors in any format work. */
 function toRgb(color: string): [number, number, number] {
