@@ -434,3 +434,34 @@ test('a file link in a Claude reply opens the file in a tab', async () => {
     await app.close();
   }
 });
+
+test('tab bar looks like Notion: rounded tabs, gray only when open, and + opens a new tab', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    const tabs = page.locator('.vision-dock .dv-tab');
+    await expect(tabs.first()).toBeVisible({ timeout: 15_000 });
+    const before = await tabs.count();
+    await page.getByRole('button', { name: 'New tab' }).first().click();
+    await expect(tabs).toHaveCount(before + 1);
+    await page.mouse.move(600, 400);
+    await page.screenshot({ animations: 'disabled', path: 'test-results/notion-tabs.png' });
+
+    const look = await page.evaluate(() => {
+      const style = (selector: string) => getComputedStyle(document.querySelector(selector) as Element);
+      return {
+        bar: style('.vision-dock .dv-tabs-and-actions-container').backgroundColor,
+        page: style('.vision-dock .dv-groupview').backgroundColor,
+        radius: style('.vision-dock .dv-active-tab').borderTopLeftRadius,
+        active: style('.vision-dock .dv-active-tab').backgroundColor,
+        inactive: style('.vision-dock .dv-inactive-tab').backgroundColor,
+      };
+    });
+    expect(look.bar).toBe(look.page);
+    expect(look.radius).toBe('8px');
+    expect(look.active).not.toBe(look.bar);
+    expect(look.inactive).toBe('rgba(0, 0, 0, 0)');
+  } finally {
+    await app.close();
+  }
+});

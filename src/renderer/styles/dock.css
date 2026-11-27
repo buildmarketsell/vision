@@ -1,15 +1,15 @@
 /*
  * Dock (panes and tabs), flat like Notion: one white page area, panes split by 1px lines,
- * a gray tab strip on top where the active tab is white and joins the page below it.
+ * and Notion's tab bar on top: white, a hairline under it, rounded tabs where only the open one is gray.
  */
 
 .vision-dock {
   --dv-group-view-background-color: var(--color-card);
-  --dv-tabs-and-actions-container-background-color: var(--color-sidebar);
+  --dv-tabs-and-actions-container-background-color: var(--color-card);
   --dv-tabs-and-actions-container-height: var(--title-bar-height);
-  --dv-activegroup-visiblepanel-tab-background-color: var(--color-card);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--color-row-selected);
   --dv-activegroup-hiddenpanel-tab-background-color: transparent;
-  --dv-inactivegroup-visiblepanel-tab-background-color: var(--color-card);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--color-row-hover);
   --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
   --dv-activegroup-visiblepanel-tab-color: var(--color-text);
   --dv-activegroup-hiddenpanel-tab-color: var(--color-text-muted);
@@ -30,9 +30,14 @@
   height: 100%;
 }
 
-/* The line under the strip is an inset shadow, so the white active tab paints over it. */
 .vision-dock .dv-tabs-and-actions-container {
   box-shadow: inset 0 -1px 0 var(--color-border);
+}
+
+.vision-dock .dv-tabs-container {
+  align-items: center;
+  gap: var(--space-1);
+  padding-left: var(--space-2);
 }
 
 /* With the menu hidden, the top-left strip leaves room for the traffic lights and the menu button; with the sidebar hidden, the top-right one for the sidebar button. */
@@ -47,14 +52,28 @@
 .vision-dock .dv-tab {
   flex: 0 1 var(--tab-width);
   min-width: var(--tab-min-width);
-  height: 100%;
+  height: 28px;
   padding: 0;
-  box-shadow: inset -1px 0 0 var(--color-border);
+  border-radius: var(--radius-control);
   transition: background-color var(--duration-fast) var(--ease);
 }
 
 .vision-dock .dv-tab:not(.dv-active-tab):hover {
   background: var(--color-row-hover);
+}
+
+/* Focus ring follows the rounded tab instead of dockview's square outline. */
+.vision-dock .dv-tab:focus-visible::after,
+.vision-dock .dv-tab:has(:focus-visible)::after {
+  border-radius: var(--radius-control);
+}
+
+.vision-dock .dock-new-tab {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: var(--space-1);
+  -webkit-app-region: no-drag;
 }
 
 /* Empty strip space moves the window, like a title bar. */
