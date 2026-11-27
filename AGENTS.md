@@ -145,6 +145,10 @@ Every page that fills the window uses the shared page frame in `styles.css`; nev
 ## Tab bar (Dan, 2026-11-27: "the same look for the upper bar with the tabs as notion")
 - Notion's tab bar: white like the page, a hairline under it, rounded 28px tabs with no dividers; only the open tab is gray (`--color-row-selected`), others gray on hover. A "+" after the last tab opens a new Claude session like ⌘T (`NewTabButton.tsx`). Styles in `styles/dock.css`; `workspace.spec.ts` checks it.
 
+## Chat background (Dan, 2026-11-27, after Magic UI's Dither, Dot Pattern and Animated Grid Pattern)
+- Settings → Chat → Background: Off, Dither (default), Dots, Grid (`src/renderer/core/chatBackdrop.ts`, localStorage). Written fresh, no new dependencies: `ChatBackdrop.tsx` (2D canvas for dots and grid), `ditherPainter.ts` (one WebGL shader, 8×8 Bayer), timing in `backdropMath.ts` (stateless, unit tested).
+- Drawn only beside the 760px chat column and faded out toward it (mask in `chat.css`); in a narrow pane there's nothing. 30 fps, stops while the chat is off screen or VISION is hidden; Reduce Motion draws one still frame. Dither uses the accent, dots and grid `--color-text-faint`. Test: `workspace.spec.ts` "chat background".
+
 ## Workspace panel tabs (Dan, 2026-11-19)
 - The Workspace sidebar has VS Code-style tabs in its top row (`WorkspacePanel.tsx`, `header` on the view): Files, Claude, Calendar, from features' `workspaceTabs` in registry order. Files shows the folder name and its action buttons below the tabs. Calendar here is the quick "what's next" list (`CalendarView`), not the week page. Replaced the short-lived Usage button.
 
