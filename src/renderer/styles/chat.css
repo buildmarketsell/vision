@@ -315,3 +315,18 @@
     transition: none;
   }
 }
+
+/*
+ * The animation beside the chat (ChatBackdrop.tsx, picked in Settings). Behind everything, never clickable, and faded
+ * out toward the 760px column so text never sits on it; in a narrow pane it simply isn't there.
+ */
+.chat-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(50% - 540px), transparent calc(50% - 380px), transparent calc(50% + 380px), #000 calc(50% + 540px));
+  mask-image: linear-gradient(to right, #000 calc(50% - 540px), transparent calc(50% - 380px), transparent calc(50% + 380px), #000 calc(50% + 540px));
+}

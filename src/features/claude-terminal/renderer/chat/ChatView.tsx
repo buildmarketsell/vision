@@ -5,6 +5,7 @@ import { CopyButton } from '../../../../renderer/components/CopyButton';
 import { baseName, useWorkspace } from '../../../../renderer/core/workspaceStore';
 import type { ChatItem, ChatState } from '../../../../shared/chat/chatTypes';
 import { Banners } from './Banners';
+import { ChatBackdrop } from './ChatBackdrop';
 import { Composer } from './Composer';
 import { useDraft } from './useDraft';
 import { WorkingLine, TasksCard } from './LiveCards';
@@ -109,7 +110,8 @@ export function ChatView({ chat }: { chat: ChatSession }) {
   const draft = useDraft();
 
   return (
-    <div className="flex h-full min-h-0 flex-col" onDragOver={draft.onDragOver} onDrop={draft.onDrop}>
+    <div className="relative isolate flex h-full min-h-0 flex-col" onDragOver={draft.onDragOver} onDrop={draft.onDrop}>
+      <ChatBackdrop />
       <div ref={scrollRef} onScroll={onScroll} onCopy={copyAsPlainText} className="reading-surface min-h-0 flex-1 overflow-y-auto">
         {state.items.length === 0 && state.phase !== 'starting' ? (
           <EmptyState onOpen={(sessionId) => chat.open(sessionId)} />

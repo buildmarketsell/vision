@@ -465,3 +465,49 @@ test('tab bar looks like Notion: rounded tabs, gray only when open, and + opens 
     await app.close();
   }
 });
+
+test('chat background: picked in Settings, drawn only beside the chat, gone when Off', async () => {
+  const { userData } = makeFixture();
+  const { app, page } = await launch(userData);
+  try {
+    // Menu and sidebar hidden: the chat gets the whole window, with room on both sides.
+    await expect(messageBox(page).first()).toBeVisible({ timeout: 15_000 });
+    await page.keyboard.press('Meta+Backslash');
+    await page.keyboard.press('Meta+Shift+Backslash');
+    const backdrop = page.locator('.chat-backdrop');
+    await expect(backdrop).toHaveAttribute('data-backdrop', 'dither');
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: 'test-results/chat-backdrop-dither.png' });
+
+    for (const name of ['Dots', 'Grid'] as const) {
+      await page.keyboard.press('Meta+Backslash');
+      await menu(page).getByRole('tab', { name: 'Settings' }).click();
+      await page.getByRole('radiogroup', { name: 'Chat background' }).getByRole('radio', { name }).click();
+      await menu(page).getByRole('tab', { name: 'Workspace' }).click();
+      await page.keyboard.press('Meta+Backslash');
+      await expect(backdrop).toHaveAttribute('data-backdrop', name.toLowerCase());
+      await page.waitForTimeout(700);
+      const painted = await backdrop.evaluate((canvas: HTMLCanvasElement) => {
+        const ctx = canvas.getContext('2d');
+        const alphaIn = (x: number) => {
+          const data = ctx?.getImageData(x, 0, 40, canvas.height).data ?? [];
+          let sum = 0;
+          for (let i = 3; i < data.length; i += 4) sum += data[i] ?? 0;
+          return sum;
+        };
+        return { side: alphaIn(0), middle: alphaIn(Math.floor(canvas.width / 2) - 20) };
+      });
+      expect(painted.side).toBeGreaterThan(0);
+      expect(painted.middle).toBe(0);
+      await page.screenshot({ path: `test-results/chat-backdrop-${name.toLowerCase()}.png` });
+    }
+
+    await page.keyboard.press('Meta+Backslash');
+    await menu(page).getByRole('tab', { name: 'Settings' }).click();
+    await page.getByRole('radiogroup', { name: 'Chat background' }).getByRole('radio', { name: 'Off' }).click();
+    await menu(page).getByRole('tab', { name: 'Workspace' }).click();
+    await expect(backdrop).toHaveCount(0);
+  } finally {
+    await app.close();
+  }
+});

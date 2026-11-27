@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { useAppTheme } from '../../../renderer/core/appTheme';
+import { CHAT_BACKDROPS, useChatBackdrop } from '../../../renderer/core/chatBackdrop';
 import { followFocus, useFocusStore } from '../../../renderer/core/focus';
 import { useTerminalTheme, type TerminalAppearance } from '../../../renderer/core/terminalTheme';
 import { THEMES, type VisionTheme } from '../../../renderer/themes';
@@ -57,6 +58,23 @@ function FocusSettings() {
   );
 }
 
+/** The animation beside the Claude chat when the window is wider than the chat. */
+function ChatSettings() {
+  const { backdrop, setBackdrop } = useChatBackdrop();
+  return (
+    <div className="flex items-center gap-2 px-3 py-1">
+      <span className="flex-1">Background</span>
+      <div className="segmented" role="radiogroup" aria-label="Chat background">
+        {CHAT_BACKDROPS.map((option) => (
+          <button key={option.value} role="radio" aria-checked={backdrop === option.value} data-active={backdrop === option.value} onClick={() => setBackdrop(option.value)}>
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Settings in the sidebar. New settings and app features get their own section here. */
 export function SettingsView() {
   const { appearance, setAppearance } = useTerminalTheme();
@@ -66,6 +84,8 @@ export function SettingsView() {
       <ThemePicker />
       <div className="section-label">Colors</div>
       <ColorSettings />
+      <div className="section-label">Chat</div>
+      <ChatSettings />
       <div className="section-label">Terminal</div>
       <div className="flex items-center gap-2 px-3 py-1">
         <span className="flex-1">Appearance</span>
