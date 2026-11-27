@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useChatBackdrop, type ChatBackdrop as Backdrop } from '../../../../renderer/core/chatBackdrop';
 import { dotGlow, gridSquare, sideBands } from './backdropMath';
-import { createDitherPainter, type Painter } from './ditherPainter';
+import { createDitherPainter } from './ditherPainter';
+import { createMatrixPainter } from './matrixPainter';
+import type { Painter } from './painter';
 
 /** The chat column (760 px, chat.css) stays clear; the effect fades in beside it (mask in chat.css). */
 const CLEAR = 760;
@@ -90,6 +92,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, bands: [number, number][], widt
 
 function createPainter(canvas: HTMLCanvasElement, backdrop: Exclude<Backdrop, 'off'>): Painter | null {
   if (backdrop === 'dither') return createDitherPainter(canvas) ?? create2dPainter(canvas, 'dots');
+  if (backdrop === 'matrix') return createMatrixPainter(canvas);
   return create2dPainter(canvas, backdrop);
 }
 

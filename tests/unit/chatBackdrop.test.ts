@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dotGlow, gridSquare, GRID_CYCLE_S, sideBands } from '../../src/features/claude-terminal/renderer/chat/backdropMath';
+import { dotGlow, gridSquare, GRID_CYCLE_S, MATRIX_GLYPHS, rainCell, sideBands } from '../../src/features/claude-terminal/renderer/chat/backdropMath';
 
 describe('dotGlow', () => {
   it('pulses between 0.4 and 1 and grows up to 1.5x', () => {
@@ -48,5 +48,35 @@ describe('sideBands', () => {
 
   it('returns nothing when there is no room beside the column', () => {
     expect(sideBands(900, 1000)).toEqual([]);
+  });
+});
+
+describe('rainCell', () => {
+  const column = 3;
+  /** Brightness down one column at one moment. */
+  const columnAt = (seconds: number) => Array.from({ length: 60 }, (_, row) => rainCell(column, row, seconds));
+
+  it('has a brightest head with a trail fading above it and darkness below', () => {
+    const cells = columnAt(12.3);
+    const head = cells.findIndex((cell) => cell.isHead);
+    expect(head).toBeGreaterThan(0);
+    expect(cells[head]?.brightness).toBe(1);
+    const above = cells[head - 1]?.brightness ?? 0;
+    expect(above).toBeGreaterThan(0);
+    expect(above).toBeLessThan(1);
+    if (head + 1 < cells.length) expect(cells[head + 1]?.brightness).toBe(0);
+  });
+
+  it('falls: the head moves down over time', () => {
+    const headAt = (seconds: number) => columnAt(seconds).findIndex((cell) => cell.isHead);
+    const first = headAt(12.3);
+    expect(headAt(12.6)).toBeGreaterThan(first);
+  });
+
+  it('uses the film glyphs and changes them slowly', () => {
+    const glyphs = Array.from({ length: 40 }, (_, step) => rainCell(5, 7, step * 0.5).glyph);
+    expect(glyphs.every((glyph) => MATRIX_GLYPHS.includes(glyph))).toBe(true);
+    expect(new Set(glyphs).size).toBeGreaterThan(1);
+    expect(rainCell(5, 7, 1).glyph).toBe(rainCell(5, 7, 1.02).glyph);
   });
 });
